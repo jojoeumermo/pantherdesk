@@ -1,0 +1,521 @@
+# Auditoria da interface — briefing de redesenho (2026-10-29)
+
+Comparação do protótipo atual (design/prototipo/index.html) com o briefing e com os pedidos diretos do dono. Etapa 1: nada foi alterado.
+
+## Início, Relatórios e Notificações (rota inicial, painel/vitrine, destino de cada bloco)
+
+- **Rota inicial**
+  - Hoje: Sem hash, a partida (index.html, linha 1946) abre 'entrar'. 'Entrar com Google' leva a ir('inicio') (linha 1354). Ou seja, depois do login o técnico cai no painel Início, não na fila.
+  - Alvo: Depois do login, abrir 'Meus tickets' ou a última visão usada, lembrada por usuário. Pelo pedido do usuário, a visão 'Geral' (todos os campi) também precisa existir e pode ser opção de rota inicial.
+- **Barra lateral / Início**
+  - Hoje: Item 'Início' (ícone casa) é o primeiro da navegação (linha 586), acima de 'Tickets'. O título da tela traz a data 'quinta, 29 de outubro' e o botão sólido 'Abrir meus tickets' leva à visão 'Meus abertos'.
+  - Alvo: Tirar 'Início' como destino. O primeiro bloco da lateral passa a ser Visões com contador (Meus tickets, Não atribuídos, Geral etc.). O botão 'Abrir meus tickets' deixa de existir, porque a fila já é a tela.
+- **Início: cards de métrica**
+  - Hoje: Faixa .nums com 4 números: 'Resolvidos na semana 23 (+5 sobre a anterior)', '1ª resposta, mediana 18 min (meta 30 min)', 'Satisfação, 60 dias 100% (9 avaliações)', 'Prazo cumprido na semana 94% (1 estourado seu)'. São números fixos no HTML (linhas 629-632).
+  - Alvo: Sai do Início. Resolvidos e SLA cumprido vão para Relatórios, como série semanal. A 1ª resposta vai com mediana e p90. Satisfação só aparece com amostra suficiente e sempre com n. Nada de '+5 sobre a anterior' de vitrine.
+- **Início: 'Satisfação 100% · 9 avaliações'**
+  - Hoje: Métrica de vitrine em destaque, com amostra pequena. Não bate nem com o dado de operação da spec 13 (cerca de 99% em 60 dias).
+  - Alvo: Em Relatórios, mostrar % de satisfação com n e um limite mínimo de amostra. Abaixo do limite, mostrar só o n ou ocultar. O limite precisa ser definido pelo dono.
+- **Início: 'Seus tickets que vencem primeiro'**
+  - Hoje: Tabela compacta com os 5 tickets 'Você' não resolvidos, ordenados por prazo. Colunas: nº, assunto, estado, prazo, prioridade, criado (desenharInicio, linha 1361). Não tem Solicitante nem Local, e repete a ordem por prazo que já existe na lista.
+  - Alvo: Remover. A mesma informação passa a ser a visão 'Meus tickets' ordenada por SLA, já com as colunas pedidas pelo usuário: status, id, campus, SLA, assunto, solicitante, atribuído, atualizações.
+- **Início: feed 'Atividade'**
+  - Hoje: Bloco com abas Tudo/Menções/Atribuições/Prazos e o botão 'Marcar como lido'. Tem 5 itens com citação: menção de Rafael; '#8398 estourou · gestor avisado em 8 h úteis'; '#8420 virou incidente com 14 vinculados'; '#8425 faltam 7 dias para a montagem'; 'Carla Nunes avaliou #8341 com nota 5' com citação.
+  - Alvo: Mudar para o painel Notificações. Manter os filtros Menções/Atribuições/Prazos e o lido/não lido. A avaliação individual (nota 5 com citação) é vitrine: vai para Relatórios ou para o próprio ticket, não para o feed.
+- **Início: gráfico 'Criados e resolvidos'**
+  - Hoje: SVG fixo de 8 semanas (S1 a S8), 'seus grupos', com duas linhas (criados tracejada, resolvidos sólida) e aria-label descritivo. Os dados são desenhados à mão no HTML (linhas 645-651).
+  - Alvo: Sai do Início. Em Relatórios, só se for útil: backlog por campus e grupo, e criados x resolvidos por semana com eixo e valores reais. Nada de gráfico decorativo.
+- **Notificações (gaveta)**
+  - Hoje: O botão 'Notificações' fica no topo da lateral, com contador '3' (linha 583), e abre a gaveta lateral #notif. São só 3 itens (menção #8412, prazo #8398, Eventos devolveu #8380), sem filtros e sem marca de não lido. São dados diferentes do feed do Início: o feed fala de menção em #8420, a gaveta fala de #8412. O contador '3' também não bate com os 2 itens 'nova' do feed. Clicar em #8380 só mostra um toast de protótipo.
+  - Alvo: O sino passa para a barra superior, ao lado de busca (Ctrl K) e de 'Novo ticket'. Ele recebe o feed inteiro numa fonte só: menções, atribuições a mim, respostas em tickets meus, avisos de SLA e avisos de montagem. Cada item tem lido/não lido e data relativa com a data completa no hover. O contador mostra só os não lidos. O vazio é seco ('Nenhuma notificação.').
+- **Notificações: tipos faltando**
+  - Hoje: Não aparece o aviso de ticket novo sem responsável para o grupo, nem 'resposta em ticket meu'.
+  - Alvo: Incluir esses tipos, que já são regra das specs (D09 e Δ21). Respeitar a D12: nunca notificar o autor da própria ação.
+- **Relatórios**
+  - Hoje: Não existe tela. 'Relatórios' é um botão com data-acao (linha 590) que só mostra o toast 'Relatórios (protótipo)' (linha 1323). Não há rota #relatorios, e TELAS não inclui relatorios (linha 1274). A busca/paleta (linha 1888) também não lista Relatórios.
+  - Alvo: Criar a tela Relatórios, que recebe tudo o que sai do Início. Conteúdo: backlog por campus e grupo; SLA cumprido por semana; 1ª resposta com mediana e p90; salas e equipamentos com mais chamados; satisfação com n. Filtros de período, campus/local, grupo, motivo e equipamento (Δ24), com exportação CSV. Pelo pedido do usuário, a quebra principal é por campus Barra/Gávea.
+- **Relatórios: métricas mínimas**
+  - Hoje: Não existem. Só aparecem os 4 cards soltos do Início, sem recorte.
+  - Alvo: Por quebra, mostrar as métricas mínimas da Δ24: criados, resolvidos, mediana da 1ª resposta, mediana da 1ª resolução, % dentro do SLA (resultado único por métrica, D10) e % de satisfação. O p90 do briefing é um acréscimo e não está na spec.
+- **Início: textos e ruído**
+  - Hoje: Os textos do Início têm frases de regra embutidas, como 'gestor avisado em 8 h úteis' e 'encaminhamento com retorno'. O cabeçalho mostra a data por extenso. O vazio do feed é 'Nada por aqui.'.
+  - Alvo: Ao mover para Notificações, deixar o texto curto e sem regra. A data completa vai no hover. Vazio seco ('Nenhuma notificação.').
+
+### Conflitos com as specs
+- A spec 13 R33/Δ21 define a 'Página inicial do agente' no MVP com os números da semana (resolvidos, mediana da 1ª resposta, avaliações), satisfação de 60 dias (minha e da conta), abertos nos meus grupos por estado e o feed. O briefing manda remover tudo isso do Início. É uma mudança de requisito, não só de interface, e a Δ21 precisa ser revista pelo dono.
+- A spec 13 R23/Δ15 diz que a avaliação aparece 'na página inicial (Δ21)' com a % de satisfação de 60 dias. O briefing tira a satisfação do Início e só a mostra com amostra suficiente. Isso conflita com R23 e Δ15, e o limite de amostra não existe em nenhuma spec.
+- A spec 13 R59 pede uma página inicial com as listas 'meus tickets, em cópia, seguindo e concluídos em 30 dias'. Isso se encaixa melhor no briefing (Início vira fila) do que o protótipo atual, mas faltam as visões 'em cópia', 'seguindo' e 'concluídos em 30 dias' na lista de visões do briefing.
+- A spec 13 Δ28 define o atalho 'G seguido de I' para Início. Se o Início deixar de existir como tela, esse atalho precisa ser redefinido (ir para a fila ou para a última visão). A lista de atalhos do briefing (j/k, Enter, x, a, r, n, s, /) não cobre os atalhos G.
+- Rotas: a restrição do briefing diz 'não mudar rotas'. Mesmo assim, remover o painel #inicio e criar a tela Relatórios exige uma rota nova (#relatorios) e mudar o comportamento de #inicio, seja redirecionando para a fila ou apagando a rota. A decisão é do dono.
+- Δ24 (spec 13) define relatórios com quebra por campo de lista, campus/local, grupo e período, mais exportação CSV. O briefing acrescenta p90 da 1ª resposta e 'salas e equipamentos com mais chamados', que não estão na Δ24. Não é conflito direto, mas amplia o escopo da spec 11.
+- Satisfação: o protótipo mostra 100% com 9 avaliações, e a spec 13 descreve cerca de 99% em 60 dias na operação real. Os dois são vitrine. O caso de teste ER-35 (6 de 8 avaliações = 75%) mostra que a regra aceita amostras pequenas, sem mínimo.
+- Notificações: o produto (spec 09, citada nas decisões D09 e D12) trata o feed como notificação no app, então mover o feed para o sino está de acordo. Hoje, porém, o protótipo tem duas fontes diferentes, o feed do Início e a gaveta, com itens e contagens que não batem. Unificar é obrigatório, não opcional.
+- Identidade (afeta os gráficos e números de Relatórios): o briefing pede IBM Plex Sans ou Source Sans 3 e diz para pedir as cores oficiais. Já a spec 13 R55/Δ27 fixa Montserrat e o azul oficial, e o 00-produto, revisado em 2026-10-29, fixa a paleta Panthers (azul-marinho, azul royal, vermelho). O briefing conflita com a paleta e a fonte já decididas.
+
+### Perguntas
+- Pode revogar ou reescrever a Δ21 e a R33 (página inicial com números e satisfação) e a menção à 'página inicial' na Δ15/R23? Ou o Início continua existindo como tela opcional, fora da rota padrão?
+- Depois do login, a rota inicial deve abrir 'Meus tickets', a visão 'Geral' (todos os campi, pedida nesta rodada) ou a última visão usada pelo técnico?
+- O que acontece com #inicio e com o atalho G I? Redirecionar para a fila (mantém a rota) ou remover?
+- Pode criar a rota #relatorios, apesar da restrição 'não mudar rotas'?
+- Qual é a amostra mínima para mostrar a % de satisfação em Relatórios (por exemplo, n de 30 ou mais)? E abaixo dela, mostra só o n ou oculta?
+- O p90 da 1ª resposta e o ranking de salas e equipamentos entram no escopo do MVP da spec 11 (hoje a Δ24 pede só as medianas)?
+- A avaliação individual com comentário ('Carla Nunes avaliou com nota 5') deve gerar notificação para o técnico ou só aparecer no ticket e em Relatórios?
+- O sino de Notificações sai da lateral e vai para a barra superior, como pede o briefing? Confirma que a lateral fica só com texto, sem o contador de notificações?
+- Faltam as visões 'em cópia', 'seguindo' e 'concluídos em 30 dias' (R59). Elas entram na seção Visões da lateral?
+- Fonte e cores: vale Montserrat e a paleta Panthers (specs de 2026-10-29) ou IBM Plex Sans e as cores oficiais a confirmar (briefing)?
+
+## Eventos (#eventos) e QR das salas (#qr)
+
+- **Eventos – texto de regra na tela**
+  - Hoje: A legenda no topo direito mostra o texto fixo 'prazo = início da montagem · mínimo 5 dias úteis', ao lado de Barra, Gávea, Entre campi e 'montagem'.
+  - Alvo: Tirar o texto da tela. A regra vai numa dica (ícone de ajuda ou tooltip) no cabeçalho. A legenda fica só com as cores dos campi e o ícone de montagem.
+- **Eventos – Próximos**
+  - Hoje: O painel lateral de 300px tem o título 'Próximos pela montagem'. Cada item mostra dia + 'nov', nome, tipo · campus e a etiqueta cinza arredondada 'montagem: N dias' (âmbar se N ≤ 2). Pedidos fora da antecedência ganham a etiqueta vermelha 'fora do prazo'. A linha não mostra responsável nem estado do ticket.
+  - Alvo: Manter a lista. Trocar a etiqueta 'montagem: N dias' repetida por um estado de prazo com ícone e texto: no prazo (neutro, sem destaque), atenção (âmbar), atrasado (vermelho). Linhas mais densas. Mostrar o responsável ('—' quando não há) e os tickets ligados.
+- **Eventos – calendário (mês)**
+  - Hoje: A grade de novembro de 2026 começa no domingo (Dom…Sáb). Cada dia tem uma altura mínima de 104px. Cada evento aparece como bolinha do campus + hora + nome, com dica de nome, horário e campus. A célula não mostra local, estado nem selo de prazo. Não há limite por dia nem 'mais N'. As setas de mês e o botão Semana só abrem toasts ('Protótipo: só novembro de 2026').
+  - Alvo: Manter o calendário. Cada evento ganha cor do campus, ícone de montagem e estado do prazo, sem depender só da cor. A spec 08 §9.7 pede local, estado e selo no item, até 3 eventos por dia com 'mais N' e semana de segunda a domingo. Para o protótipo valer como teste, a visão Semana precisa funcionar.
+- **Eventos – ícone de montagem**
+  - Hoje: A linha de montagem (ícone de chave inglesa, texto cinza claro) só aparece quando a montagem cai em outro dia. Em 6 dos 10 eventos (8426, 8428, 8439, 8431, 8436, 8438) a montagem é no mesmo dia e não aparece no calendário.
+  - Alvo: Mostrar o ícone de montagem em todo evento, também quando a montagem é no mesmo dia (por exemplo, o ícone com a hora da montagem no próprio item). Na semana, uma faixa de montagem antes do evento (spec 08 §9.7).
+- **Eventos – cores por campus**
+  - Hoje: Os tokens são --c-barra #3D6BE0 (azul royal), --c-gavea #0B1F4B (azul-marinho, quase a cor do texto) e --c-entre (contorno cinza #6E7078). No tema escuro são #7393F2, #A9B6D8 e #8D8F96. Os campi aparecem como bolinhas de 2 tons de azul que se confundem entre si.
+  - Alvo: Usar uma cor por campus, bem distinguível, mais uma para entre campi, com rótulo ou letra junto (B, G, B+G) para não depender só da cor. Revisar o contraste AA nos dois temas. Os valores dependem do dono (ver conflitos).
+- **Eventos – tickets ligados ao evento**
+  - Hoje: O evento é um ticket (8425, 8426…). Clicar abre o detalhe. Nenhum lugar da tela mostra tickets ligados ao evento, nem uma contagem.
+  - Alvo: Cada evento mostra os tickets ligados a ele (contagem no item e lista no detalhe ou num painel). Antes, falta definir o vínculo no modelo (ver conflitos).
+- **Eventos – filtros e cabeçalho**
+  - Hoje: Há o segmentado Todos / Barra / Gávea / Entre campi e o select 'Tipo: todos'. O cabeçalho tem a trilha 'Eventos / Novembro de 2026', as setas, 'Mês | Semana' e o botão sólido 'Novo evento', que leva ao formulário do portal. Não há filtro rápido para esconder resolvidos e fechados.
+  - Alvo: Manter os filtros de campus e tipo. Somar o filtro rápido que esconde resolvidos e fechados (spec 08 §9.7) e o filtro 'fora do prazo'. Na barra lateral, o item 'Eventos' fica só em texto, sem o ícone de calendário que existe hoje.
+- **Eventos – SLA na lista de tickets**
+  - Hoje: Na fila, os tickets de evento aparecem com o selo 'faltam N dias p/ montagem' (abreviado). Em #8380 a coluna mostra 'pausado'.
+  - Alvo: Com o pedido do usuário (a coluna SLA substitui Prioridade), o ticket de evento mostra na coluna SLA o selo de montagem com o texto da spec 05 §7.15: 'faltam N dias para a montagem', 'pronto', 'montagem sem pronto' ou 'evento encerrado'. O texto deve ser curto e igual ao do calendário.
+- **Eventos – dados de teste**
+  - Hoje: São 10 eventos em novembro de 2026, no máximo 1 por dia, nenhum sobreposto. Só 1 está fora do prazo (8426) e nenhum tem a marca 'pronto'.
+  - Alvo: Pôr eventos sobrepostos no mesmo dia e horário, um dia com mais de 3 eventos (para testar o 'mais N'), eventos prontos, um com montagem já iniciada sem a marca e um já encerrado.
+- **QR – estrutura da tela**
+  - Hoje: A tela 'QR da sala' mostra uma única sala fixa (trilha 'QR da sala / BAR-2-214'). Não existe lista de salas por campus e andar, nem contagem de tickets abertos por sala.
+  - Alvo: Renomear para 'QR das salas'. A tela vira uma lista de salas agrupadas por campus e andar (com o prédio na Gávea), com o código curto e o número de tickets abertos, numa tabela densa. Clicar numa sala abre a prévia e a folha dela.
+- **QR – impressão em lote**
+  - Hoje: Só existe o botão 'Imprimir os 5 QR do andar', no painel de uma sala. Ele só mostra um toast de protótipo. Não dá para escolher o andar nem selecionar várias salas.
+  - Alvo: Impressão em lote por andar (e por prédio, como a spec pede): uma ação no grupo do andar ou uma seleção de salas na lista, mais uma prévia da folha (nome da sala e código).
+- **QR – textos explicativos**
+  - Hoje: O painel 'Folha para imprimir' tem o parágrafo 'Trocar o nome da sala não muda o QR. O local do ticket vem do QR ou do formulário.' Acima do celular há a legenda 'O que o técnico vê ao escanear o QR'.
+  - Alvo: Tirar o parágrafo de regra (vai para a documentação ou para uma dica). Trocar a legenda por um rótulo curto da prévia, por exemplo 'Prévia · técnico'.
+- **QR – prévia do técnico**
+  - Hoje: A prévia é uma moldura de celular de 340px com cantos de 36px e 28px, barra de status falsa ('10:38', '5G') e URL help.earj.com.br/s/BAR-2-214. Lista 4 tickets com etiquetas arredondadas de prazo ('50 min', '1 d'), 'com você' com avatar ou o botão 'Assumir', e o botão sólido 'Abrir ticket aqui'.
+  - Alvo: Manter a prévia do que o técnico vê, sem enfeite: sem barra de status falsa e com cantos de 4 a 6px. Usar as mesmas células de status e SLA da lista (texto 'vence em 50 min', âmbar ou vermelho só quando pede ação) e o mesmo padrão de responsável. Nada de parágrafo explicativo.
+- **QR – Ver como solicitante**
+  - Hoje: O botão 'Ver como solicitante' e o 'Abrir ticket aqui' levam ao portal e chamam simularQR(true). No portal, o botão 'Simular QR da Sala 214' ('Simulate QR for Room 214' em EN) fica visível.
+  - Alvo: Manter 'Ver como solicitante' na tela de QR. O botão de simulação sai do portal fora do modo de desenvolvimento (checklist de aceite).
+
+### Conflitos com as specs
+- Estado do prazo de montagem: o briefing pede 'no prazo / atenção / fora do prazo'. Nas specs, 'fora do prazo' é outra coisa: a marca derivada de pedido feito com menos de 5 dias úteis de antecedência (spec 01 §5.2, spec 13 Δ34). O selo de prazo do evento tem outros valores: 'faltam N dias/h para a montagem', 'falta menos de 1 h', 'pronto', 'montagem sem pronto' (vermelho), 'evento encerrado' (spec 05 §7.15, D40, D54). Usar 'fora do prazo' como estado do selo muda a regra.
+- 'Não repetir montagem: N dias': o texto 'faltam N dias para a montagem' é o valor definido do selo (D54, spec 05 §7.15). Dá para encurtar a apresentação (só 'N dias' com o ícone de montagem), mas sumir com a contagem contraria a spec. O protótipo hoje usa 'montagem: N dias' e 'faltam N dias p/ montagem', dois formatos diferentes do texto da spec.
+- Limite de 'atenção' (<25% restante, âmbar): esse limite vale para o SLA no briefing. O prazo de evento não é métrica de SLA (spec 05, glossário) e não tem início medido para calcular a porcentagem. A regra da spec para o evento é a fila 'Quase escalando' com montagem em até 60 min úteis. O protótipo usa âmbar com N ≤ 2 dias, regra que não existe na spec (a mais parecida é o aviso 2 dias úteis antes, §7.14).
+- Marca 'pronto para o evento' (D44): o estado principal do prazo de evento não aparece em nenhum lugar do calendário nem de Próximos. O redesenho precisa mostrá-la, e o briefing não a cita.
+- Tickets ligados ao evento: o modelo (spec 01) só tem vínculo pai-filho para incidente em massa (§4.8), e marcar como pai força o tipo incidente. Ligar tickets a um ticket de evento exige outro vínculo ou mudança no modelo, o que a restrição 'não mudar modelo de dados' proíbe. Decisão do dono.
+- Calendário: a spec 08 §9.7 pede semana de segunda a domingo, até 3 eventos por dia com 'mais N' e local, estado e selo em cada evento. O protótipo começa no domingo, não limita os eventos por dia e não mostra local, estado nem selo. O briefing só diz 'manter calendário'.
+- QR, níveis do local: a spec tem 4 níveis, campus → prédio → andar → sala (Δ33, spec 03 §4.9), e a impressão é 'por prédio ou por andar'. O briefing pede só por campus e andar, mas a Gávea tem Prédio A e Prédio B.
+- QR, permissão de imprimir: a spec diz que o admin imprime os QR (Δ33, spec 03 §4.9). O briefing põe a impressão em lote numa tela de técnico. É preciso definir se agentes comuns veem o botão.
+- Cores por campus: não existem na paleta definida em 2026-10-29 (Δ30: azul-marinho #0B1F4B, royal #1F4FD6, vermelho #D62839, verde só para sucesso). O protótipo usou royal e azul-marinho para Barra e Gávea, e o azul-marinho é a cor da moldura. O vermelho e o verde já têm significado (atenção e sucesso), então não servem para campus. A spec 13 também lista outra paleta institucional (#27348B, #00B050, #E4051F, Montserrat), e o briefing pede IBM Plex Sans no lugar de Inter e Montserrat: conflito de tipografia e cores.
+- Status 'Novo' amarelo do briefing: os tickets de evento no protótipo usam Aberto e Em espera. Se o redesenho trouxer 'Novo', ele não existe no modelo de estados (spec 01).
+
+### Perguntas
+- Para o prazo de montagem, valem os valores da spec ('faltam N dias', 'pronto', 'montagem sem pronto', 'evento encerrado') com o 'fora do prazo' de antecedência como marca à parte? Ou o dono quer mudar a regra para 'no prazo / atenção / fora do prazo'?
+- A partir de quanto tempo antes da montagem o evento sem 'pronto' fica âmbar (atenção)? 2 dias úteis, como o aviso da spec 05 §7.14? 60 min úteis, como a fila 'Quase escalando'? Outro valor?
+- O que são os 'tickets ligados' a um evento? Precisa de um novo tipo de vínculo no modelo (hoje só existe pai-filho de incidente), ou basta listar os tickets do mesmo local e data, sem vínculo?
+- Quais cores usar para Barra, Gávea e Entre campi? Elas entram na paleta oficial ou ficam fora dela? E qual paleta vale: a Panthers do Δ30 ou a institucional (#27348B, #00B050, #E4051F)?
+- A impressão em lote de QR fica só para admin, como na spec, ou todo técnico pode imprimir?
+- A lista de salas agrupa por campus → prédio → andar (spec) ou só por campus → andar (briefing)?
+- A visão Geral pedida pelo usuário também inclui os tickets de evento, com o selo de montagem na coluna SLA?
+- Podemos remover a moldura de celular (barra de status falsa) da prévia do QR, ou ela serve para apresentações à escola?
+
+## Portal do solicitante (#portal) e chat "Fale com a TI"
+
+- **Portal · Abrir pedido (QR)**
+  - Hoje: Botão fixo "Simular QR da Sala 214" / "Simulate QR for Room 214" no topo do formulário (linha 832), visível para qualquer solicitante. Dispara o toast "QR lido: Sala 214 · Barra · 2º andar".
+  - Alvo: Remover fora de dev. O QR real chega pela URL curta com o código da sala. A simulação, se ficar, só atrás de uma flag de dev, fora da tela do solicitante.
+- **Portal · Abrir pedido (texto de regra)**
+  - Hoje: Subtítulo "Os próximos campos aparecem conforme as suas escolhas." / "More fields appear based on your choices."
+  - Alvo: Remover. A interface não explica a regra.
+- **Portal · Evento de AV (texto de regra)**
+  - Hoje: Subtítulo fixo "Peça com pelo menos 5 dias úteis de antecedência. O prazo da equipe é o início da montagem." Aviso: "Abaixo da antecedência mínima: faltam N dias úteis (o mínimo é 5). O pedido é aceito, mas fica marcado 'fora do prazo'."
+  - Alvo: Tirar o subtítulo de regra e passar a regra para uma dica. O aviso condicional fica, mais curto e sem explicar a regra (ex.: "Faltam 3 dias úteis. O pedido entra como fora do prazo.").
+- **Portal · Abrir pedido (opções não traduzidas)**
+  - Hoje: No modo EN continuam em português: as opções de "You are" (Funcionário(a) da escola, Responsável por aluno), de Equipamento (Escolha…, Projetor, Impressora, Notebook / Chromebook, Caixa de som), de sintomas (Não liga, Liga mas sem imagem…), os nomes de andar e sala (Subsolo, Térreo, 2º andar, Prédio A · Térreo, Sala dos professores, Entre campi) e os textos já preenchidos de Assunto e Descrição. Só o primeiro "Escolha…" de campus, andar e sala muda para "Choose…".
+  - Alvo: PT/EN traduz tudo, inclusive as opções dos campos e os nomes de andar e sala, sem misturar idiomas. Os nomes das salas vêm do cadastro de locais e também precisam de rótulo EN (ex.: 2nd floor, Teachers' room).
+- **Portal · Evento de AV (opções não traduzidas)**
+  - Hoje: No modo EN continuam em português: os tipos (Tradução simultânea, Evento entre campi, Pequeno evento, Outro), as 9 caixas de equipamento (Projetor, Telão, Microfone sem fio, Mesa de som…), os placeholders "Ex.: Assembly do Ensino Fundamental" e "Roteiro, quem fala, se precisa de gravação…" (sem data-i18n-ph) e os locais. No modo PT aparecem "Assembly" e "Homecoming" em inglês.
+  - Alvo: Traduzir todas as opções e placeholders. Decidir se Assembly e Homecoming são nomes próprios da escola (podem ficar iguais nos dois idiomas) ou se precisam de tradução.
+- **Portal · acessibilidade e idioma**
+  - Hoje: Os aria-labels ficam só em PT ("Idioma", "Alternar tema", "Conta", "Abrir um pedido", "Motivo do contato", "Chat com a TI", "Nota de 1 a 5", "Buscar"). O idioma volta para PT a cada carga, porque a variável idioma não é guardada nem lida da Pessoa. O toast de envio em EN não traz a sala, e o de PT traz.
+  - Alvo: Traduzir também os rótulos acessíveis. Abrir no idioma da pessoa (Δ23), lembrar a escolha e deixar os textos iguais nos dois idiomas.
+- **Chat (widget)**
+  - Hoje: Nada no widget é traduzido. Só o botão muda ("Fale com a TI" / "Chat with IT"). Em EN continuam em português: "Online · costuma responder em minutos", "Hoje · pedido #8431", "Como foi o atendimento?", "1 = muito ruim · 5 = excelente", as legendas da nota, "Rafael está escrevendo", o placeholder "Escreva sua mensagem" e a resposta automática "Anotado! Já estou vendo isso."
+  - Alvo: O widget segue o idioma do portal e traduz tudo. Manter "Chat with IT" / "Fale com a TI".
+- **Chat (textos)**
+  - Hoje: Os textos do sistema usam exclamação: "Que bom! Obrigado.", "Que ótimo! Obrigado pela avaliação." e a resposta simulada "Anotado!". O cabeçalho promete "Online · costuma responder em minutos".
+  - Alvo: Textos curtos e sem exclamação. Sem promessa de tempo real: o chat é assíncrono (Δ16) e não exige agente online.
+- **Chat (dados de demonstração)**
+  - Hoje: A conta logada é Mariana Costa (MC), mas o chat a chama de "Bruna". O "pedido #8431" é o número do evento "Conselho de classe entre campi" na tela Eventos, e a conversa fala do som do ginásio.
+  - Alvo: Usar dados coerentes entre as telas: o mesmo solicitante e um número de ticket de chat que exista na fila.
+- **Chat (avaliação)**
+  - Hoje: A nota de 1 a 5 está em botões quadrados. Uma nota baixa só troca a legenda ("Sentimos muito. Conte o que deu errado?"). Não há campo de comentário nem lista de motivos.
+  - Alvo: Manter a nota de 1 a 5. Ligar à spec: comentário opcional e motivo opcional quando a nota é 1 a 3 (Δ15). A legenda fica neutra.
+- **Chat (lados da conversa)**
+  - Hoje: A mensagem do solicitante (.bal.eu) fica à direita, em fundo cinza. A da TI (.bal.eles) fica à esquerda, com avatar "RT".
+  - Alvo: O pedido do usuário para trocar os lados (EU à esquerda) foi feito para a conversa do ticket. Falta confirmar se vale também para o widget do portal. Hoje o widget segue o padrão de mensageiro.
+- **Portal · Meus pedidos (estados)**
+  - Hoje: EST_PORTAL mapeia só 3 estados: Aberto vira "Em andamento", Pendente vira "Aguardando você" e Resolvido vira "Resolvido · avalie". As etiquetas usam as cores internas do agente (COR_EST), então "Em andamento" aparece na cor de Aberto (vermelho/alerta). Não há mapeamento para Em espera (EST_PORTAL['Em espera'] é undefined e quebraria a linha) nem para Fechado.
+  - Alvo: Estados simples: Recebido, Em andamento, Aguardando você e Resolvido (avalie). Usar cores próprias do portal, calmas, com rótulo escrito, e não o vermelho do agente. Em espera aparece como "Em andamento". Incluir Fechado.
+- **Portal · Meus pedidos (ações e datas)**
+  - Hoje: Clicar na linha só mostra o toast "Pedido #N (protótipo)". "Resolvido · avalie" não leva à avaliação. As datas são relativas ("há 3 dias") sem a data completa no hover. Não existe a ação "Meu problema foi resolvido".
+  - Alvo: "Avalie" deve levar à nota. Mostrar a data completa no hover. Confirmar com o dono se a ação de resolver pelo solicitante (D08) entra nesta etapa, que é só de interface.
+- **Portal · Sugestões de artigos**
+  - Hoje: Já existem três pontos: a busca no início ("Nada encontrado. Abra um pedido e a gente ajuda."), "Mais procurados" e "Talvez isto resolva agora" abaixo do Assunto. Os títulos são traduzidos em PT/EN. Clicar em artigo ou categoria só mostra um toast ou não faz nada (os 4 cards de categoria apontam para #portal).
+  - Alvo: Manter as sugestões ao abrir pedido e na busca. As categorias precisam abrir a lista de artigos. Quando faltar tradução, cair para o idioma padrão (Δ23) sem misturar idiomas na lista.
+- **Portal · Visual e marca**
+  - Hoje: O cabeçalho tem 52px com o símbolo da pantera e "Central de ajuda", sem o nome da escola (EARJ). O herói "Como podemos ajudar?" está centralizado, em 24px, com 56px de respiro. Há 4 cards de categoria com ícones de linha (wifi, impressora). A fonte é Inter, com os tokens do agente (royal #1F4FD6). Raios: busca 8px, cards 8px, local-box 8px, chat 10px, balões 10px e botão flutuante em pílula de 18px com sombra flutuante.
+  - Alvo: Mais acolhedor, com a marca da escola: nome EARJ e logo no cabeçalho, cor de marca com parcimônia e sem ilustração genérica. Raio de 4px (no máximo 6px), bordas de 1px em vez de sombras e menos cara de modelo pronto na grade de cards com ícones.
+- **Portal · Conta**
+  - Hoje: O menu da conta da solicitante (Mariana Costa) traz o link "Área do técnico" / "Agent area".
+  - Alvo: Mostrar só para quem é agente. Para o solicitante, o menu fica com Meus pedidos e idioma/tema.
+- **Lista (atalho para o portal)**
+  - Hoje: O botão "Novo ticket" da área do técnico abre o formulário do solicitante com o toast "Formulário do solicitante · abra em nome de alguém". O botão do QR também leva ao portal.
+  - Alvo: Fora do foco do portal. Registrar que Novo ticket deve abrir um formulário do agente, sem trocar para a interface do solicitante, e que isso é decisão das telas do agente.
+
+### Conflitos com as specs
+- Estado "Recebido" do briefing: não existe estado com esse nome no modelo da spec 01 §4.1. Para o solicitante, aberto vira "em andamento". "Recebido" só seria possível como rótulo derivado de "sem primeira resposta", e isso precisa do dono. A spec 01 diz que a redação final é da spec 07.
+- O briefing lista 4 estados no portal e não inclui "Fechado". A spec 01 tem fechado visível ao solicitante, e o portal oferece "abrir novo pedido" (TL-34).
+- "Em espera" nunca pode aparecer para o solicitante (spec 01 §4.1, spec 13 Δ3): tem de virar "Em andamento". O protótipo nem mapeia esse estado no portal.
+- Fonte do portal: o briefing pede IBM Plex Sans ou Source Sans 3. A spec 13 Δ27 define Montserrat como fonte oficial da escola para portal, widget e e-mails, e o Δ30 mantém a marca da conta no portal.
+- Cores do portal: o briefing pede as cores oficiais da EARJ e manda não inventar. As specs têm duas paletas: Δ27 (#27348B, #00B050, #E4051F, dos templates institucionais) e Δ30 de 2026-10-29 (Panthers: #0B1F4B, #1F4FD6, #D62839), que diz que o portal da EARJ usa a paleta Panthers com o nome da escola.
+- Cores de estado: o briefing pede as cores do Zendesk, com Aberto vermelho. A spec Δ27 diz que as cores de estado são fixas no produto e que Aberto usa a cor de alerta da conta. No portal, mostrar "Em andamento" em vermelho contraria o tom acolhedor.
+- O chat promete "Online · costuma responder em minutos", mas a spec Δ16 define o chat como assíncrono, sem exigir agente online.
+- Avaliação no chat: a spec Δ15 pede motivo opcional (nota de 1 a 3) e comentário. O protótipo não tem nenhum dos dois, e isso é lacuna de funcionalidade, não só de interface.
+- A ação "Meu problema foi resolvido" (D08, no MVP) não existe no portal do protótipo. O briefing proíbe adicionar ou remover funcionalidade sem perguntar.
+- O idioma do portal deveria vir da Pessoa, com recuo para o padrão da conta (Δ23). O protótipo sempre abre em PT e não lembra a escolha.
+
+### Perguntas
+- Qual é a fonte do portal: Montserrat (Δ27, fonte oficial da escola) ou IBM Plex Sans / Source Sans 3 (briefing)?
+- Qual paleta vale no portal: a institucional do Δ27 (#27348B / #00B050 / #E4051F) ou a Panthers do Δ30 (#0B1F4B / #1F4FD6 / #D62839)? Pode enviar os códigos oficiais e o logo da EARJ para fundo claro e escuro?
+- "Recebido" entra como rótulo derivado de "aberto sem primeira resposta"? E "Fechado" aparece no portal como estado próprio?
+- A troca de lados da conversa (EU à esquerda) vale também para o widget de chat do portal ou só para a conversa do ticket na área do técnico?
+- "Assembly" e "Homecoming" ficam iguais nos dois idiomas, como nomes da escola, ou têm tradução em PT?
+- Os nomes de andar e sala do cadastro (ex.: "Sala dos professores", "2º andar") ganham rótulo em EN ou ficam só em PT, como nome próprio do local?
+- Incluímos agora a ação "Meu problema foi resolvido" (D08) e os campos de motivo e comentário da avaliação (Δ15), ou deixamos para depois porque esta etapa é só de interface?
+- A simulação de QR deve sumir de vez ou ficar atrás de uma flag de desenvolvimento (ex.: ?dev=1)?
+
+## Detalhe do ticket (#ticket)
+
+- **Ticket · layout geral**
+  - Hoje: Três zonas: conversa à esquerda (linha do tempo limitada a 820px de largura), painel de propriedades fixo de 320px à direita. Fonte Inter. Mensagens e editor com raio de 8px; botões com 6px. As abas Atividade, Respostas e Notas internas têm um ícone cada.
+  - Alvo: Manter conversa larga à esquerda e propriedades à direita. Trocar a fonte por IBM Plex Sans com números tabulares. Raio de 4px, no máximo 6px. Tirar os ícones das abas. Densidade de ferramenta de trabalho.
+- **Ticket · cabeçalho**
+  - Hoje: A trilha mostra só 'Tickets / assunto'. O nº aparece só no tooltip da trilha e no topo do painel ('#8412 · Formulário do portal'). O solicitante só aparece no painel, sem link. O local não aparece no cabeçalho. À direita ficam o avatar de presença 'RT', o botão de status (bolinha + texto) e o menu ⋯.
+  - Alvo: Cabeçalho com nº, assunto, solicitante (link para os outros tickets dele) e local campus · sala (link para a sala). Status em etiqueta sólida com as cores definidas.
+- **Ticket · cor do status**
+  - Hoje: O botão de status usa bolinha de 7px e texto. Cores: Aberto azul royal #3D6BE0, Pendente âmbar #D49B12, Em espera cinza #A0A2A8, Resolvido verde #2F9A62. O menu de status tem só 4 estados: falta Fechado.
+  - Alvo: Etiqueta sólida com as cores do Zendesk: Aberto vermelho, Pendente azul, Em espera cinza-escuro, Resolvido cinza. O briefing também cita 'Novo amarelo' (ver conflitos).
+- **Ticket · painel de propriedades**
+  - Hoje: No topo: avatar e nome do solicitante, depois '1ª resposta' e 'Resolução' com ícone (i) de tooltip; prazo cumprido aparece como 'Cumprido' em verde. A seção 'Detalhes', aberta, tem Responsável, Grupo, Prioridade (barras), Tipo, Etiquetas ('nenhuma') e Seguindo. A seção 'Local e classificação' vem RECOLHIDA e junta campus · andar · sala num texto só; depois vêm Motivo, Equipamento, Sintoma, Máquina e Idioma. O status não está no painel.
+  - Alvo: Ordem: status, prioridade, responsável, grupo; campus, andar e sala em campos separados; equipamento; SLA e vinculados. Local visível sem precisar abrir a seção. SLA no mesmo formato da lista ('em 30 min', 'estourado há 2 h', vazio quando cumprido, ícone de pausa em Pendente/Em espera). Prioridade com cor e ícone só em Alta e Urgente. Esconder 'Etiquetas: nenhuma'.
+- **Ticket · lados da conversa (pedido do usuário)**
+  - Hoje: Linha do tempo em coluna única, com fio vertical. Todos os autores (solicitante, 'Você', Rafael, fornecedor) ficam com avatar à esquerda e o card na mesma coluna. O usuário logado aparece como 'Você', com avatar azul-marinho (.av.voce).
+  - Alvo: EU (o usuário logado) à esquerda; as outras pessoas que comentam (solicitante, outros técnicos, fornecedor) à direita. Isso exige trocar a linha do tempo de coluna única por um layout de dois lados.
+- **Ticket · nota interna x resposta pública**
+  - Hoje: Nota interna com fundo #FFFBEE e faixa esquerda #E5C463 (escuro: #25210F / #8A7330), rótulo 'nota interna' e mini ícone no avatar. A resposta pública tem card branco com borda e mostra o e-mail do remetente no cabeçalho. A conversa com fornecedor tem borda tracejada e o texto 'só a equipe vê'. No editor, o modo nota também fica amarelo.
+  - Alvo: Nota interna em amarelo claro, bem diferente da resposta pública. Já atende em boa parte: falta revisar o contraste AA no tema escuro (#25210F) e tirar o texto 'só a equipe vê'.
+- **Ticket · editor e botão de envio**
+  - Hoje: Editor recolhido em 'Responder (R)' e 'Nota interna (N)'. O botão é dividido: 'Enviar · Em espera' com seta para escolher o estado. O padrão é 'Em espera' para todo ticket (estadoEnvio = 'Em espera'). Em nota, o botão vira 'Adicionar nota'. Há ícones de macro, anexo e 'Revisar o texto com IA'. Não existem os atalhos Ctrl+Shift+P/E/R.
+  - Alvo: Rótulo 'Enviar como Pendente' / 'Enviar como Resolvido'. Escolher o padrão de estado do envio (ver perguntas). Atalhos de envio com estado.
+- **Ticket · macros**
+  - Hoje: O popover lista cada macro com o nome em PT e o nome em EN embaixo ('Atendimento no local / On-site visit') e a etiqueta 'PT · EN' repetida em toda linha. A busca diz 'Buscar macro (PT ou EN)'. A prévia mostra o texto 'idioma de Mariana: PT · prévia' com seletor PT/EN. Os toasts explicam a regra ('os 14 solicitantes recebem cada um a sua variante'). Não há atalho M.
+  - Alvo: Uma língua por tela: mostrar o nome da macro só no idioma da interface. Tirar a etiqueta 'PT · EN' de cada linha. Manter só um seletor PT/EN discreto na prévia, sem frase de regra. Atalho M para macros (spec Δ28).
+- **Ticket · histórico de alterações**
+  - Hoje: Os eventos de sistema ficam misturados na conversa como linhas cinza ('Rafael Torres atribuiu a você · há 2 h', 'Prioridade mudou para Urgente'). A partir de 3 seguidos, agrupam em '+N alterações'. A aba Atividade mostra tudo junto.
+  - Alvo: Histórico de alterações recolhido e separado da conversa.
+- **Ticket · incidente com vinculados**
+  - Hoje: Ticket 8420: seção 'Tickets vinculados', recolhida, com uma lista de salas e contagens fixas no código (Sala 201 2, Sala 204 3…; soma 14). Abaixo, o texto de regra 'Resolver este ticket resolve os vinculados. A resposta vai a cada solicitante no idioma dele.' No editor, o aviso 'Vai para os 14 solicitantes, cada um no seu idioma, e fica registrada em cada ticket vinculado.' Os dados se contradizem: filhos:14, mas a nota e o histórico dizem 'vinculei 13'.
+  - Alvo: Mostrar 'incidente · N vinculados' de forma discreta, com dica (tooltip). A lista de vinculados mostra os tickets de verdade (nº, solicitante, sala, status), não contagem por sala. Tirar os dois textos de regra. Testar com 20 vinculados. Acertar a contagem.
+- **Ticket · idioma**
+  - Hoje: O idioma aparece como 'Idioma: Inglês' na seção recolhida do painel, como '(EN)' no 'para Daniel Brooks (EN)' do editor e como '· EN' no cabeçalho da mensagem. A conversa EN (8411) aparece numa tela em PT, o que é esperado: é conteúdo do cliente.
+  - Alvo: Marca 'EN' discreta, com dica, perto do assunto ou do solicitante no cabeçalho. O idioma no painel fica visível sem abrir a seção.
+- **Ticket · ruído e textos de regra**
+  - Hoje: Selo 'feito com IA · você pode editar' no resumo fixado. Tooltip (i) ao lado de cada SLA. No ticket de evento, 'Pedido abaixo da antecedência mínima' em texto corrido. 'Você' se repete nas mensagens, na menção '@Você' e no histórico ('Você mudou…').
+  - Alvo: Tirar o selo de IA decorativo. Nenhuma frase de regra na tela (usar tooltip). Mostrar o fora do prazo como estado (no prazo / atenção / fora do prazo). Reduzir as repetições de 'Você'.
+- **Ticket · atalhos**
+  - Hoje: R responde, N ou I abre nota interna, S status, A atribuir, P prioridade, Shift ←/→ troca de ticket, Ctrl ↵ envia. Tudo listado no '?'.
+  - Alvo: O briefing pede r, n (nota), s, a. Alinhar com a spec Δ28 (ver conflitos sobre N e I).
+
+### Conflitos com as specs
+- Status 'Novo' (amarelo) do briefing não existe no modelo: spec 01 §4.1 diz que 'Novo' NÃO é estado; ticket aberto sem 1ª resposta é condição derivada ('sem primeira resposta'). Pode virar marca/indicador, não etiqueta de status.
+- Spec 01 tem 6 estados (aberto, pendente, em espera, resolvido, fechado, mesclado). Briefing não define cor para Fechado; o protótipo já omite Fechado no menu de status, embora a matriz permita agente → fechado.
+- Resolvido cinza (briefing) x spec 13 Δ30: verde reservado a sucesso (resolvido, satisfeito). Aberto vermelho combina com Δ27/Δ30 (aberto usa cor de alerta). Pendente azul pode colidir com o royal #1F4FD6, que é cor de ação/seleção (Δ30, 00-produto princípio 1).
+- Paleta: briefing manda usar cores oficiais da EARJ e pedir códigos. As specs já têm duas: Panthers definida em 2026-10-29 (Δ30: #0B1F4B, #1F4FD6, #D62839), que substitui Δ27 (EARJ #27348B, #00B050, #E4051F, fonte Montserrat) para o produto; marca da conta vale no portal/e-mails. Precisa decidir qual vale na área do técnico.
+- Fonte: briefing IBM Plex Sans; spec Δ27 cita Montserrat como fonte oficial da escola (portal/marca); protótipo usa Inter.
+- Lados da conversa (EU à esquerda, outros à direita) conflita com 00-produto princípio 6: 'Conversa em linha do tempo com fio vertical fino' e eventos de sistema como linhas cinza na linha do tempo.
+- Histórico recolhido e separado (briefing) conflita com 00-produto princípio 6 (eventos de sistema dentro da linha do tempo). R32 exige histórico completo (quem, o quê, regras) — separar não pode perder itens.
+- Atalho de nota interna: briefing 'n'; spec 13 Δ28 define N = novo ticket e I = nota interna. Protótipo aceita N e I para nota. Briefing também não cita M (macros) nem Ctrl+Shift+P/E/R (enviar com estado), exigidos por Δ28/R56.
+- Rótulo do pai: briefing 'incidente · 14 vinculados'; specs usam 'ticket pai'/'filho' e D57 exige 'via ticket pai #N'. 'Incidente' também é valor do campo Tipo (spec 01), distinto de ser pai — risco de ambiguidade.
+- Lista de Tipo no protótipo (Incidente, Problema, Pedido, Evento de AV) diverge do modelo (pergunta, incidente, problema, tarefa, evento). Redesenho não pode mudar modelo; protótipo já está fora.
+- Raio de 8px em mensagens/editor e 6px em botões excedem o máx. 6px do briefing; 00-produto proíbe 'brilhos de IA' — selo 'feito com IA' no resumo viola os dois.
+
+### Perguntas
+- Na troca de lados: 'EU' é só o usuário logado, ou toda a equipe de TI (outros técnicos à esquerda, solicitante à direita)? Notas internas de outros técnicos e a conversa com fornecedor ficam de qual lado?
+- Aceita abandonar a 'linha do tempo com fio vertical' do princípio 6 (00-produto) em favor da conversa em dois lados? Atualizo a spec depois?
+- Status sem 'Novo': mostrar 'sem 1ª resposta' como marca separada em Aberto, ou não destacar?
+- Cor de Resolvido: cinza (briefing/Zendesk) ou verde (Δ30)? E qual cor para Fechado?
+- Pendente azul colide com o azul royal de ação/seleção: usar outro tom de azul ou mudar a cor de ação?
+- Paleta da área do técnico: Panthers (Δ30) ou cores institucionais EARJ (#27348B/#00B050/#E4051F)? Fonte: IBM Plex Sans ou Montserrat?
+- Atalho da nota interna: manter I (spec) e liberar N para novo ticket, ou seguir o briefing (n)?
+- Estado padrão do botão de envio: Pendente (hábito Zendesk), o estado atual do ticket, ou manter 'Em espera'?
+- Histórico separado: aba própria no painel direito, ou bloco recolhido no fim da conversa? Atribuição e mudança de estado continuam aparecendo como linha curta na conversa?
+- Vinculados: mostrar lista de tickets filhos (nº, solicitante, sala, status) no lugar da contagem por sala?
+- Manter 'Resumir com IA' e 'Revisar texto com IA' só no menu ⋯, sem selo no resumo fixado?
+
+## Lista de tickets (#tickets) e navegação: barra lateral, visões, barra superior, busca e atalhos
+
+- **Lista · ordem das colunas**
+  - Hoje: Ordem fixa em BASE: seleção, Nº, Assunto, Estado, 1ª resposta, Resolução, Responsável, Prioridade, Criado. Solicitante, Grupo e Canal existem, mas ficam ocultos por padrão (L.ocultas). Não existe coluna Local.
+  - Alvo: Pedido do usuário, que vale sobre o briefing: status, nº, local/campus (Barra ou Gávea), SLA, assunto, solicitante, atribuído, atualizações. A coluna Prioridade sai e o SLA fica no lugar dela. O briefing pedia outra ordem (assunto antes de solicitante e local, prioridade no fim). Vale a do usuário.
+- **Lista · coluna Local/campus**
+  - Hoje: O campus e o andar só aparecem no texto meta dos dados ('#8420 · Barra · 2º andar'), que nenhuma coluna mostra. Não há sala na lista.
+  - Alvo: Coluna própria com o campus (Barra ou Gávea), na 3ª posição. O briefing pedia 'campus · sala'. Falta decidir se a sala aparece junto (ver perguntas).
+- **Lista · coluna SLA**
+  - Hoje: São duas colunas, '1ª resposta' e 'Resolução', com selos arredondados ('emb'). Aparece 'cumprido' na 1ª resposta de quase toda linha e nas duas colunas dos resolvidos. O resto usa forma curta: '30 min', '−2 h', 'pausado', '7 d' para eventos. Ticket sem responsável mostra '—' na resolução.
+  - Alvo: Uma coluna só, no lugar da Prioridade, com o próximo prazo que vence ('em 30 min', 'estourado há 2 h'). Fica vazia quando o prazo foi cumprido, sem a palavra 'cumprido'. Ícone de pausa em Pendente e Em espera. Neutro no prazo, âmbar na atenção, vermelho no estouro. Texto simples, sem selo arredondado.
+- **Lista · coluna Status**
+  - Hoje: Bolinha de 7px mais texto cinza (estHTML, cor --tinta-2). Cores: Aberto azul royal #3D6BE0, Pendente âmbar #D49B12, Em espera cinza #A0A2A8, Resolvido verde #2F9A62. Não existe 'Novo' nem o rótulo 'sem resposta'.
+  - Alvo: Etiqueta sólida e legível, na 1ª coluna. Briefing: Novo amarelo, Aberto vermelho, Pendente azul, Em espera cinza-escuro, Resolvido cinza. Conflita com as specs (ver conflitos).
+- **Lista · Assunto**
+  - Hoje: O incidente leva um selo cinza arredondado '14 vinculados'. Ticket em inglês leva uma etiqueta com borda 'EN'. Não lido fica com o assunto em semibold (tr.nl), sem bolinha.
+  - Alvo: 'incidente · 14 vinculados' e 'EN' em texto discreto, com dica, sem etiqueta. Não lido: assunto em negrito e bolinha à esquerda.
+- **Lista · Responsável (atribuído)**
+  - Hoje: Avatar mais nome. 'Você' aparece repetido em quase toda linha de 'Meus abertos' e 'Não resolvidos', com avatar marinho. Sem responsável mostra o texto 'Sem responsável' em cada linha.
+  - Alvo: Avatar e nome. Sem responsável mostra '—'. Não repetir 'Você': o próprio usuário recebe só um destaque sutil, e o filtro fica com a visão Meus tickets. O usuário chama a coluna de 'atribuído'.
+- **Lista · Atualizado**
+  - Hoje: A coluna 'Criado' mostra 'há 2 h', com 'Na fila há…' no title. Não há coluna 'atualizado' nem data completa no hover.
+  - Alvo: Coluna 'atualizações' por último. Briefing: 'atualizado' em data relativa, com a data completa no hover. Falta confirmar o que o usuário quer dizer com 'atualizações' (ver perguntas).
+- **Lista · Linha estourada**
+  - Hoje: Só o selo da célula fica vermelho ('−2 h' em fundo --perigo-suave). A linha não muda.
+  - Alvo: A linha inteira ganha fundo vermelho suave e borda esquerda vermelha, com o texto 'estourado há X' escrito.
+- **Lista · Densidade e cabeçalho**
+  - Hoje: Linha de 36px, cabeçalho de 32px, tabela em 13px e cabeçalho em 12px. Isso já cumpre o limite. Fonte Inter. O cabeçalho da tabela não é fixo: só a barra .cab tem sticky. Não há ações no hover.
+  - Alvo: Manter 32 a 36px e 13px. Trocar para IBM Plex Sans com números tabulares. Cabeçalho da tabela fixo. Ações rápidas no hover: assumir e mudar status.
+- **Lista · Filtros**
+  - Hoje: Na barra de controle: campo 'Filtrar por assunto ou nº', botão 'Grupo: todos', alternância 'Só os meus', menu 'Filtrar' (só Estado, com contador ' · N'), 'Ordenar', 'Colunas' e 'Salvar visão'. Os filtros ativos não aparecem como chips. 'Limpar filtros' só existe no estado vazio.
+  - Alvo: Chips acima da tabela, um por filtro ativo, removíveis, e 'Limpar filtros' sempre visível quando há filtro. Os menus Ordenar e Colunas continuam, só com texto.
+- **Lista · Contador e atualização**
+  - Hoje: O rodapé mostra 'N de M'. O botão de atualizar mostra o skeleton por 260 ms. Não há atualização automática nem 'atualizado há X min'.
+  - Alvo: 'N tickets · atualizado há X min' e atualização automática. O skeleton fica na carga.
+- **Lista · Paginação**
+  - Hoje: Seletor 20/50/100, com 20 por padrão. Só corta a lista (slice): não há página seguinte nem anterior.
+  - Alvo: 50 por padrão, com navegação entre páginas. O máximo de 100 por página fica (D15).
+- **Lista · Seleção em massa**
+  - Hoje: Coluna de checkbox de 44px com 'selecionar todos'. Barra flutuante centralizada com sombra grande (--sombra-flut) e raio de 8px: Atribuir, Estado, Macro e 'mais' (Mudar prioridade, Etiquetas, Mesclar, Exportar CSV). Esc limpa a seleção.
+  - Alvo: Barra de ações com borda de 1px, sem sombra grande, raio de até 6px: atribuir, status, prioridade, mesclar. Prioridade e mesclar sobem do menu 'mais'. A tecla x seleciona. Manter Macro e Exportar CSV, porque estão na spec 13 (R13 e R60) e o briefing proíbe remover funcionalidade sem perguntar.
+- **Lista · Estados vazios e dados**
+  - Hoje: Vazio: ícone de 32px, 'Nada nesta visão' e a frase 'Quando entrar algo aqui, aparece nesta lista.'. Com filtro: 'Nenhum ticket com esses filtros'. A visão padrão tem 14 tickets e há cerca de 20 no total.
+  - Alvo: Vazio seco, sem ícone grande e sem frase explicativa: 'Nenhum ticket nesta visão.'. Testar com mais de 300 tickets, assuntos longos, solicitante sem nome, incidente com 20 vinculados e vários SLAs estourados.
+- **Barra lateral · estrutura**
+  - Hoje: De cima para baixo: identidade (PantherDesk · EARJ · TI), Buscar (Ctrl K) e Notificações (3). Depois Início, Tickets, Eventos, QR da sala e Relatórios. Depois o grupo recolhível 'Visões salvas' com 6 itens: Quase escalando 4, Meus abertos 6, Sem responsável 6, Em espera 6, Pendentes 2, Resolvidos hoje 1. No rodapé, Portal do solicitante, Tema e Recolher. Todo item tem ícone de linha. A visão padrão 'Não resolvidos' (14) só aparece no menu do título da lista.
+  - Alvo: Visões no topo, com contador: Meus tickets, Não atribuídos, Abertos, Pendentes, Em espera, Estourando SLA, Resolvidos recentemente, uma por campus, mais a visão 'Geral' pedida pelo usuário. Depois as visões salvas do usuário, e então Eventos, QR das salas, Relatórios e Portal do solicitante. Itens só em texto, sem ícone. Sai o item Início. Recolher continua (já é lembrado em pd-lateral).
+- **Barra lateral · visão 'Geral'**
+  - Hoje: Não existe. A visão mais ampla é 'Não resolvidos', só no menu do título, com a descrição 'Todos os não resolvidos dos seus grupos'.
+  - Alvo: Visão 'Geral' com todos os tickets dos dois campi, com todos os SLAs e estados, na lista de visões e com contador (pedido direto do usuário).
+- **Barra superior**
+  - Hoje: Não existe. A busca e as notificações ficam na barra lateral. 'Novo ticket' só aparece no cabeçalho da lista e leva ao formulário do portal com o toast 'Formulário do solicitante · abra em nome de alguém'. O cabeçalho da lista usa um seletor de visão no título, em 15px.
+  - Alvo: Barra superior com busca global (Ctrl K), botão Novo ticket e Notificações, que recebem o feed de atividade. Título de página em 20px semibold.
+- **Busca (Ctrl K)**
+  - Hoje: Paleta 'Ir para ticket, visão ou tela…' que procura no nº, no assunto e no solicitante, além de nomes de visões e telas. Não procura por sala.
+  - Alvo: Busca por nº, assunto, solicitante e sala.
+- **Atalhos**
+  - Hoje: A lista '?' tem Ctrl K, R, N ou I, S, A (abre o campo responsável), P, Shift ←/→, Ctrl ↵, Esc e ?. Fora do Ctrl K, do ? e do Esc, todos só funcionam na tela do ticket. Na lista não há j/k, Enter, x nem /.
+  - Alvo: j/k para navegar, Enter para abrir, x para selecionar, a para assumir, r para responder, n para nota interna, s para status e / para buscar, todos funcionando na lista, e a lista completa no '?'.
+- **Rota inicial**
+  - Hoje: Sem hash, abre 'entrar'. Depois do login com Google vai para #inicio, o painel com 4 cards de métrica, o feed e o gráfico.
+  - Alvo: Abrir 'Meus tickets' ou a última visão usada.
+- **Tokens visíveis na lista e na lateral**
+  - Hoje: Inter. Neutros quase sem saturação (#F8F8F9, #E7E7EA). Raio de 6px em botões e de 8px na barra de massa. Sombra flutuante. O tema escuro é lembrado em localStorage (pd-tema), mas a página abre clara por padrão.
+  - Alvo: IBM Plex Sans, neutros puxados para a marca, raio de 4px (máximo 6px), bordas em vez de sombras, tema escuro revisado com o mesmo cuidado.
+
+### Conflitos com as specs
+- Estado 'Novo' (amarelo): não existe no modelo. A spec 01 §4.1 diz que 'Novo não é um estado'. O equivalente é o indicador derivado 'sem primeira resposta', que a spec 08 §9.3 e o Δ30 mandam mostrar na coluna de estado como o rótulo 'sem resposta' em vermelho. Também falta 'Fechado' (e 'Mesclado') na legenda de status.
+- Cores de status do briefing x Δ30 (paleta Panthers, decidida em 2026-10-29): o Δ30 reserva o vermelho #D62839 para atenção (SLA vencido, sem resposta, itens que pedem ação) e o verde para sucesso (resolvido). Com 'Aberto' vermelho, quase toda a fila fica vermelha e o vermelho deixa de destacar o estouro. 'Resolvido' cinza contraria o verde do Δ30.
+- Paleta: o briefing manda criar variáveis e pedir os códigos. Os códigos já estão definidos no Δ30 (marinho #0B1F4B, royal #1F4FD6, vermelho #D62839; no escuro, royal em texto #7090FF, vermelho em texto #FF5C6C, botões #3F63E6 e #E0384A). O protótipo usa outros valores no escuro: #7393F2/#8EA8F6 e #E5484D/#FF7B81.
+- Âmbar para atenção no SLA (menos de 25% restante): o Δ30 diz que o âmbar do Δ27 deixa de ser usado. Além disso, as specs não definem limiar percentual. O que existe é o limiar de 1 hora útil da fila 'Quase escalando' (Δ37, spec 08 §9.1).
+- Textos do SLA: o briefing pede 'em 30 min' e 'estourado há 2 h'. A spec 08 §9.3 fixa 'vence em X', 'vencido há X', 'pausado' e vazio sem SLA. Nos eventos, a spec fixa 'faltam N dias para a montagem', 'pronto', 'montagem sem pronto' e 'evento encerrado' (D40, D54). O protótipo abrevia para '7 d', o que também diverge da spec.
+- Coluna SLA: a spec 08 §9.3 diz que o selo de prazo não pode ser retirado; o agente só muda a posição. Isso é compatível com o pedido do usuário. Tirar a coluna Prioridade é permitido (é coluna opcional), mas o briefing pede Alta e Urgente com cor e ícone e não diz onde ficam sem essa coluna.
+- Nomes das visões: as specs falam em 'filas salvas', não 'visões' (spec 08, linha 40). As filas padrão se chamam 'Meus tickets', 'Fila dos meus grupos', 'Todos dos meus grupos' e 'Quase escalando'. As compartilhadas da EARJ incluem 'Sem responsável', 'Em espera nos meus grupos' e 'Resolvidos nas últimas 12 h'. O briefing usa 'Não atribuídos', 'Estourando SLA' e 'Resolvidos recentemente'. O protótipo usa 'Meus abertos', 'Não resolvidos' e 'Resolvidos hoje'. Os três vocabulários divergem.
+- Visão 'Geral' (todos os tickets de todos os campi): a contagem e o conteúdo respeitam as permissões de quem vê (spec 08 §9.2, spec 06). Um agente sem acesso a um grupo não vê esses tickets. A 'Geral' só é realmente geral para o admin ou para quem tem acesso a todos os grupos. Ela também precisa ser uma fila compartilhada criada pelo admin, porque o agente não cria fila compartilhada (403).
+- Visões por campus: dá para fazer, porque o campus do local é filtro (spec 01 §5.3). Mas o local é opcional (há tickets sem local), há tickets 'entre campi' e um incidente pode ter locais afetados nos dois campi (D48). A coluna 'Barra ou Gávea' precisa de um valor para esses casos.
+- Terminologia de incidente: o briefing e o protótipo dizem 'incidente · 14 vinculados'. A spec 08 §9.3 fixa 'incidente · N filhos' e, no filho, 'filho de #N'.
+- Marca 'encaminhado' (D23): deve aparecer na coluna de estado para o grupo de origem. O protótipo só a tem no texto meta ('encaminhado por você a Eventos') e não a mostra. O redesenho precisa prever o lugar dela.
+- Atalhos: a spec 13 R56 pede atalhos desligáveis e um atalho para aplicar macro. O briefing não menciona nenhum dos dois. 'a' para assumir (spec 04: 'pegar') é diferente do 'A' atual, que abre o campo responsável.
+- Seleção em massa: o briefing lista atribuir, status, prioridade e mesclar. A spec 13 R13 pede também aplicar resposta pronta (macro), e a R60 pede exportação CSV. As duas já existem no protótipo e não devem sair sem perguntar.
+- A spec 13 R60 pede alternância tabela/cartões e indicação de outro agente com o ticket aberto. O protótipo não tem nenhuma das duas na lista, e o briefing não fala delas.
+
+### Perguntas
+- Sem a coluna Prioridade, onde aparecem Alta e Urgente? Sugestão: ícone mais texto curto dentro da célula de SLA ou antes do assunto, só para essas duas.
+- A coluna de seleção (checkbox) continua antes de 'status'? Sem ela, a seleção em massa fica só pelo atalho x.
+- A coluna 'local/campus' mostra só o campus ou 'campus · sala', como no briefing? O que mostrar para ticket sem local, 'entre campi' e incidente com salas nos dois campi?
+- O que é 'atualizações': a data da última atualização (relativa, com a data completa no hover) ou a quantidade de mensagens e alterações?
+- O cabeçalho da coluna fica 'Atribuído' (palavra do usuário) ou 'Responsável' (termo das specs e do briefing)?
+- A 'Geral' inclui resolvidos e fechados, ou só os não resolvidos (aberto, pendente, em espera)? Ela vira a rota inicial no lugar de 'Meus tickets'?
+- Para agentes sem acesso a todos os grupos, a 'Geral' mostra só o que eles podem ver (regra das specs)? Ou ela é restrita a admins?
+- Status: seguir as cores do Zendesk (Aberto vermelho, Resolvido cinza) contra o Δ30, ou manter o vermelho só para estouro e 'sem resposta'? E o 'Novo' amarelo: vira o rótulo derivado 'sem resposta'?
+- Textos do SLA: valem os da spec ('vence em', 'vencido há', 'faltam N dias para a montagem') ou os do briefing ('em 30 min', 'estourado há')? Se valerem os do briefing, a spec 08 precisa ser revista.
+- Atenção em âmbar com menos de 25% restante: aprovar a volta do âmbar (o Δ30 o tirou) e um limiar percentual que não existe nas specs? Ou usar o limiar de 1 hora útil da fila 'Quase escalando'?
+- Nomes finais das visões: adotar os da spec 08 ('Meus tickets', 'Fila dos meus grupos', 'Sem responsável', 'Quase escalando', 'Resolvidos nas últimas 12 h') ou os do briefing ('Não atribuídos', 'Estourando SLA', 'Resolvidos recentemente')?
+- Na barra de massa, mantém Macro e Exportar CSV (previstos na spec 13) junto com atribuir, status, prioridade e mesclar?
+- O tema escuro deve ser o padrão na primeira abertura, já que o time usa o Zendesk no escuro?
+
+## Transversal: tokens, tipografia, forma, ícones, textos, idiomas, acessibilidade, estados e dados de teste
+
+- **Tokens de cor (claro)**
+  - Hoje: Os tokens ficam em :root (linhas 13-28). Os neutros são cinza puro (--sup-2 #F8F8F9, --tinta #18191C, --contorno #E7E7EA). Usa a paleta Panthers: --primario #0B1F4B, --royal #1F4FD6, --perigo #D62839. Nenhuma cor oficial da EARJ aparece no protótipo.
+  - Alvo: Usar as cores oficiais da EARJ, com uma cor de marca usada pouco: botão primário, item ativo e foco. Neutros levemente puxados para a marca. Se faltar algum código, criar a variável e pedir o valor.
+- **Cores oficiais encontradas no repositório**
+  - Hoje: design/prototipo-earj/index.html, linha 13: comentário 'Paleta oficial EARJ (templates institucionais)'. Valores: azul #27348B, vermelho #E4051F, verde #00B050. Derivados no mesmo arquivo: --azul-esc #1B2466, --azul-claro #E8EAF6, --verde-txt #007A38. A spec 13 (linhas 448-451, Δ27) repete os três códigos e cita os templates institucionais e a fonte Montserrat. Os arquivos Montserrat-*.ttf estão em design/prototipo-earj/assets/. A pasta de templates em Downloads não estava acessível nesta sessão, então não deu para conferir na fonte original.
+  - Alvo: Usar esses valores como cores oficiais nos tokens, depois que o dono confirmar (ver conflitos).
+- **Tokens de cor (escuro)**
+  - Hoje: Os tokens escuros ficam em :root[data-theme=dark] (linhas 29-45). Cinza puro (#151517, #1A1A1D). No escuro, o botão primário vira quase branco (#E6EAF5 com texto marinho). Royal-txt #8EA8F6 e perigo-txt #FF7B81 diferem dos valores do Δ30 (#7090FF e #FF5C6C). O tema fica salvo em localStorage 'pd-tema', mas não segue o sistema: não há prefers-color-scheme.
+  - Alvo: Tema escuro com o mesmo cuidado, neutros puxados para a marca e a escolha do usuário lembrada. A spec R64 também pede a opção 'igual ao sistema'.
+- **Cores de status**
+  - Hoje: O status aparece como bolinha de 7px mais texto cinza (estHTML, linha 1225). Cores: Aberto azul #3D6BE0, Pendente âmbar #D49B12, Em espera cinza #A0A2A8, Resolvido verde #2F9A62. A bolinha de Pendente e a de Em espera têm 2,5:1 sobre branco. Não existe estado Novo.
+  - Alvo: Etiqueta sólida com as cores do Zendesk: Aberto vermelho, Pendente azul, Em espera cinza-escuro, Resolvido cinza (e Novo amarelo, ver conflito). Texto da etiqueta com contraste AA. No amarelo, só tinta escura: branco sobre amarelo dá cerca de 1,6:1.
+- **Cores de SLA e prioridade**
+  - Hoje: O SLA usa emblemas .emb: perto em âmbar #8A5800/#FBF3DF, estourado em #B42131/#FCEDEF e 'cumprido' em texto cinza. Há duas colunas (1ª resposta e Resolução). A prioridade usa ícone cinza, e só Urgente fica vermelha (.pri.urg).
+  - Alvo: SLA no prazo neutro, atenção (<25% restante) em âmbar, estourado em vermelho, sem pílula. Pedido do usuário: a coluna SLA substitui a de prioridade. Assim, Alta e Urgente precisam de outro lugar para cor e ícone (ver perguntas).
+- **Tipografia: fonte**
+  - Hoje: A fonte é Inter 400/500/600, carregada do Google Fonts (linha 8). O fallback é Segoe UI. Os pesos são quase todos 500 (16 ocorrências) ou 400.
+  - Alvo: IBM Plex Sans (ou Source Sans 3) no lugar de Inter. A spec 13 Δ27 define Montserrat como fonte oficial e o arquivo deve vir instalado, sem serviço externo (ver conflito).
+- **Tipografia: escala e números**
+  - Hoje: Tamanhos usados: 12px (59x), 13px (19x), 15px (8x), 11px (3x), 14px (2x), 10px, 24px. O título de página (.cab .tit) tem 15px peso 500. 'tabular-nums' aparece só em 2 lugares: .emb e a coluna Nº.
+  - Alvo: Escala 12/13/14/16/20. Título de página com 20px semibold. Números tabulares em toda célula numérica: nº, SLA, contadores, datas, relatórios. Eliminar 10px, 11px, 15px e 24px.
+- **Forma: raio**
+  - Hoje: Raios encontrados: 6px (20x), 8px (11x, em menus .pop, .msg e barra de massa), 10px (4x, no card de entrar), 18px, 28px, 36px e 50% nos avatares e nas bolinhas.
+  - Alvo: Raio de 4px, no máximo 6px. Avatar redondo pode ficar. Rever 8, 10, 18, 28 e 36px.
+- **Forma: sombras e efeitos**
+  - Hoje: --sombra-flut (0 10px 28px) aparece em 10 lugares: menus, barra de massa, painel móvel. O anel de foco do input é box-shadow 0 0 0 2px. Também há box-shadows inset decorativos. Não há gradiente nem vidro.
+  - Alvo: Bordas de 1px no lugar de sombras. Sombra pequena só em menus e diálogos. Diminuir a sombra de 28px de desfoque.
+- **Ícones no menu lateral**
+  - Hoje: Todo item do menu tem ícone de linha: Início, Tickets, Eventos, QR da sala, Relatórios, Portal, Tema, Recolher, Buscar e Notificações. As visões também têm ícone (VIS_LAT: relogio, pessoa, pessoax, pausa, ampulheta, checkc). Há 67 data-ic no HTML.
+  - Alvo: Menu lateral só com texto. Ícones apenas em status, SLA, prioridade e ações.
+- **Etiquetas arredondadas**
+  - Hoje: Há etiquetas pequenas em vários lugares: .emb para SLA e prazo, .tag-l para o 'EN', .etq para as etiquetas do ticket e .cont para contadores. Nos eventos aparece 'faltam 15 dias p/ montagem'. Os 'cumprido' são em texto.
+  - Alvo: Etiqueta sólida só no status. SLA, idioma, contagem e prazo em texto discreto, com dica.
+- **Textos explicativos**
+  - Hoje: QR (linha 789): 'Trocar o nome da sala não muda o QR. O local do ticket vem do QR ou do formulário.' Eventos (linha 755): legenda 'prazo = início da montagem − ...'. QR (linha 773): 'O que o técnico vê ao escanear o QR'. Entrar: 'Pais e visitantes entram por link...'. Visões com desc ('Ninguém pegou ainda', 'Aguardando o solicitante'). Portal (linha 854): 'Peça com pelo menos 5 dias úteis...'. Aviso de AV: 'The request is accepted but marked late'.
+  - Alvo: A interface não explica regra. Mover para tooltip ou documentação. No portal, avaliar se a antecedência mínima conta como informação ao solicitante (ver perguntas).
+- **Mistura de idiomas (painel do técnico)**
+  - Hoje: O painel está em pt-BR, mas o seletor de macros mostra nome PT e nome EN juntos, com 'PT · EN' (linha 1619). Tipos de evento em inglês ('Assembly', 'Homecoming'). Os assuntos em EN vêm dos dados, o que é correto. Não há opção de inglês por usuário no painel.
+  - Alvo: Uma língua por tela. Inglês por usuário como preferência. Macro mostra só o nome da intenção na língua da interface. A variante da resposta segue o idioma do solicitante (Δ36).
+- **Mistura de idiomas (portal) e resto de dev**
+  - Hoje: O portal tem dicionário EN (linha 1739) e alterna os textos com data-i18n. Ainda existe o botão 'Simular QR da Sala 214' (linha 832, 'qr-sim'), visível para o solicitante.
+  - Alvo: PT/EN traduz tudo, inclusive opções dos campos. Remover 'Simular QR' fora do modo de desenvolvimento.
+- **Acessibilidade: contraste**
+  - Hoje: Medido: --tinta-4 #A0A2A8 sobre branco dá 2,55:1 e sobre a lateral 2,45:1. Aparece em 22 regras, todas com texto: contadores, kbd, 'Sem responsável', 'nenhuma', pausa. No escuro, --tinta-4 #5E6066 sobre #151517 dá 2,90:1. --tinta-3 passa (4,94 claro, 5,65 escuro). Royal, aviso e perigo passam.
+  - Alvo: Contraste AA nos dois temas. Tirar --tinta-4 de todo texto ou escurecer o token.
+- **Acessibilidade: foco e cor sozinha**
+  - Hoje: Existe :focus-visible com outline royal de 2px (linha 55). Há 8 'outline:none/0', compensados por borda royal nos inputs. O status tem texto junto da bolinha. A linha estourada não tem marca além da cor do emblema. O campus nos eventos aparece só por cor de bolinha, com legenda separada.
+  - Alvo: Foco visível em tudo, inclusive linhas da tabela com j/k. Status, SLA e prioridade nunca só por cor: ícone ou texto sempre. O campus nos eventos precisa de rótulo ou inicial.
+- **Estados de carregamento, erro e vazio**
+  - Hoje: Há skeleton na tabela (tr.esq-l, linha 1257). Há vazio com filtro ('Nenhum ticket com esses filtros') e vazio na conversa. Nenhum estado de erro: não há role=alert, 'Não foi possível' nem 'Tentar de novo'. Eventos, QR, Relatórios e Início não têm vazio nem erro.
+  - Alvo: Skeleton na tabela, mais erro e vazio em todas as telas, com texto seco ('Nenhum ticket nesta visão.').
+- **Dados de teste**
+  - Hoje: São 24 números de ticket distintos no arquivo. As visões são arrays fixos e repetem os mesmos tickets. 'Pendentes' é um slice de 'Em espera' (linha 1158), então o estado não bate com os dados. 13 tickets usam 'Sem mais detalhes no protótipo.' ou a Sala 214. Os e-mails são @earj.example. Não há solicitante sem nome, incidente com 20 vinculados nem visão vazia.
+  - Alvo: 300+ tickets nos dois campi com salas reais, assuntos longos, PT e EN, solicitante sem nome, incidente com 20 vinculados, visões vazias, SLAs estourados e eventos sobrepostos.
+- **Lista de tickets (pedido do usuário, ponto transversal)**
+  - Hoje: COLS (linha 1233): sel, Nº, Assunto, Estado, 1ª resposta, Resolução, Prazo, Responsável, Prioridade, Criado. Não há coluna Local, e o campus aparece só no texto meta da visão. Solicitante só existe em alguns layouts.
+  - Alvo: Ordem pedida: status, id, local/campus (Barra ou Gávea), SLA (no lugar de prioridade), assunto, solicitante, atribuído, atualizações. É diferente da ordem do briefing, que tem nº antes do status, assunto antes de solicitante e prioridade separada; o pedido do usuário vale.
+- **Visões (pedido do usuário)**
+  - Hoje: VIS_LAT: Quase escalando, Meus abertos, Sem responsável, Em espera, Pendentes, Resolvidos hoje. O item Tickets abre 'Não resolvidos', que mostra só os grupos do usuário. Não há visão por campus nem visão 'Geral'.
+  - Alvo: Visão 'Geral' com todos os tickets de todos os campi e SLAs, com contador. Mais uma visão por campus, conforme o briefing.
+- **Conversa do ticket (pedido do usuário)**
+  - Hoje: A linha do tempo tem uma coluna só: avatar à esquerda e fio vertical (.tl::before, .it padding-left 42px). Todas as mensagens ficam do mesmo lado, seja do técnico ou do solicitante.
+  - Alvo: Usuário logado (EU) à esquerda e as outras pessoas à direita. Nota interna continua em fundo amarelo claro.
+
+### Conflitos com as specs
+- Paleta. A spec 13 Δ30 (2026-10-29) e a 00-produto definem Panthers: marinho #0B1F4B, royal #1F4FD6, vermelho #D62839, sem verde de marca. O Δ27 e os templates trazem as cores oficiais EARJ: #27348B, #E4051F, #00B050. O briefing pede as cores oficiais. Trocar exige revisar o Δ30.
+- Fonte. A spec 13 Δ27 e a R55 definem Montserrat como fonte oficial da escola, instalada junto com a aplicação. O briefing pede IBM Plex Sans ou Source Sans 3. O protótipo usa Inter, vinda do Google Fonts, o que fere o 'sem serviço externo'.
+- Estado Novo. A spec 01 (linha 206) diz que 'Novo' não é estado no PantherDesk. O briefing pede etiqueta amarela para Novo. Só seria possível como rótulo derivado (aberto sem 1ª resposta), sem mudar o modelo.
+- Cor de Aberto. O Δ27 diz que aberto usa a cor de alerta da conta, que é vermelho; isso bate com o briefing. O 00-produto (princípio 1) diz que o vermelho fica só para estourado, urgente e erro. O protótipo usa azul.
+- Formato do status. O princípio 5 do 00-produto pede 'estado (ponto + texto)' e o princípio 2 proíbe pílulas coloridas. O briefing pede etiqueta sólida.
+- Colunas de SLA. O princípio 5 do 00-produto pede duas colunas, 1ª resposta e resolução, com emblema suave. O briefing e o usuário pedem uma coluna só, com o próximo prazo, e o usuário quer que ela substitua a prioridade.
+- Prioridade. O princípio 5 pede ícone de barras cinza. O briefing pede cor e ícone só em Alta e Urgente. O usuário remove a coluna de prioridade.
+- Botão primário. O princípio 1 do 00-produto diz 'único botão sólido azul-marinho'. O Δ30 diz 'royal para ações primárias'. No escuro, o protótipo deixa o primário quase branco. Nenhum dos três bate com 'cor oficial da EARJ'.
+- Tons do escuro. O Δ30 fixa royal #7090FF e vermelho #FF5C6C como texto no escuro. O protótipo usa #8EA8F6/#7393F2 e #FF7B81.
+- Tema. A R64 pede claro, escuro ou igual ao sistema. O protótipo só alterna entre claro e escuro e salva em localStorage.
+- Lado da conversa. O pedido do usuário (EU à esquerda, outros à direita) muda o princípio 6 do 00-produto, que fala em 'linha do tempo com fio vertical'. Com mensagens dos dois lados, o fio vertical deixa de funcionar.
+
+### Perguntas
+- Qual paleta vale: a oficial EARJ (#27348B, #E4051F, #00B050) ou a Panthers do Δ30 (#0B1F4B, #1F4FD6, #D62839)? Se for a oficial, o verde volta como cor de marca?
+- Os três códigos oficiais vieram dos templates institucionais, segundo o comentário em design/prototipo-earj e a spec 13. Existem outros tons oficiais, como neutros ou um azul escuro? A pasta de templates em Downloads não estava acessível para conferir.
+- Qual fonte usar: Montserrat (oficial, spec 13), IBM Plex Sans ou Source Sans 3 (briefing)? Montserrat é larga para uma tabela densa de 13px.
+- Novo amarelo pode ser só um rótulo visual para 'aberto sem 1ª resposta', sem novo estado no modelo? Ou fica fora?
+- Sem a coluna de prioridade, como Alta e Urgente aparecem: ícone dentro da célula de SLA, ícone no assunto ou nenhum?
+- Na ordem pedida, a coluna de seleção (checkbox) fica antes do status? E qual campo é 'atualizações': data de atualização ou número de mensagens?
+- A visão 'Geral' mostra todos os grupos, inclusive os que o técnico não integra? Isso depende das permissões da spec 06.
+- No portal, a antecedência mínima de 5 dias úteis para evento é regra que deve sumir da tela? Ou é informação necessária ao solicitante (aviso de atraso)?
+- Com a conversa em dois lados, notas internas e eventos de sistema ficam do meu lado, centralizados ou numa faixa própria?
+- Os tipos de evento 'Assembly' e 'Homecoming' são nomes próprios da escola e podem ficar em inglês, ou precisam de tradução no painel em PT?
+
+## Revisão de completude (lacunas e erros nas auditorias)
+
+- **Lista · teclado e foco nas linhas**
+  - Hoje: As linhas (tr[data-n]) só abrem com clique do mouse. Não têm tabindex, role nem tratamento de Enter. O keydown global sai logo se a tela não for 'ticket' (linha 1925). Na lista, a tabela não é operável por teclado.
+  - Alvo: Checklist: tudo por teclado e foco visível. A linha ativa precisa receber foco, abrir com Enter e mostrar foco visível. Isso é pré-requisito do j/k e do x, não só um atalho a mais.
+- **Lista · ordenação por coluna**
+  - Hoje: Os cabeçalhos não ordenam e não há aria-sort. ORDENS só tem Padrão, Prazo mais próximo, Mais recentes e Prioridade. Não existe 'última atualização'. Se a coluna Prioridade sair, a ordenação por prioridade continua escondida no menu.
+  - Alvo: Ordenar pela nova coluna 'atualizações' (spec 08 §7: atualizado em) e pela coluna SLA. Definir se o clique no cabeçalho ordena, como no hábito de quem vem do Zendesk.
+- **Lista · agrupamento**
+  - Hoje: Nenhuma visão agrupa. A spec 08 §9.1 define filas compartilhadas da EARJ agrupadas por estado e por responsável ('Não resolvidos por estado', 'Abertos por responsável').
+  - Alvo: Nenhuma auditoria tratou o agrupamento. O redesenho da tabela densa precisa prever a linha de grupo, porque é funcionalidade e não pode sair sem perguntar.
+- **Lista · coluna 'Prazo' (correção da auditoria transversal)**
+  - Hoje: A auditoria transversal lista 'Prazo' entre as colunas. Ela existe no objeto COLS (linha 1233), mas não está em BASE (linha 1372) e nunca aparece. O que se vê são '1ª resposta' e 'Resolução'.
+  - Alvo: Usar como base o que está em BASE, não em COLS. A coluna 'prazo' morta pode virar a coluna única de SLA.
+- **Lista · nomes do responsável**
+  - Hoje: Os dados misturam 'Rafael T.' (eventos na lista) e 'Rafael Torres' (conversa e notificações). Na lista o nome sai abreviado. No detalhe sai completo.
+  - Alvo: Um formato só de nome na coluna 'atribuído'. Avatar mais nome curto, com o nome completo no hover.
+- **Lista · 'Pendentes' com estado errado (complemento)**
+  - Hoje: filas['Pendentes'] é um slice de 'Em espera' (linha 1159). A normalização cria o ticket primeiro a partir de 'Em espera', então a visão 'Pendentes' (contador 2) mostra linhas com o status 'Em espera'.
+  - Alvo: Com etiqueta sólida de status, essa contradição fica muito visível. Os dados de teste precisam ser gerados por estado, e não por visão.
+- **Restos de desenvolvimento além do 'Simular QR'**
+  - Hoje: Toasts com '(protótipo)' ou 'Protótipo:' na área do técnico: 'Relatórios (protótipo)', 'Preferências (protótipo)', '#8380 · devolvido por Eventos (protótipo)', 'Visão salva … (protótipo)', 'Encaminhar, dividir ou fixar (protótipo)', 'Anexar arquivo (protótipo)', 'Protótipo: só novembro de 2026' (2x), 'Visão de semana (protótipo)', 'Folha com 5 QR … (protótipo)'. Também há o script de recarga automática a cada 2 s (linhas 1950-1962), que é só para localhost.
+  - Alvo: O checklist pede 'sem resto de desenvolvimento'. Ninguém listou esses toasts. Cada um vira uma ação real ou sai da tela. O script de recarga fica restrito ao dev, como já está.
+- **Toasts com regra**
+  - Hoje: 'Encaminhado a Eventos · volta para você quando concluírem', 'Rascunho salvo na base · só o admin publica', 'Formulário do solicitante · abra em nome de alguém', 'Variante EN pedida como rascunho vinculado'. As auditorias só pegaram os toasts de macro.
+  - Alvo: A interface não explica regra. O toast confirma a ação em poucas palavras ('Encaminhado a Eventos').
+- **Detalhe · data completa no hover**
+  - Hoje: Na conversa, o <time> tem title igual a m.hora (só a hora, ex.: '09:12'). Não traz a data completa. A auditoria do detalhe não cobriu isso.
+  - Alvo: Data relativa com data completa no hover, também na conversa e no histórico.
+- **Detalhe · identidade de 'EU' nos dois lados**
+  - Hoje: O usuário logado aparece como 'Você', com avatar 'VC' (classe .voce). Com a troca de lados, o lado já identifica quem fala.
+  - Alvo: Definir se as mensagens do lado esquerdo mostram o nome real do técnico ou 'Você'. O briefing pede para não repetir 'Você'. O cabeçalho da mensagem pública também precisa mostrar o que vai para o solicitante (e-mail), porque o lado não diz isso.
+- **Tela Entrar (#entrar)**
+  - Hoje: Nenhuma auditoria cobriu a tela. Card com raio de 10px e título h1 de 15px. Botões 'Entrar com Google' e 'Receber link por e-mail'. O texto 'você volta à página que tinha aberto' promete algo que o código não faz: depois do login vai sempre para ir('inicio') (linha 1354), e o sessionStorage 'pd-tela' só é gravado pelo script de recarga.
+  - Alvo: Raio de até 6px, título de 20px semibold e sem frase de regra. Depois do login, voltar à página pedida ou abrir a fila (Meus tickets, última visão ou Geral).
+- **Lista · 'atualizado há X min' x tempo real**
+  - Hoje: Não há atualização automática. A spec 09 (tabela de eventos, linha 146 e seguintes) diz que 'ticket atualizado' e 'mensagem nova' atualizam as listas em tempo real, e que as filas por tempo são recontadas a cada minuto.
+  - Alvo: Com tempo real, o carimbo 'atualizado há X min' perde sentido ou engana. Precisa de uma decisão (ver perguntas).
+
+### Conflitos com as specs
+- Visão 'Geral' x filas da spec 08 §9.1: já existem 'Todos dos meus grupos' (grupo:meus, todos os estados, por última atualização) e 'Não resolvidos por estado'. A 'Geral' do usuário fica perto da primeira, só que sem o recorte 'meus grupos'. Ninguém comparou a Geral com essas filas existentes. Criar outra fila pode duplicar uma que já existe.
+- 'Estourando SLA' (briefing) e 'Quase escalando' (spec 08 §9.1 e protótipo) não são a mesma coisa. 'Quase escalando' junta os vencidos com os que vencem em até 1 hora útil, mais eventos sem 'pronto'. As auditorias só trataram a diferença de nome. Aqui muda o conteúdo da fila.
+- Coluna local: a spec 08 §9.3 define a coluna 'local' como sala, com campus e andar. O usuário pede 'campus (Barra ou Gávea)'. Só o campus perde a sala, que é o diferencial do produto (QR e sala). O briefing pede 'campus · sala'.
+- Selo de prazo: a spec 08 §9.3 usa 'tempo corrido' no texto ('vence em X'). O limiar de atenção do briefing (<25% restante) e o 'Quase escalando' (1 hora útil) usam outra base. Na mesma coluna, a cor âmbar e o texto podem não bater: por exemplo, 'vence em 3 h' em âmbar numa sexta à noite.
+- Agrupamento por estado e por responsável é funcionalidade da spec 08 §9.1 e §9.3. O briefing não cita agrupamento, e a restrição 'não remover funcionalidade sem perguntar' se aplica a ele.
+- Tempo real (spec 09) x 'atualizado há X min' e 'atualização automática' (briefing): o modelo do produto é push mais recontagem por minuto, não um polling com carimbo.
+
+### Perguntas
+- A 'Geral' é uma fila nova ou a 'Todos dos meus grupos' / 'Não resolvidos por estado' da spec 08 renomeada e sem o recorte de grupo?
+- 'Estourando SLA' mostra só os vencidos (fila nova) ou substitui 'Quase escalando', que junta os vencidos e os que vencem em até 1 h útil?
+- Na coluna de campus, fica só 'Barra'/'Gávea' ou 'Barra · Sala 214'? Se for só o campus, a sala aparece em outro lugar da linha?
+- Com a lista atualizando em tempo real (spec 09), ainda precisa do carimbo 'atualizado há X min' no contador?
+- O clique no cabeçalho da coluna ordena a lista? A ordenação por prioridade continua disponível sem a coluna Prioridade?
+- O agrupamento por estado ou por responsável (filas da spec 08) entra no redesenho da tabela densa?
+- Na conversa em dois lados, as minhas mensagens mostram meu nome ou 'Você'?
+- Depois do login, volta à página pedida antes ou abre sempre a fila? Hoje a tela promete voltar, mas o protótipo não faz isso.

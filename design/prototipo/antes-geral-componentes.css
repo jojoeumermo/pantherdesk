@@ -1,0 +1,116 @@
+/* PantherDesk — componentes base (etapa 3 do redesenho, 2026-10-29).
+   Só usa as variáveis de tokens.css. Prefixo pd- para não colidir com as
+   telas antigas enquanto a migração acontece. */
+
+/* ---------- Botões ---------- */
+.pd-btn{display:inline-flex;align-items:center;gap:var(--e-1);height:28px;padding:0 var(--e-3);border-radius:var(--raio);border:var(--borda);background:var(--superficie);color:var(--tinta);font:inherit;font-size:var(--t-13);white-space:nowrap;cursor:pointer}
+.pd-btn:hover{background:var(--superficie-2)}
+.pd-btn.prim{background:var(--marca);border-color:var(--marca);color:var(--marca-tinta);font-weight:var(--peso-forte)}
+.pd-btn.prim:hover{background:var(--marca-hover)}
+.pd-btn.fant{border-color:transparent;background:transparent;color:var(--tinta-2)}
+.pd-btn.fant:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-btn svg{width:14px;height:14px;flex:0 0 14px}
+:where(.pd-btn,.pd-chip,.pd-visao,.pd-tabela tr,.pd-tabela a,input,select):focus-visible{outline:2px solid var(--foco);outline-offset:1px}
+
+/* ---------- Etiqueta de estado ---------- */
+.pd-est{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:20px;padding:0 var(--e-2);border-radius:var(--raio);font-size:var(--t-12);font-weight:var(--peso-forte);line-height:1;white-space:nowrap}
+.pd-est.novo{background:var(--est-novo-fundo);color:var(--est-novo-texto)}
+.pd-est.aberto{background:var(--est-aberto-fundo);color:var(--est-aberto-texto)}
+.pd-est.pendente{background:var(--est-pendente-fundo);color:var(--est-pendente-texto)}
+.pd-est.espera{background:var(--est-espera-fundo);color:var(--est-espera-texto)}
+.pd-est.resolvido{background:var(--est-resolvido-fundo);color:var(--est-resolvido-texto)}
+.pd-est.fechado{background:var(--est-fechado-fundo);color:var(--est-fechado-texto)}
+
+/* ---------- Célula de SLA ----------
+   Mostra só o próximo prazo. Vazia quando cumprido. Nunca só por cor:
+   o texto diz o estado ("em", "estourado há", "pausado"). */
+.pd-sla{display:inline-flex;align-items:center;gap:var(--e-1);font-size:var(--t-13);font-variant-numeric:var(--num);color:var(--sla-ok);white-space:nowrap}
+.pd-sla.atencao{color:var(--sla-atencao-texto);font-weight:var(--peso-forte)}
+.pd-sla.estouro{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.pd-sla.pausa{color:var(--tinta-3)}
+.pd-sla svg{width:12px;height:12px;flex:0 0 12px}
+
+/* ---------- Prioridade (só Alta e Urgente aparecem) ---------- */
+.pd-pri{display:inline-flex;align-items:center;gap:3px;margin-right:var(--e-1);font-size:var(--t-12);font-weight:var(--peso-forte);white-space:nowrap}
+.pd-pri.urgente{color:var(--pri-urgente)}
+.pd-pri.alta{color:var(--pri-alta)}
+.pd-pri svg{width:12px;height:12px}
+
+/* ---------- Avatar ---------- */
+.pd-av{display:inline-flex;align-items:center;gap:var(--e-2);min-width:0;white-space:nowrap}
+.pd-av i{width:20px;height:20px;flex:0 0 20px;border-radius:50%;background:var(--superficie-2);border:1px solid var(--linha);color:var(--tinta-2);font-style:normal;font-size:10px;font-weight:var(--peso-forte);display:inline-flex;align-items:center;justify-content:center}
+.pd-av.eu i{background:var(--marca);border-color:var(--marca);color:var(--marca-tinta)}
+.pd-av span{overflow:hidden;text-overflow:ellipsis}
+.pd-vazio-cel{color:var(--tinta-4)}
+
+/* ---------- Chip de filtro ---------- */
+.pd-chips{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-2)}
+.pd-chip{display:inline-flex;align-items:center;gap:var(--e-1);height:24px;padding:0 var(--e-1) 0 var(--e-2);border:var(--borda);border-radius:var(--raio);background:var(--superficie);font:inherit;font-size:var(--t-12);color:var(--tinta-2)}
+.pd-chip b{color:var(--tinta);font-weight:var(--peso-forte)}
+.pd-chip button{width:18px;height:18px;border:0;border-radius:3px;background:none;color:var(--tinta-3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.pd-chip button:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-chip.add{border-style:dashed;padding-right:var(--e-2);cursor:pointer}
+.pd-limpar{border:0;background:none;color:var(--marca-texto);font:inherit;font-size:var(--t-12);cursor:pointer;padding:0}
+.pd-limpar:hover{text-decoration:underline}
+.pd-contador{margin-left:auto;font-size:var(--t-12);color:var(--tinta-3);font-variant-numeric:var(--num)}
+
+/* ---------- Tabela densa ---------- */
+.pd-tabela-wrap{border:var(--borda);border-radius:var(--raio);background:var(--superficie);overflow:auto;max-height:100%}
+.pd-tabela{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--t-13)}
+.pd-tabela th{position:sticky;top:0;z-index:1;height:var(--cabecalho-tabela);padding:0 var(--e-2);background:var(--superficie-2);border-bottom:var(--borda);text-align:left;font-size:var(--t-12);font-weight:var(--peso-normal);color:var(--tinta-3);white-space:nowrap}
+.pd-tabela td{height:var(--linha-tabela);padding:0 var(--e-2);border-bottom:1px solid var(--linha-2);white-space:nowrap;max-width:0;overflow:hidden;text-overflow:ellipsis}
+.pd-tabela td.sel,.pd-tabela th.sel{width:32px;padding:0 0 0 var(--e-3)}
+.pd-tabela td.est,.pd-tabela th.est{width:88px}
+.pd-tabela td.num,.pd-tabela th.num{width:56px;font-variant-numeric:var(--num);color:var(--tinta-3)}
+.pd-tabela td.local,.pd-tabela th.local{width:180px}
+.pd-tabela td.sla,.pd-tabela th.sla{width:144px}
+.pd-tabela td.sol,.pd-tabela th.sol{width:150px}
+.pd-tabela td.resp,.pd-tabela th.resp{width:150px}
+.pd-tabela td.atu,.pd-tabela th.atu{width:92px;font-variant-numeric:var(--num);color:var(--tinta-3)}
+.pd-tabela tbody tr{cursor:pointer}
+.pd-tabela tbody tr:hover td{background:var(--superficie-2)}
+.pd-tabela tbody tr.marcada td{background:var(--marca-suave)}
+.pd-tabela tbody tr.foco td{background:var(--superficie-2)}
+.pd-tabela tbody tr.foco td:first-child{box-shadow:inset 2px 0 0 var(--marca)}
+.pd-tabela tbody tr.meu td.resp{color:var(--tinta)}
+/* Estourado: linha inteira com fundo suave e borda à esquerda */
+.pd-tabela tbody tr.estouro td{background:var(--sla-estouro-fundo)}
+.pd-tabela tbody tr.estouro td:first-child{box-shadow:inset 3px 0 0 var(--sla-estouro-borda)}
+/* Não lido: bolinha e assunto em negrito */
+.pd-tabela .ass{display:flex;align-items:center;gap:var(--e-1);min-width:0}
+.pd-tabela .ass .txt{overflow:hidden;text-overflow:ellipsis}
+.pd-tabela tr.nao-lido .ass .txt{font-weight:var(--peso-forte);color:var(--tinta)}
+.pd-tabela tr.nao-lido td.sel{background-image:radial-gradient(circle,var(--marca-texto) 3px,transparent 3.5px);background-repeat:no-repeat;background-position:4px center}
+.pd-marc{flex:0 0 auto;font-size:var(--t-12);color:var(--tinta-3)}
+/* Ações rápidas ao passar o mouse */
+.pd-tabela td.acoes{width:0;padding:0;overflow:visible;position:sticky;right:0}
+.pd-rapidas{display:none;position:absolute;right:var(--e-2);top:50%;transform:translateY(-50%);gap:var(--e-1);background:var(--superficie);border:var(--borda);border-radius:var(--raio);padding:2px}
+.pd-tabela tbody tr:hover .pd-rapidas,.pd-tabela tbody tr.foco .pd-rapidas{display:flex}
+.pd-rapidas .pd-btn{height:22px;padding:0 var(--e-2);font-size:var(--t-12)}
+/* Skeleton */
+.pd-esq td span{display:block;height:10px;border-radius:2px;background:var(--linha-2);animation:pd-pulso 1.2s ease-in-out infinite}
+@keyframes pd-pulso{50%{opacity:.5}}
+.pd-vazio{padding:var(--e-8) var(--e-4);text-align:center;color:var(--tinta-3);font-size:var(--t-13)}
+
+/* ---------- Barra de ações em massa ---------- */
+.pd-massa{display:none;align-items:center;gap:var(--e-2);padding:var(--e-1) var(--e-2) var(--e-1) var(--e-3);border:1px solid var(--marca);border-radius:var(--raio);background:var(--marca-suave);font-size:var(--t-13)}
+.pd-massa.vis{display:flex}
+.pd-massa strong{font-variant-numeric:var(--num);margin-right:var(--e-2)}
+.pd-massa .fim{margin-left:auto}
+
+/* ---------- Item de visão com contador ---------- */
+.pd-visoes{display:flex;flex-direction:column;gap:1px}
+.pd-visoes h3{margin:var(--e-4) 0 var(--e-1);padding:0 var(--e-2);font-size:var(--t-12);font-weight:var(--peso-forte);color:var(--tinta-3)}
+.pd-visao{display:flex;align-items:center;justify-content:space-between;gap:var(--e-2);height:28px;padding:0 var(--e-2);border-radius:var(--raio);color:var(--tinta-2);text-decoration:none;font-size:var(--t-13)}
+.pd-visao span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pd-visao:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-visao[aria-current="page"]{background:var(--marca-suave);color:var(--marca-texto);font-weight:var(--peso-forte)}
+.pd-visao .c{font-size:var(--t-12);font-variant-numeric:var(--num);color:var(--tinta-3)}
+.pd-visao .c.alerta{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.pd-visao .c.zero{color:var(--tinta-4)}
+
+/* ---------- Dica (tooltip) ---------- */
+[data-dica]{position:relative}
+[data-dica]:hover::after,[data-dica]:focus-visible::after{content:attr(data-dica);position:absolute;left:0;top:calc(100% + 4px);z-index:20;max-width:280px;width:max-content;padding:var(--e-1) var(--e-2);border-radius:var(--raio);background:var(--tinta);color:var(--superficie);font-size:var(--t-12);font-weight:var(--peso-normal);white-space:normal;box-shadow:var(--sombra-flutuante)}
+
+@media (prefers-reduced-motion:reduce){.pd-esq td span{animation:none}}

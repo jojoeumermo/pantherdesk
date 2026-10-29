@@ -1,0 +1,127 @@
+/* PantherDesk — tokens de interface (etapa 2 do redesenho, 2026-10-29).
+   Único lugar com valores de cor, tipo, espaço e forma. Componentes e telas
+   só usam as variáveis abaixo.
+   Marca: cores oficiais da EARJ (azul #27348B, vermelho #E4051F, verde
+   #00B050) e Montserrat, instalada com a aplicação. */
+
+@font-face{font-family:"Montserrat";src:url("assets/fonts/Montserrat-Regular.ttf") format("truetype");font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:"Montserrat";src:url("assets/fonts/Montserrat-Bold.ttf") format("truetype");font-weight:600 700;font-style:normal;font-display:swap}
+
+:root{
+  color-scheme:light;
+
+  /* Marca: só botão primário, item ativo e foco */
+  --marca:#27348B;
+  --marca-hover:#1F2A73;
+  --marca-tinta:#FFFFFF;          /* texto sobre a marca */
+  --marca-texto:#27348B;          /* link e item ativo */
+  --marca-suave:#ECEEF8;          /* fundo do item ativo e da linha selecionada */
+  --foco:#27348B;
+
+  /* Neutros puxados para o azul da marca */
+  --fundo:#F6F7FA;
+  --superficie:#FFFFFF;
+  --superficie-2:#F0F2F7;         /* hover de linha, cabeçalho de tabela */
+  --linha:#DCDFE8;
+  --linha-2:#E9EBF1;
+  --tinta:#161A2E;                /* texto principal */
+  --tinta-2:#3E4459;              /* texto secundário */
+  --tinta-3:#5F6578;              /* metadados (AA sobre superfície) */
+  --tinta-4:#8A90A3;              /* desabilitado e marcador decorativo */
+
+  /* Estados do ticket: etiqueta sólida, sempre com texto */
+  --est-novo-fundo:#F5C518;      --est-novo-texto:#2E2300;
+  --est-aberto-fundo:#E4051F;    --est-aberto-texto:#FFFFFF;
+  --est-pendente-fundo:#1E6FD9;  --est-pendente-texto:#FFFFFF;
+  --est-espera-fundo:#444B5E;    --est-espera-texto:#FFFFFF;
+  --est-resolvido-fundo:#DADDE6; --est-resolvido-texto:#2F3445;
+  --est-fechado-fundo:#ECEEF3;   --est-fechado-texto:#4C5266;
+
+  /* SLA */
+  --sla-ok:var(--tinta-2);
+  --sla-atencao-texto:#9A5300;   --sla-atencao-fundo:#FFF3DC;
+  --sla-estouro-texto:#B8001A;   --sla-estouro-fundo:#FDECEE;
+  --sla-estouro-borda:#E4051F;
+
+  /* Prioridade (só Alta e Urgente ganham cor) */
+  --pri-urgente:#B8001A;
+  --pri-alta:#9A5300;
+
+  /* Sucesso (resolvido no portal, avaliação positiva) */
+  --sucesso-texto:#007A3D;       --sucesso-fundo:#E3F6EB;
+
+  /* Nota interna */
+  --nota-fundo:#FFF8DB;          --nota-borda:#EBD27A;
+
+  /* Campi (eventos e QR) */
+  --campus-barra:#27348B;
+  --campus-gavea:#007A3D;
+  --campus-entre:#8A90A3;
+
+  /* Tipografia */
+  --fonte:"Montserrat",system-ui,sans-serif;
+  --t-12:12px; --t-13:13px; --t-14:14px; --t-16:16px; --t-20:20px;
+  --peso-normal:400; --peso-forte:700;
+  --altura-linha:1.45;
+  --num:tabular-nums;            /* font-variant-numeric em nº, horas e contadores */
+
+  /* Espaço (passos de 4px) */
+  --e-1:4px; --e-2:8px; --e-3:12px; --e-4:16px; --e-5:20px; --e-6:24px; --e-8:32px;
+
+  /* Forma */
+  --raio:4px; --raio-max:6px;
+  --borda:1px solid var(--linha);
+  --sombra-flutuante:0 4px 12px rgba(22,26,46,.12);   /* só menus e diálogos */
+  --veu:rgba(22,26,46,.32);       /* fundo atrás de diálogos e gavetas */
+
+  /* Densidade da tabela */
+  --linha-tabela:34px;
+  --cabecalho-tabela:32px;
+}
+
+:root[data-theme="dark"]{
+  color-scheme:dark;
+
+  --marca:#4656C9;
+  --marca-hover:#5666D6;
+  --marca-tinta:#FFFFFF;
+  --marca-texto:#A9B3F5;
+  --marca-suave:#232A4D;
+  --foco:#A9B3F5;
+
+  --fundo:#0F1220;
+  --superficie:#161A2B;
+  --superficie-2:#1E2338;
+  --linha:#2C3250;
+  --linha-2:#232842;
+  --tinta:#E8EAF3;
+  --tinta-2:#C3C7D6;
+  --tinta-3:#9CA2B8;
+  --tinta-4:#6B7189;
+
+  --est-novo-fundo:#E3B60F;      --est-novo-texto:#241B00;
+  --est-aberto-fundo:#D9061E;    --est-aberto-texto:#FFFFFF;
+  --est-pendente-fundo:#1E6FD9;  --est-pendente-texto:#FFFFFF;
+  --est-espera-fundo:#5A6278;    --est-espera-texto:#FFFFFF;
+  --est-resolvido-fundo:#3A4058; --est-resolvido-texto:#E1E4EE;
+  --est-fechado-fundo:#2A2F45;   --est-fechado-texto:#B8BDCE;
+
+  --sla-ok:var(--tinta-2);
+  --sla-atencao-texto:#F2B455;   --sla-atencao-fundo:#33260F;
+  --sla-estouro-texto:#FF7A88;   --sla-estouro-fundo:#3A1219;
+  --sla-estouro-borda:#FF4D5F;
+
+  --pri-urgente:#FF7A88;
+  --pri-alta:#F2B455;
+
+  --sucesso-texto:#5FD394;       --sucesso-fundo:#12301F;
+
+  --nota-fundo:#2B2614;          --nota-borda:#5E5023;
+
+  --campus-barra:#7D8BEA;
+  --campus-gavea:#3FBF7A;
+  --campus-entre:#9CA2B8;
+
+  --sombra-flutuante:0 4px 12px rgba(0,0,0,.45);
+  --veu:rgba(0,0,0,.55);
+}

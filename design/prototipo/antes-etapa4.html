@@ -1,0 +1,1965 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PantherDesk — protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens semânticos (claro) ----------
+   superfície · tinta · contorno · destaque · perigo. Cinzas quase sem saturação.
+   Marinho só na marca e no botão primário; royal em link, foco e seleção; vermelho só em problema real. */
+:root{
+  --sup:#FFFFFF; --sup-2:#F8F8F9; --sup-3:#F1F1F3; --sup-4:#E8E8EB; --lateral:#FAFAFA;
+  --tinta:#18191C; --tinta-2:#3F4147; --tinta-3:#6E7078; --tinta-4:#A0A2A8;
+  --contorno:#E7E7EA; --contorno-2:#F0F0F2; --contorno-forte:#D5D6DA;
+  --primario:#0B1F4B; --primario-hover:#16306B; --primario-tinta:#FFFFFF;
+  --royal:#1F4FD6; --royal-txt:#1F4FD6; --royal-suave:#EEF2FD;
+  --perigo:#D62839; --perigo-txt:#B42131; --perigo-suave:#FCEDEF;
+  --aviso-txt:#8A5800; --aviso-suave:#FBF3DF;
+  --ok-txt:#23704A;
+  --nota:#FFFBEE; --nota-faixa:#E5C463;
+  --st-aberto:#3D6BE0; --st-pendente:#D49B12; --st-espera:#A0A2A8; --st-resolvido:#2F9A62;
+  --c-barra:#3D6BE0; --c-gavea:#0B1F4B; --c-entre:#6E7078;
+  --sombra-flut:0 10px 28px rgba(20,20,26,.12),0 1px 3px rgba(20,20,26,.08);
+  --veu:rgba(20,20,26,.24);
+}
+/* ---------- Mesmos tokens no escuro ---------- */
+:root[data-theme="dark"]{
+  --sup:#151517; --sup-2:#1A1A1D; --sup-3:#232327; --sup-4:#2D2D32; --lateral:#18181B;
+  --tinta:#ECECEE; --tinta-2:#C7C8CC; --tinta-3:#8D8F96; --tinta-4:#5E6066;
+  --contorno:#2A2A2F; --contorno-2:#212125; --contorno-forte:#3A3A40;
+  --primario:#E6EAF5; --primario-hover:#FFFFFF; --primario-tinta:#0B1F4B;
+  --royal:#7393F2; --royal-txt:#8EA8F6; --royal-suave:#1D2541;
+  --perigo:#E5484D; --perigo-txt:#FF7B81; --perigo-suave:#3A1B1F;
+  --aviso-txt:#EDBE5F; --aviso-suave:#32280F;
+  --ok-txt:#6BCB98;
+  --nota:#25210F; --nota-faixa:#8A7330;
+  --st-aberto:#7393F2; --st-pendente:#E0AE3A; --st-espera:#6E7078; --st-resolvido:#3DB57A;
+  --c-barra:#7393F2; --c-gavea:#A9B6D8; --c-entre:#8D8F96;
+  --sombra-flut:0 10px 28px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.05);
+  --veu:rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--contorno-forte) transparent}
+html,body{margin:0;height:100%}
+body{background:var(--sup);color:var(--tinta);font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p{margin:0}
+h1,h2,h3,strong,b{font-weight:500}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:2px solid var(--royal);outline-offset:1px}
+.oculto{display:none!important}
+.mut{color:var(--tinta-3)}
+.mut4{color:var(--tinta-4)}
+.esp{flex:1}
+.rel{position:relative;display:inline-flex}
+.lnk{color:var(--royal-txt)}
+.lnk:hover{text-decoration:underline}
+kbd{font-family:inherit;font-size:11px;color:var(--tinta-4);border:1px solid var(--contorno);border-radius:4px;padding:0 4px;line-height:16px;white-space:nowrap}
+svg.i{flex:none;display:block}
+hr{border:0;border-top:1px solid var(--contorno-2);margin:4px 0}
+.marca-t{display:inline-flex;align-items:center;justify-content:center;background:#0B1F4B;flex:none}
+:root[data-theme="dark"] .marca-t{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+
+/* ---------- Botões: um sólido por tela, o resto cinza ou fantasma ---------- */
+.b{height:28px;padding:0 10px;border-radius:6px;border:0;background:var(--sup-3);color:var(--tinta);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none}
+.b:hover{background:var(--sup-4)}
+.b svg{color:var(--tinta-3)}
+.b.fant{background:transparent;color:var(--tinta-2)}
+.b.fant:hover{background:var(--sup-3);color:var(--tinta)}
+.b.sol{background:var(--primario);color:var(--primario-tinta)}
+.b.sol:hover{background:var(--primario-hover)}
+.b.sol svg{color:currentColor}
+.b.ic{width:28px;padding:0;justify-content:center}
+.b.gr{height:32px;padding:0 12px}
+.b.larga{width:100%;justify-content:center}
+.b[aria-pressed="true"]{background:var(--sup-4);color:var(--tinta)}
+.b kbd{margin-left:2px}
+
+/* ---------- Menus flutuantes (únicos com sombra) ---------- */
+.pop{position:absolute;top:calc(100% + 4px);left:0;z-index:45;min-width:200px;background:var(--sup);border:1px solid var(--contorno);border-radius:8px;box-shadow:var(--sombra-flut);padding:4px;display:none;text-align:left;font-weight:400}
+.pop.dir{left:auto;right:0}
+.pop.cima{top:auto;bottom:calc(100% + 8px)}
+.pop.fixo{position:fixed}
+.pop.aberto{display:block;animation:surge .15s ease both}
+.pop button{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;padding:4px 8px;border:0;background:none;border-radius:5px;font-size:13px;font-weight:400;color:var(--tinta);text-align:left;white-space:nowrap}
+.pop button:hover,.pop button.on{background:var(--sup-3)}
+.pop button svg{color:var(--tinta-3)}
+.pop button .fim,.pop button kbd,.pop button .cont{margin-left:auto}
+.pop button .cont{color:var(--tinta-4);font-size:12px}
+.pop button:disabled{color:var(--tinta-4);background:none;cursor:default}
+.pop .pop-tit{font-size:12px;color:var(--tinta-3);padding:6px 8px 2px}
+.pop input{width:100%;height:30px;border:1px solid var(--contorno);border-radius:6px;padding:0 8px;background:var(--sup);margin-bottom:4px;outline:none}
+.pop input:focus{border-color:var(--royal)}
+.pop-cab{display:flex;gap:10px;align-items:center;padding:8px}
+.pop-cab small{display:block;color:var(--tinta-3);font-size:12px}
+.pop .var{margin-left:auto;font-size:12px;color:var(--tinta-3)}
+.pop .sub-m{display:block;font-size:12px;color:var(--tinta-3)}
+@keyframes surge{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+
+/* ---------- Pequenas peças ---------- */
+.pt{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.est{display:inline-flex;align-items:center;gap:7px;color:var(--tinta-2)}
+.emb{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;font-size:12px;background:var(--sup-3);color:var(--tinta-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.emb.perto{background:var(--aviso-suave);color:var(--aviso-txt)}
+.emb.estourado{background:var(--perigo-suave);color:var(--perigo-txt)}
+.emb.ok{background:none;padding:0;color:var(--tinta-3)}
+.emb.pausa{background:none;padding:0;color:var(--tinta-4)}
+.emb.nada{background:none;padding:0;color:var(--tinta-4)}
+.av{position:relative;width:20px;height:20px;border-radius:50%;background:var(--sup-4);color:var(--tinta-2);font-size:10px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:1}
+.av.m{width:28px;height:28px;font-size:11px}
+.av.g{width:40px;height:40px;font-size:13px}
+.av.voce{background:#0B1F4B;color:#FFFFFF}
+:root[data-theme="dark"] .av.voce{background:#2B3C6B}
+.av .mini{position:absolute;right:-4px;bottom:-4px;width:15px;height:15px;border-radius:50%;background:var(--sup);border:1px solid var(--contorno);display:flex;align-items:center;justify-content:center;color:var(--tinta-3)}
+.resp{display:inline-flex;align-items:center;gap:7px;min-width:0}
+.pri{display:inline-flex;align-items:center;gap:7px;color:var(--tinta-2)}
+.pri svg{color:var(--tinta-3)}
+.pri.urg,.pri.urg svg{color:var(--perigo-txt)}
+.tag-l{font-size:11px;color:var(--tinta-3);border:1px solid var(--contorno);border-radius:3px;padding:0 3px;line-height:15px;flex:none}
+.etq{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;background:var(--sup-3);color:var(--tinta-2);font-size:12px}
+.mencao{color:var(--royal-txt);font-weight:500}
+.esq{display:block;height:8px;border-radius:4px;background:var(--sup-3);animation:pulsa 1s ease-in-out infinite alternate}
+@keyframes pulsa{from{opacity:.55}to{opacity:1}}
+.vazio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:64px 16px;color:var(--tinta-3);text-align:center}
+.vazio svg{color:var(--tinta-4);margin-bottom:4px}
+.vazio strong{color:var(--tinta)}
+.div-v{width:1px;height:16px;background:var(--contorno);margin:0 4px;flex:none}
+.seg-t{display:inline-flex;gap:2px;align-items:center}
+.seg-t button{height:26px;padding:0 8px;border:0;background:none;border-radius:6px;color:var(--tinta-3);font-size:13px;white-space:nowrap}
+.seg-t button:hover{color:var(--tinta)}
+.seg-t button.on{background:var(--sup-3);color:var(--tinta)}
+
+/* ---------- Moldura e barra lateral clara ---------- */
+.app{display:flex;min-height:100vh}
+.app.sem-lateral .lateral{display:none}
+.lateral{width:228px;flex:0 0 228px;background:var(--lateral);border-right:1px solid var(--contorno);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:8px;z-index:20;transition:width .2s ease,flex-basis .2s ease}
+.lat-topo{display:flex;flex-direction:column;gap:1px;position:relative}
+.ident{display:flex;align-items:center;gap:8px;height:40px;padding:0 6px;border:0;background:none;border-radius:6px;text-align:left;width:100%;margin-bottom:6px;color:var(--tinta)}
+.ident:hover{background:var(--sup-3)}
+.ident strong{display:block;font-size:13px;line-height:1.25}
+.ident small{display:block;font-size:12px;color:var(--tinta-3);line-height:1.25}
+.ident > svg{margin-left:auto;color:var(--tinta-3)}
+#pop-perfil{top:42px;width:220px}
+.ni{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;border:0;background:none;border-radius:6px;color:var(--tinta-2);font-size:13px;width:100%;text-align:left;white-space:nowrap;overflow:hidden;flex:none}
+.ni svg{color:var(--tinta-3)}
+.ni:hover{background:var(--sup-3);color:var(--tinta)}
+.ni[aria-current="page"]{background:var(--sup-4);color:var(--tinta)}
+.ni[aria-current="page"] svg{color:var(--tinta-2)}
+.ni .cont,.ni kbd{margin-left:auto}
+.ni .cont{font-size:12px;color:var(--tinta-4)}
+.lat-nav{display:flex;flex-direction:column;gap:1px;margin-top:14px;flex:1;overflow:auto;min-height:0}
+.grupo-cab{display:flex;align-items:center;gap:4px;height:28px;margin-top:16px;padding:0 8px;border:0;background:none;color:var(--tinta-3);font-size:12px;border-radius:6px;width:100%;text-align:left;flex:none}
+.grupo-cab:hover{color:var(--tinta)}
+.grupo-cab svg{transition:transform .2s ease}
+.grupo-cab[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.recolhivel{display:grid;grid-template-rows:1fr;transition:grid-template-rows .2s ease}
+.recolhivel.fechado{grid-template-rows:0fr}
+.recolhivel > div{overflow:hidden;min-height:0;display:flex;flex-direction:column;gap:1px}
+.lat-rod{display:flex;flex-direction:column;gap:1px;padding-top:8px;border-top:1px solid var(--contorno)}
+.app.mini .lateral{width:52px;flex-basis:52px}
+.app.mini .rot-l{display:none!important}
+.app.mini .ni,.app.mini .ident{justify-content:center;padding:0}
+.app.mini .recolhivel.fechado{grid-template-rows:1fr}
+.app.mini #recolher svg{transform:scaleX(-1)}
+.veu-nav{display:none}
+
+.conteudo{flex:1;min-width:0;display:flex;flex-direction:column;view-transition-name:conteudo}
+.tela{display:none}
+.tela.ativa{display:flex;flex-direction:column;min-height:100vh}
+.cab{height:48px;flex:none;display:flex;align-items:center;gap:8px;padding:0 20px;border-bottom:1px solid var(--contorno);background:var(--sup);position:sticky;top:0;z-index:8}
+.cab .tit{font-size:15px;font-weight:500;white-space:nowrap}
+.trilha{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px}
+.trilha a,.trilha .ant{color:var(--tinta-3);white-space:nowrap}
+.trilha a:hover{color:var(--tinta)}
+.trilha .sep{color:var(--tinta-4)}
+.trilha .atual{color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.so-m{display:none!important}
+
+/* ---------- Transições ---------- */
+::view-transition-old(conteudo){animation:.12s ease both vt-sai}
+::view-transition-new(conteudo){animation:.18s ease both vt-entra}
+@keyframes vt-sai{to{opacity:0}}
+@keyframes vt-entra{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after,::view-transition-old(conteudo),::view-transition-new(conteudo){animation:none!important;transition:none!important}
+}
+
+/* ---------- Entrar ---------- */
+.tela.entrar.ativa{align-items:center;justify-content:center;background:var(--sup-2)}
+.entrar-c{width:100%;max-width:360px;margin:16px;padding:28px;background:var(--sup);border:1px solid var(--contorno);border-radius:10px;display:flex;flex-direction:column;gap:12px}
+.entrar-c h1{font-size:15px;margin-top:10px}
+.entrar-c .endereco{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tinta-3)}
+.entrar-c .nota-rod{font-size:12px;color:var(--tinta-3);border-top:1px solid var(--contorno-2);padding-top:12px;margin-top:4px}
+.linha-f{display:flex;gap:8px}
+.inp{height:32px;border:1px solid var(--contorno-forte);border-radius:6px;padding:0 10px;background:var(--sup);min-width:0;flex:1;outline:none;color:var(--tinta)}
+.inp:focus{border-color:var(--royal);box-shadow:0 0 0 2px var(--royal-suave)}
+.lbl{font-size:13px;color:var(--tinta-2)}
+
+/* ---------- Início ---------- */
+.nums{display:flex;flex-wrap:wrap;padding:0 20px;border-bottom:1px solid var(--contorno)}
+.num{padding:14px 24px 14px 0;margin-right:24px;border-right:1px solid var(--contorno-2);display:flex;flex-direction:column;gap:1px}
+.num:last-child{border-right:0}
+.num span,.num small{font-size:12px;color:var(--tinta-3)}
+.num strong{font-size:15px}
+.secao{padding:16px 20px;min-width:0}
+.secao-cab{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:28px}
+.secao-cab h2{font-size:13px}
+.secao .tab th:first-child,.secao .tab td:first-child{padding-left:0}
+.duas{display:flex;flex-wrap:wrap;border-top:1px solid var(--contorno)}
+.duas > .secao{flex:1 1 420px}
+.duas > .secao + .secao{border-left:1px solid var(--contorno)}
+.fd{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:13px;color:var(--tinta-2);border-bottom:1px solid var(--contorno-2)}
+.fd:last-child{border-bottom:0}
+.fd:hover .fd-t{color:var(--tinta)}
+.fd-t{flex:1;min-width:0}
+.fd-t .mut{font-size:12px}
+.fd .cit{display:block;color:var(--tinta-3);font-size:12px;margin-top:1px}
+.pt-nl{width:6px;height:6px;border-radius:50%;background:var(--royal);margin-top:8px;flex:none}
+.grafico{width:100%;height:auto;max-height:220px;display:block}
+
+/* ---------- Lista de tickets ---------- */
+.titulo-sel{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 6px;margin-left:-6px;border:0;background:none;border-radius:6px;font-size:15px;font-weight:500;color:var(--tinta);white-space:nowrap}
+.titulo-sel:hover{background:var(--sup-3)}
+.titulo-sel svg{color:var(--tinta-3)}
+.ctrl{display:flex;align-items:center;gap:8px;padding:8px 20px;border-bottom:1px solid var(--contorno);flex-wrap:wrap;flex:none}
+.ctrl-e,.ctrl-d{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ctrl-d{margin-left:auto}
+.filtro-txt{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;border:1px solid var(--contorno);border-radius:6px;width:220px;color:var(--tinta-3);background:var(--sup)}
+.filtro-txt:focus-within{border-color:var(--royal)}
+.filtro-txt input{border:0;outline:0;background:none;width:100%;color:var(--tinta);min-width:0}
+.tab-wrap{overflow-x:auto;flex:1}
+.tab{width:100%;min-width:900px;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.tab.compacta{min-width:620px}
+.tab th{height:32px;padding:0 8px;text-align:left;font-weight:400;font-size:12px;color:var(--tinta-3);border-bottom:1px solid var(--contorno);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab td{height:36px;padding:0 8px;border-bottom:1px solid var(--contorno-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tinta-2)}
+.tab th:first-child,.tab td:first-child{padding-left:20px}
+.tab th:last-child,.tab td:last-child{padding-right:20px}
+.tab tbody tr{cursor:pointer}
+.tab tbody tr:hover{background:var(--sup-2)}
+.tab tbody tr.sel{background:var(--royal-suave)}
+.tab td.c-ass > div{display:flex;align-items:center;gap:8px;min-width:0}
+.tab .ass{overflow:hidden;text-overflow:ellipsis;color:var(--tinta);min-width:0}
+.tab tr.nl .ass{font-weight:600}
+.tab .c-n{color:var(--tinta-3);font-variant-numeric:tabular-nums}
+.tab .c-criado{color:var(--tinta-3)}
+.tab tr.esq-l{cursor:default}
+.tab tr.esq-l:hover{background:none}
+.chk{width:14px;height:14px;margin:0;accent-color:var(--royal);vertical-align:middle;cursor:pointer}
+.rod-lista{display:flex;align-items:center;gap:8px;padding:6px 20px;border-top:1px solid var(--contorno);font-size:12px;color:var(--tinta-3);position:sticky;bottom:0;background:var(--sup);flex:none}
+.massa{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:none;align-items:center;gap:2px;padding:4px 4px 4px 12px;background:var(--sup);border:1px solid var(--contorno);border-radius:8px;box-shadow:var(--sombra-flut);z-index:30;white-space:nowrap}
+.massa.vis{display:flex;animation:sobe .2s ease both}
+.massa #qtd{color:var(--tinta-2);margin-right:4px}
+@keyframes sobe{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ---------- Tela do ticket ---------- */
+#t-ticket.ativa{height:100vh;min-height:0}
+.tk{flex:1;display:flex;min-height:0}
+.tk-c{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+.abas{display:flex;gap:2px;padding:0 20px;height:42px;align-items:center;border-bottom:1px solid var(--contorno);flex:none}
+.abas button{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 8px;border:0;background:none;border-radius:6px;color:var(--tinta-3);font-size:13px}
+.abas button:hover{color:var(--tinta)}
+.abas button.on{color:var(--tinta);background:var(--sup-3)}
+.abas button.on svg{color:var(--tinta-2)}
+.linha-t{flex:1;overflow:auto;padding:16px 24px 24px}
+.tl{position:relative;max-width:820px}
+.tl::before{content:"";position:absolute;left:13.5px;top:10px;bottom:10px;width:1px;background:var(--contorno)}
+.it{position:relative;padding-left:42px;margin-bottom:14px}
+.it-av{position:absolute;left:0;top:3px;box-shadow:0 0 0 4px var(--sup)}
+.sis{position:relative;padding:0 0 0 42px;margin:0 0 14px;font-size:12px;color:var(--tinta-3);display:flex;align-items:center;gap:6px;min-height:20px;flex-wrap:wrap}
+.sis b{color:var(--tinta-2)}
+.sis::before{content:"";position:absolute;left:10.5px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--sup);border:1px solid var(--contorno-forte)}
+.sis-mais{border:0;background:none;color:var(--tinta-3);font-size:12px;padding:0;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.sis-mais:hover{color:var(--tinta)}
+.msg{border:1px solid var(--contorno);border-radius:8px;background:var(--sup)}
+.msg header{display:flex;align-items:center;gap:8px;padding:4px 4px 0 12px;min-height:34px;font-size:13px;min-width:0}
+.msg header .mut{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.msg time{font-size:12px;color:var(--tinta-3);white-space:nowrap;margin-left:auto}
+.msg-acoes{display:flex;opacity:.55;transition:opacity .15s}
+.msg:hover .msg-acoes,.msg:focus-within .msg-acoes{opacity:1}
+.msg-c{padding:2px 12px 12px;line-height:1.6;color:var(--tinta);overflow-wrap:anywhere}
+.msg.nota{background:var(--nota);border-color:transparent;box-shadow:inset 3px 0 0 var(--nota-faixa)}
+.msg.forn{background:var(--sup-2);border-style:dashed}
+.anexo{margin:0 12px 12px;display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--tinta-2);border:1px solid var(--contorno);border-radius:6px;padding:3px 8px}
+.fixado{max-width:820px;margin-bottom:16px;padding:10px 12px;border-radius:8px;background:var(--sup-2);display:flex;gap:10px;color:var(--tinta-2)}
+.fixado svg{color:var(--tinta-3);margin-top:2px}
+.fixado .linha-res{display:flex;gap:8px;font-size:12px;color:var(--tinta-3)}
+.fixado .linha-res strong{color:var(--tinta)}
+.recolhidas{position:relative;margin:0 0 14px 42px;border:0;background:none;color:var(--tinta-3);font-size:12px;padding:2px 0;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.recolhidas:hover{color:var(--tinta)}
+.ed-zona{flex:none;padding:10px 24px 14px;border-top:1px solid var(--contorno);background:var(--sup)}
+.ed-botoes{display:flex;gap:4px;align-items:center}
+.ed-botoes .rasc{font-size:12px;color:var(--tinta-4);margin-left:6px}
+.editor{border:1px solid var(--contorno-forte);border-radius:8px;max-width:820px;background:var(--sup)}
+.editor.sobe{animation:sobe-ed .22s cubic-bezier(.2,.7,.2,1) both}
+@keyframes sobe-ed{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.editor.interna{background:var(--nota);border-color:var(--nota-faixa)}
+.editor.interna .seg-t button.on{background:rgba(127,110,40,.12)}
+.ed-cab{display:flex;align-items:center;gap:8px;padding:6px 4px 0 6px}
+#ed-para{font-size:12px;color:var(--tinta-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#texto{display:block;width:100%;min-height:96px;max-height:40vh;border:0;resize:vertical;padding:8px 12px;background:transparent;outline:none;line-height:1.55;color:var(--tinta)}
+.ed-rod{display:flex;align-items:center;gap:2px;padding:4px 6px 6px}
+#rascunho{font-size:12px;color:var(--tinta-4);margin-left:6px}
+.aviso-inc{padding:6px 12px 0;font-size:12px;color:var(--tinta-3)}
+.previa{margin:6px 12px 0;padding:3px 3px 3px 10px;border-radius:6px;background:var(--sup-3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+.previa .seg-t button{height:22px;font-size:12px}
+.split{display:inline-flex;position:relative}
+.split .b.a{border-radius:6px 0 0 6px}
+.split .b.b2{border-radius:0 6px 6px 0;width:26px;padding:0;justify-content:center;box-shadow:inset 1px 0 0 rgba(255,255,255,.22)}
+:root[data-theme="dark"] .split .b.b2{box-shadow:inset 1px 0 0 rgba(11,31,75,.25)}
+.split kbd{color:inherit;opacity:.7;border-color:currentColor}
+.painel{flex:0 0 320px;width:320px;border-left:1px solid var(--contorno);overflow:auto;background:var(--sup)}
+.pn-topo{padding:16px;border-bottom:1px solid var(--contorno);display:flex;flex-direction:column;gap:12px}
+.sol-c{display:flex;gap:10px;align-items:center;min-width:0}
+.sol-c strong{display:block;font-size:13px}
+.sol-c small{display:block;font-size:12px;color:var(--tinta-3)}
+.prop{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;min-height:30px;gap:8px}
+.prop > .r{color:var(--tinta-3)}
+.prop > .v{min-width:0;color:var(--tinta);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.prop > .v svg{color:var(--tinta-4)}
+.v-perto{color:var(--aviso-txt)!important}
+.v-estourado{color:var(--perigo-txt)!important}
+.v-ok{color:var(--ok-txt)!important}
+.val{border:0;background:none;padding:3px 6px;margin-left:-6px;border-radius:5px;text-align:left;max-width:calc(100% + 6px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:7px;color:var(--tinta)}
+.val:hover{background:var(--sup-3)}
+.val.vazio-v{color:var(--tinta-4)}
+.sec-p{border-bottom:1px solid var(--contorno)}
+.sec-cab{position:sticky;top:0;z-index:1;background:var(--sup);display:flex;align-items:center;justify-content:space-between;width:100%;height:40px;padding:0 16px;border:0;font-weight:500;font-size:13px;color:var(--tinta);text-align:left}
+.sec-cab .cont{margin-left:6px;color:var(--tinta-4);font-weight:400}
+.sec-cab svg{color:var(--tinta-3);transition:transform .2s ease;margin-left:auto}
+.sec-p:not(.aberta) .sec-cab svg{transform:rotate(-90deg)}
+.sec-corpo{display:grid;grid-template-rows:0fr;transition:grid-template-rows .2s ease}
+.sec-p.aberta .sec-corpo{grid-template-rows:1fr}
+.sec-corpo > div{overflow:hidden;min-height:0}
+.sec-in{padding:0 16px 12px}
+.mini-l{display:flex;flex-direction:column}
+.mini-l .li{display:flex;align-items:center;gap:8px;min-height:30px;font-size:13px;color:var(--tinta-2);border:0;background:none;padding:0;text-align:left;width:100%}
+.mini-l .li span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-l .li small{color:var(--tinta-3);font-size:12px}
+.nota-p{font-size:12px;color:var(--tinta-3);margin-top:4px}
+
+/* ---------- Eventos ---------- */
+.ev-grade{flex:1;display:flex;min-height:0}
+.cal-wrap{flex:1;min-width:0;overflow:auto}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-width:660px}
+.cal .dow{font-size:12px;color:var(--tinta-3);padding:6px 8px;border-bottom:1px solid var(--contorno);border-right:1px solid var(--contorno-2)}
+.cal .dia{min-height:104px;padding:4px;border-right:1px solid var(--contorno-2);border-bottom:1px solid var(--contorno-2);display:flex;flex-direction:column;gap:1px;min-width:0}
+.cal > :nth-child(7n){border-right:0}
+.cal .dia.fds{background:var(--sup-2)}
+.cal .dia.fora .n{color:var(--tinta-4)}
+.cal .n{font-size:12px;color:var(--tinta-3);padding:1px 4px}
+.ev{display:flex;align-items:center;gap:6px;width:100%;border:0;background:none;padding:1px 4px;border-radius:4px;font-size:12px;color:var(--tinta-2);text-align:left;white-space:nowrap;overflow:hidden;min-height:20px}
+.ev span:last-child{overflow:hidden;text-overflow:ellipsis}
+.ev:hover{background:var(--sup-3);color:var(--tinta)}
+.ev.mont{color:var(--tinta-3)}
+.ev.mont svg{color:var(--tinta-4)}
+.pt.barra{background:var(--c-barra)}
+.pt.gavea{background:var(--c-gavea)}
+.pt.entre{background:none;box-shadow:inset 0 0 0 1.5px var(--c-entre)}
+.lado{flex:0 0 300px;width:300px}
+.pn-tit{display:flex;align-items:baseline;gap:6px;padding:0 16px;height:40px;align-items:center;font-weight:500;border-bottom:1px solid var(--contorno)}
+.pn-tit small{font-weight:400;color:var(--tinta-3);font-size:12px}
+.prox{display:flex;gap:12px;width:100%;padding:10px 16px;border:0;border-bottom:1px solid var(--contorno-2);background:none;text-align:left;align-items:flex-start}
+.prox:hover{background:var(--sup-2)}
+.prox-d{flex:0 0 30px;display:flex;flex-direction:column;align-items:center;line-height:1.25;color:var(--tinta)}
+.prox-d strong{font-size:15px}
+.prox-d small{font-size:12px;color:var(--tinta-3)}
+.prox-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.prox-t .ass{color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prox-t .mut{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prox-t .linha{display:flex;gap:6px;flex-wrap:wrap}
+.legenda{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--tinta-3);flex-wrap:wrap}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+.sel-l{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 4px 0 8px;border-radius:6px;color:var(--tinta-3)}
+.sel-l:hover{background:var(--sup-3)}
+.sel-l select{border:0;background:none;color:var(--tinta);outline:none;font-weight:500;cursor:pointer}
+.sel-l select option{background:var(--sup);color:var(--tinta)}
+
+/* ---------- QR da sala ---------- */
+.qr-grade{flex:1;display:flex;min-height:0}
+.qr-centro{flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 16px 40px;overflow:auto;min-width:0}
+.fone{width:340px;max-width:100%;border-radius:36px;border:1px solid var(--contorno-forte);padding:9px;background:var(--sup-2)}
+.tela-fone{border-radius:28px;background:var(--sup);border:1px solid var(--contorno);overflow:hidden;min-height:640px;display:flex;flex-direction:column}
+.fone-st{display:flex;justify-content:space-between;padding:10px 22px 4px;font-size:12px;color:var(--tinta-2)}
+.fone-url{margin:4px 12px 8px;height:28px;border-radius:6px;background:var(--sup-3);font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--tinta-3)}
+.qr-local{padding:12px 16px;border-bottom:1px solid var(--contorno);display:flex;flex-direction:column;gap:2px}
+.qr-local strong{font-size:15px}
+.qr-local span{font-size:12px;color:var(--tinta-3)}
+.qr-lista{flex:1}
+.qr-item{padding:10px 16px;border-bottom:1px solid var(--contorno-2);display:flex;flex-direction:column;gap:3px}
+.qr-item .l1{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--tinta-3)}
+.qr-item .l1 .emb{margin-left:auto}
+.qr-item .tit{border:0;background:none;padding:0;text-align:left;color:var(--tinta);font-weight:500}
+.qr-item .tit:hover{color:var(--royal-txt)}
+.qr-item .l3{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tinta-3);min-height:28px}
+.qr-item .l3 > :last-child{margin-left:auto}
+.qr-rod{padding:12px 16px 16px}
+.qr-lado{padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center}
+.qr-lado .b{width:100%;justify-content:center}
+.qr-lado p{font-size:12px;color:var(--tinta-3)}
+
+/* ---------- Portal ---------- */
+#t-portal.ativa{display:block}
+.p-topo{height:52px;border-bottom:1px solid var(--contorno);position:sticky;top:0;background:var(--sup);z-index:8}
+.p-in{max-width:1040px;margin:0 auto;height:100%;padding:0 20px;display:flex;align-items:center;gap:8px}
+.p-marca{display:flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap}
+.p-nav{display:flex;gap:2px;margin-left:16px}
+.p-nav a{height:28px;display:inline-flex;align-items:center;padding:0 8px;border-radius:6px;color:var(--tinta-2);white-space:nowrap}
+.p-nav a:hover{background:var(--sup-3);color:var(--tinta)}
+.p-nav a.on{background:var(--sup-3);color:var(--tinta)}
+.av-btn{border:0;background:none;padding:0;border-radius:50%;display:inline-flex}
+#pop-conta{width:240px}
+.p-heroi{max-width:640px;margin:0 auto;padding:56px 20px 28px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.p-heroi h1{font-size:24px;font-weight:500;letter-spacing:-.01em}
+.p-busca{display:flex;align-items:center;gap:8px;width:100%;height:40px;padding:0 12px;border:1px solid var(--contorno-forte);border-radius:8px;background:var(--sup);color:var(--tinta-3)}
+.p-busca:focus-within{border-color:var(--royal);box-shadow:0 0 0 2px var(--royal-suave)}
+.p-busca input{border:0;outline:0;background:none;width:100%;font-size:14px;color:var(--tinta)}
+.p-res{width:100%;text-align:left}
+.p-acoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.p-sec{max-width:880px;margin:0 auto;padding:12px 20px 20px}
+.p-sec h2{font-size:12px;font-weight:400;color:var(--tinta-3);margin-bottom:8px}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.cats a{display:flex;gap:10px;padding:12px;border:1px solid var(--contorno);border-radius:8px;align-items:flex-start}
+.cats a:hover{background:var(--sup-2)}
+.cats svg{color:var(--tinta-3);margin-top:2px}
+.cats strong{display:block}
+.cats small{display:block;font-size:12px;color:var(--tinta-3)}
+.lista-art a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;border-bottom:1px solid var(--contorno-2);color:var(--tinta)}
+.lista-art a:hover{color:var(--royal-txt)}
+.lista-art a svg{color:var(--tinta-4)}
+.p-form{max-width:640px;margin:0 auto;padding:20px 20px 96px;display:flex;flex-direction:column;gap:16px}
+.p-form h1{font-size:15px}
+.form{display:flex;flex-direction:column;gap:14px}
+.campo{display:flex;flex-direction:column;gap:4px;min-width:0}
+.campo label,.campo .lbl{font-size:13px;color:var(--tinta-2)}
+.campo select,.campo input,.campo textarea{height:32px;border:1px solid var(--contorno-forte);border-radius:6px;padding:0 10px;background:var(--sup);width:100%;min-width:0;color:var(--tinta);outline:none}
+.campo textarea{height:auto;min-height:88px;padding:8px 10px;resize:vertical;line-height:1.5}
+.campo select:focus,.campo input:focus,.campo textarea:focus{border-color:var(--royal);box-shadow:0 0 0 2px var(--royal-suave)}
+.campo select:disabled{background:var(--sup-2);color:var(--tinta-2);opacity:1;cursor:not-allowed}
+.grade2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grade3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cond{animation:campo .2s ease both}
+@keyframes campo{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.motivos{display:flex;flex-wrap:wrap;gap:6px}
+.motivos button{height:28px;padding:0 10px;border:1px solid var(--contorno);border-radius:6px;background:var(--sup);color:var(--tinta-2)}
+.motivos button:hover{background:var(--sup-2)}
+.motivos button[aria-checked="true"]{border-color:var(--royal);background:var(--royal-suave);color:var(--tinta)}
+.local-box{padding:12px;border:1px solid var(--contorno);border-radius:8px;display:flex;flex-direction:column;gap:10px}
+.local-box.qr{background:var(--sup-2)}
+.local-cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--tinta-2)}
+.selo-qr{font-size:12px;color:var(--tinta-2);background:var(--sup-4);border-radius:4px;padding:0 6px;height:20px;display:inline-flex;align-items:center;gap:4px}
+.btn-link{border:0;background:none;padding:0;color:var(--royal-txt);margin-left:auto}
+.btn-link:hover{text-decoration:underline}
+.sugest{border:1px solid var(--contorno);border-radius:8px;padding:8px 12px}
+.sugest .s-tit{font-size:12px;color:var(--tinta-3);margin-bottom:2px}
+.sugest a{display:flex;align-items:center;justify-content:space-between;min-height:28px;color:var(--royal-txt)}
+.sugest a:hover{text-decoration:underline}
+.aviso-verm{padding:8px 12px;border-radius:6px;background:var(--perigo-suave);color:var(--perigo-txt)}
+fieldset.equip{border:0;padding:0;margin:0;min-width:0}
+fieldset.equip legend{font-size:13px;color:var(--tinta-2);padding:0;margin-bottom:4px}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:2px 12px}
+.checks label{display:flex;align-items:center;gap:8px;min-height:28px;color:var(--tinta-2);cursor:pointer}
+.checks input{accent-color:var(--royal);width:14px;height:14px;margin:0}
+.form-rod{display:flex;align-items:center;gap:8px;padding-top:4px}
+.p-larga{max-width:1040px;margin:0 auto;padding:16px 0 96px}
+.p-cab-l{display:flex;align-items:center;gap:8px;padding:0 20px 12px}
+.p-cab-l h1{font-size:15px}
+.p-larga .tab{min-width:560px}
+
+/* ---------- Chat do portal ---------- */
+.fab{position:fixed;right:20px;bottom:20px;height:36px;border-radius:18px;border:1px solid var(--contorno);background:var(--sup);color:var(--tinta);padding:0 14px;box-shadow:var(--sombra-flut);z-index:35;display:flex;align-items:center;gap:8px;font-weight:500}
+.fab:hover{background:var(--sup-2)}
+.fab svg{color:var(--tinta-3)}
+.chat{position:fixed;right:20px;bottom:66px;width:370px;max-width:calc(100vw - 32px);height:580px;max-height:calc(100vh - 90px);background:var(--sup);border-radius:10px;overflow:hidden;border:1px solid var(--contorno);box-shadow:var(--sombra-flut);display:none;flex-direction:column;z-index:36}
+.chat.aberto{display:flex;animation:surge .2s ease both}
+.chat header{padding:10px 8px 10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--contorno)}
+.chat header small{display:block;font-size:12px;color:var(--tinta-3)}
+.chat .corpo{flex:1;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.bal{max-width:80%;padding:8px 12px;line-height:1.45;border-radius:10px}
+.bal.eu{align-self:flex-end;background:var(--sup-3);color:var(--tinta)}
+.bal.eles{background:var(--sup);border:1px solid var(--contorno)}
+.dia-chat{align-self:center;font-size:12px;color:var(--tinta-3)}
+.aval{border:1px solid var(--contorno);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.notas{display:flex;gap:4px}
+.notas button{flex:1;height:32px;border-radius:6px;border:1px solid var(--contorno);background:var(--sup);font-weight:500}
+.notas button:hover{background:var(--sup-2)}
+.notas button[aria-checked="true"]{border-color:var(--royal);background:var(--royal-suave)}
+#digitando{padding:4px 14px;font-size:12px;color:var(--tinta-3);display:flex;align-items:center;gap:4px}
+.digit{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--tinta-3);animation:digita 1.2s infinite}
+.digit:nth-child(2){animation-delay:.15s}.digit:nth-child(3){animation-delay:.3s}
+@keyframes digita{0%,80%,100%{opacity:.25}40%{opacity:1}}
+#form-chat{display:flex;gap:6px;padding:10px;border-top:1px solid var(--contorno)}
+
+/* ---------- Gavetas, diálogos, toast ---------- */
+.veu{position:fixed;inset:0;background:var(--veu);z-index:59;display:none}
+.veu.vis{display:block}
+.gaveta{position:fixed;top:0;right:0;height:100vh;width:460px;max-width:100vw;background:var(--sup);border-left:1px solid var(--contorno);box-shadow:var(--sombra-flut);z-index:60;display:none;flex-direction:column}
+.gaveta.aberta{display:flex;animation:desliza .25s cubic-bezier(.2,.7,.2,1) both}
+@keyframes desliza{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.gaveta header{display:flex;align-items:center;gap:10px;padding:0 12px 0 20px;height:52px;border-bottom:1px solid var(--contorno)}
+.gaveta header small{display:block;font-size:12px;color:var(--tinta-3)}
+.gaveta .corpo-g{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.gaveta footer{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--contorno)}
+.notif{position:fixed;top:0;bottom:0;left:228px;width:340px;max-width:100vw;background:var(--sup);border-right:1px solid var(--contorno);box-shadow:var(--sombra-flut);z-index:50;display:flex;flex-direction:column;transform:translateX(-10px);opacity:0;visibility:hidden;transition:transform .2s ease,opacity .2s ease,visibility .2s}
+.app.mini ~ .notif{left:52px}
+.notif.aberta{transform:none;opacity:1;visibility:visible}
+.notif header{display:flex;align-items:center;gap:6px;height:48px;padding:0 8px 0 16px;border-bottom:1px solid var(--contorno);font-weight:500}
+.notif-i{display:flex;gap:10px;padding:10px 16px;border:0;border-bottom:1px solid var(--contorno-2);background:none;text-align:left;width:100%;color:var(--tinta-2)}
+.notif-i:hover{background:var(--sup-2)}
+.notif-i small{display:block;color:var(--tinta-3);font-size:12px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--tinta);color:var(--sup);padding:8px 14px;border-radius:8px;box-shadow:var(--sombra-flut);display:none;z-index:90;max-width:calc(100vw - 32px)}
+.toast.vis{display:block;animation:sobe .2s ease both}
+.dlg-veu{position:fixed;inset:0;background:var(--veu);z-index:80;display:none;align-items:flex-start;justify-content:center;padding-top:14vh}
+.dlg-veu.vis{display:flex}
+.paleta,.dlg{width:560px;max-width:calc(100vw - 32px);background:var(--sup);border:1px solid var(--contorno);border-radius:10px;box-shadow:var(--sombra-flut);overflow:hidden;animation:surge .15s ease both}
+.paleta input{width:100%;height:46px;border:0;border-bottom:1px solid var(--contorno);padding:0 16px;font-size:14px;outline:none;background:transparent}
+.paleta .res{max-height:340px;overflow:auto;padding:4px}
+.paleta .res button{display:flex;justify-content:space-between;gap:12px;width:100%;border:0;background:none;text-align:left;padding:7px 10px;border-radius:6px;color:var(--tinta)}
+.paleta .res button.on,.paleta .res button:hover{background:var(--sup-3)}
+.paleta .res small{color:var(--tinta-3);font-size:12px}
+.paleta .dica{padding:7px 14px;border-top:1px solid var(--contorno-2);font-size:12px;color:var(--tinta-3)}
+.dlg{width:420px}
+.dlg header{display:flex;align-items:center;height:44px;padding:0 8px 0 16px;border-bottom:1px solid var(--contorno);font-weight:500}
+.dlg dl{margin:0;padding:8px 16px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.dlg dt{color:var(--tinta-2)}
+.dlg dd{margin:0;text-align:right}
+
+/* ---------- Telas médias e celular ---------- */
+@media (max-width:1100px){
+  .painel{flex-basis:280px;width:280px}
+  .lado{flex-basis:260px;width:260px}
+}
+@media (max-width:820px){
+  .lateral,.app.mini .lateral{position:fixed;left:0;top:0;bottom:0;width:248px;transform:translateX(-100%);transition:transform .2s ease;z-index:56}
+  .app.mini .rot-l{display:revert!important}
+  .app.nav-aberta .lateral{transform:none;box-shadow:var(--sombra-flut)}
+  .app.nav-aberta .veu-nav{display:block;position:fixed;inset:0;background:var(--veu);z-index:55}
+  #recolher{display:none}
+  .so-m{display:inline-flex!important}
+  .esconde-m{display:none!important}
+  .rot-b{display:none}
+  .cab{padding:0 12px}
+  .ctrl{padding:8px 12px}
+  .filtro-txt{width:160px}
+  .tab{min-width:0}
+  .tab .c-sel,.tab .c-n,.tab .c-sla1,.tab .c-sla2,.tab .c-prazo,.tab .c-resp,.tab .c-pri,.tab .c-sol,.tab .c-grupo,.tab .c-canal{display:none}
+  .tab th:nth-child(2),.tab td.c-ass{padding-left:12px}
+  .tab th.c-est{width:110px!important}
+  .tab th.c-criado{width:84px!important}
+  .painel{position:fixed;right:0;top:0;bottom:0;width:300px;z-index:57;transform:translateX(100%);transition:transform .2s ease;box-shadow:var(--sombra-flut)}
+  .tk.painel-aberto .painel{transform:none}
+  .linha-t{padding:12px}
+  .ed-zona{padding:8px 12px 12px}
+  .ev-grade,.qr-grade{flex-direction:column}
+  .lado{width:auto;flex:none;border-left:0;border-top:1px solid var(--contorno)}
+  .cal .dia{min-height:72px}
+  .ev span:last-child{display:none}
+  .notif,.app.mini ~ .notif{left:0;width:100%}
+  .grade2,.grade3{grid-template-columns:minmax(0,1fr)}
+  .p-heroi{padding:32px 16px 20px}
+  .duas > .secao + .secao{border-left:0;border-top:1px solid var(--contorno)}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <nav class="lateral" id="lateral" aria-label="Navegação">
+    <div class="lat-topo">
+      <button class="ident" id="btn-perfil" aria-haspopup="true" title="PantherDesk"><span data-marca="24"></span><span class="rot-l"><strong>PantherDesk</strong><small>EARJ · TI</small></span><i data-ic="chevb" class="rot-l"></i></button>
+      <div class="pop" id="pop-perfil">
+        <div class="pop-cab"><span class="av m voce">VC</span><span><strong>Você</strong><small id="perfil-disp">Disponível</small></span></div>
+        <hr>
+        <button type="button" id="perfil-status">Ficar ausente</button>
+        <button type="button" id="perfil-pref">Preferências</button>
+        <button type="button" id="perfil-atalhos">Atalhos <kbd>?</kbd></button>
+        <hr>
+        <button type="button" id="sair" data-tela="entrar">Sair</button>
+      </div>
+      <button class="ni" data-acao="busca" title="Buscar (Ctrl K)"><i data-ic="busca"></i><span class="rot-l">Buscar</span><kbd class="rot-l">Ctrl K</kbd></button>
+      <button class="ni" id="btn-notif" title="Notificações"><i data-ic="sino"></i><span class="rot-l">Notificações</span><span class="cont rot-l" id="notif-cont">3</span></button>
+    </div>
+    <div class="lat-nav">
+      <a class="ni" href="#inicio" data-tela="inicio" title="Início"><i data-ic="casa"></i><span class="rot-l">Início</span></a>
+      <a class="ni" href="#tickets" data-tela="tickets" data-visao="Não resolvidos" id="nav-tickets" title="Tickets"><i data-ic="ticket"></i><span class="rot-l">Tickets</span></a>
+      <a class="ni" href="#eventos" data-tela="eventos" title="Eventos"><i data-ic="cal"></i><span class="rot-l">Eventos</span></a>
+      <a class="ni" href="#qr" data-tela="qr" title="QR da sala"><i data-ic="qr"></i><span class="rot-l">QR da sala</span></a>
+      <button class="ni" data-acao="relatorios" title="Relatórios"><i data-ic="graf"></i><span class="rot-l">Relatórios</span></button>
+      <button class="grupo-cab rot-l" id="grupo-visoes" aria-expanded="true" aria-controls="visoes-c"><i data-ic="chevb"></i>Visões salvas</button>
+      <div class="recolhivel" id="visoes-c"><div id="lista-visoes"></div></div>
+    </div>
+    <div class="lat-rod">
+      <a class="ni" href="#portal" data-tela="portal" title="Portal do solicitante"><i data-ic="portal"></i><span class="rot-l">Portal do solicitante</span></a>
+      <button class="ni" id="tema" title="Alternar tema"><span id="tema-ic"></span><span class="rot-l" id="tema-rot">Tema escuro</span></button>
+      <button class="ni" id="recolher" title="Recolher barra lateral"><i data-ic="lateral"></i><span class="rot-l">Recolher</span></button>
+    </div>
+  </nav>
+  <div class="veu-nav" id="veu-nav"></div>
+
+  <div class="conteudo" id="conteudo">
+
+    <!-- ================= ENTRAR ================= -->
+    <section class="tela entrar" id="t-entrar" aria-label="Entrar">
+      <div class="entrar-c">
+        <span data-marca="36"></span>
+        <div><h1>Entrar no PantherDesk</h1><p class="mut">Use a conta Google da escola (@earj.com.br).</p></div>
+        <button class="b sol gr larga" id="entrar-google">Entrar com Google</button>
+        <button class="b fant gr larga" id="entrar-link" aria-expanded="false"><i data-ic="email"></i>Receber link por e-mail</button>
+        <form class="campo oculto" id="form-link" onsubmit="return false">
+          <label for="e-link" class="lbl">Seu e-mail</label>
+          <div class="linha-f"><input class="inp" id="e-link" type="email" placeholder="nome@exemplo.com"><button type="submit" class="b gr">Enviar link</button></div>
+        </form>
+        <p class="nota-rod">Pais e visitantes entram por link. A equipe entra com a conta Google; depois de entrar, você volta à página que tinha aberto.</p>
+        <span class="endereco"><i data-ic="chave"></i>help.earj.com.br/agente</span>
+      </div>
+    </section>
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="tela" id="t-inicio" aria-label="Início">
+      <header class="cab">
+        <button class="b ic fant so-m" data-acao="menu" aria-label="Abrir navegação"><i data-ic="menu"></i></button>
+        <h1 class="tit">Início</h1><span class="mut esconde-m">quinta, 29 de outubro</span>
+        <span class="esp"></span>
+        <a href="#tickets" data-tela="tickets" data-visao="Meus abertos" class="b sol">Abrir meus tickets</a>
+      </header>
+      <div class="nums">
+        <div class="num"><span>Resolvidos na semana</span><strong>23</strong><small>+5 sobre a anterior</small></div>
+        <div class="num"><span>1ª resposta, mediana</span><strong>18 min</strong><small>meta 30 min</small></div>
+        <div class="num"><span>Satisfação, 60 dias</span><strong>100%</strong><small>9 avaliações</small></div>
+        <div class="num"><span>Prazo cumprido na semana</span><strong>94%</strong><small>1 estourado seu</small></div>
+      </div>
+      <section class="secao">
+        <div class="secao-cab"><h2>Seus tickets que vencem primeiro</h2><span class="esp"></span><a class="lnk" href="#tickets" data-tela="tickets" data-visao="Meus abertos">Ver todos</a></div>
+        <div class="tab-wrap"><table class="tab compacta" id="tab-inicio"></table></div>
+      </section>
+      <div class="duas">
+        <section class="secao">
+          <div class="secao-cab"><h2>Atividade</h2><div class="seg-t" role="tablist" id="abas-feed" style="margin-left:8px"><button role="tab" class="on" data-f="tudo">Tudo</button><button role="tab" data-f="mencao">Menções</button><button role="tab" data-f="atrib">Atribuições</button><button role="tab" data-f="sla">Prazos</button></div><span class="esp"></span><button class="b fant" id="ler-tudo"><i data-ic="check"></i><span class="rot-b">Marcar como lido</span></button></div>
+          <div id="feed"></div>
+        </section>
+        <section class="secao">
+          <div class="secao-cab"><h2>Criados e resolvidos</h2><span class="mut">8 semanas · seus grupos</span><span class="esp"></span><span class="legenda"><span><svg width="14" height="2" aria-hidden="true"><path d="M0 1h14" stroke="var(--tinta-4)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>Criados</span><span><svg width="14" height="2" aria-hidden="true"><path d="M0 1h14" stroke="var(--tinta-2)" stroke-width="1.5"/></svg>Resolvidos</span></span></div>
+          <svg class="grafico" role="img" aria-label="Criados e resolvidos por semana; os resolvidos acompanham os criados, entre 35 e 51 por semana" viewBox="0 0 800 200">
+            <g stroke="var(--contorno-2)" stroke-width="1"><path d="M40 20 H790 M40 70 H790 M40 120 H790"/></g><path d="M40 170 H790" stroke="var(--contorno)" stroke-width="1"/>
+            <g fill="var(--tinta-4)" font-size="11"><text x="8" y="24">60</text><text x="8" y="74">40</text><text x="8" y="124">20</text><text x="14" y="174">0</text></g>
+            <path id="linha-criados" d="M40 75 L147 65 L254 82.5 L361 52.5 L468 60 L575 70 L682 42.5 L790 55" fill="none" stroke="var(--tinta-4)" stroke-width="1.5" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
+            <path id="linha-resolvidos" d="M40 82.5 L147 70 L254 77.5 L361 60 L468 57.5 L575 67.5 L682 50 L790 52.5" fill="none" stroke="var(--tinta-2)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+            <g fill="var(--tinta-3)" font-size="11"><text x="30" y="194">S1</text><text x="137" y="194">S2</text><text x="244" y="194">S3</text><text x="351" y="194">S4</text><text x="458" y="194">S5</text><text x="565" y="194">S6</text><text x="672" y="194">S7</text><text x="770" y="194">S8</text></g>
+          </svg>
+        </section>
+      </div>
+    </section>
+
+    <!-- ================= TICKETS (lista de largura total) ================= -->
+    <section class="tela" id="t-tickets" aria-label="Tickets">
+      <header class="cab">
+        <button class="b ic fant so-m" data-acao="menu" aria-label="Abrir navegação"><i data-ic="menu"></i></button>
+        <span class="rel"><button class="titulo-sel" id="btn-visao" aria-haspopup="true"><span id="visao-nome">Não resolvidos</span><i data-ic="chevb"></i></button><div class="pop" id="pop-visao" style="min-width:240px"></div></span>
+        <span class="esp"></span>
+        <button class="b sol" id="novo-ticket"><i data-ic="add"></i>Novo ticket</button>
+      </header>
+      <div class="ctrl">
+        <div class="ctrl-e">
+          <label class="filtro-txt"><i data-ic="busca"></i><span class="sr">Filtrar</span><input id="f-texto" placeholder="Filtrar por assunto ou nº" autocomplete="off"></label>
+          <span class="rel"><button class="b fant" id="btn-grupo">Grupo: <span id="f-grupo-v">todos</span><i data-ic="chevb"></i></button><div class="pop" id="pop-grupo"></div></span>
+          <button class="b fant" id="f-meus" aria-pressed="false">Só os meus</button>
+        </div>
+        <div class="ctrl-d">
+          <button class="b fant oculto" id="salvar-visao">Salvar visão</button>
+          <button class="b ic fant" id="atualizar" title="Atualizar" aria-label="Atualizar"><i data-ic="atualizar"></i></button>
+          <span class="div-v"></span>
+          <span class="rel"><button class="b fant" id="btn-filtrar"><i data-ic="filtro"></i><span class="rot-b">Filtrar</span><span id="n-filtros"></span></button><div class="pop dir" id="pop-filtrar"></div></span>
+          <span class="rel"><button class="b fant" id="btn-ordenar"><i data-ic="ordenar"></i><span class="rot-b">Ordenar</span></button><div class="pop dir" id="pop-ordenar"></div></span>
+          <span class="rel"><button class="b fant" id="btn-colunas"><i data-ic="colunas"></i><span class="rot-b">Colunas</span></button><div class="pop dir" id="pop-colunas"></div></span>
+        </div>
+      </div>
+      <div class="tab-wrap"><table class="tab" id="tab-tickets"></table><div id="vazio-lista"></div></div>
+      <footer class="rod-lista"><span id="contagem"></span><span class="esp"></span><span class="esconde-m">Por página</span><div class="seg-t" id="pag"><button class="on" data-p="20">20</button><button data-p="50">50</button><button data-p="100">100</button></div></footer>
+    </section>
+
+    <!-- ================= TICKET ================= -->
+    <section class="tela" id="t-ticket" aria-label="Ticket">
+      <header class="cab">
+        <button class="b ic fant so-m" data-acao="menu" aria-label="Abrir navegação"><i data-ic="menu"></i></button>
+        <nav class="trilha" aria-label="Trilha"><a href="#tickets" data-tela="tickets">Tickets</a><span class="sep">/</span><span class="atual" id="trilha-ass"></span></nav>
+        <span class="esp"></span>
+        <span class="av esconde-m" title="Rafael Torres está vendo este ticket" aria-label="Rafael Torres está vendo">RT</span>
+        <span class="rel"><button class="b" id="btn-status" aria-haspopup="true" title="Estado (S)"><span class="pt" id="status-pt"></span><span id="status-nome"></span><i data-ic="chevb"></i></button>
+          <div class="pop dir" id="pop-status"><button type="button" data-st="Aberto"><span class="pt" style="background:var(--st-aberto)"></span>Aberto</button><button type="button" data-st="Pendente"><span class="pt" style="background:var(--st-pendente)"></span>Pendente</button><button type="button" data-st="Em espera"><span class="pt" style="background:var(--st-espera)"></span>Em espera</button><button type="button" data-st="Resolvido"><span class="pt" style="background:var(--st-resolvido)"></span>Resolvido</button></div></span>
+        <span class="rel"><button class="b ic fant" id="btn-mais" aria-label="Mais ações" aria-haspopup="true"><i data-ic="mais"></i></button>
+          <div class="pop dir" id="pop-mais" style="min-width:230px">
+            <button type="button" id="resumir"><i data-ic="resumo"></i>Resumir com IA</button>
+            <button type="button" id="encaminhar"><i data-ic="encaminhar"></i>Encaminhar com retorno</button>
+            <button type="button" data-toast="Vincular a outro ticket (protótipo)"><i data-ic="link"></i>Vincular a outro ticket</button>
+            <button type="button" data-toast="Mesclar com outro ticket (protótipo)"><i data-ic="mesclar"></i>Mesclar</button>
+            <hr id="sep-artigo">
+            <button type="button" id="criar-artigo"><i data-ic="artigo"></i>Criar artigo</button>
+          </div></span>
+        <button class="b ic fant so-m" id="btn-painel" aria-label="Detalhes do ticket"><i data-ic="colunas"></i></button>
+      </header>
+      <div class="tk" id="tk">
+        <div class="tk-c">
+          <div class="abas" role="tablist" id="abas-tl"><button role="tab" class="on" data-f="tudo"><i data-ic="relogio"></i>Atividade</button><button role="tab" data-f="pub"><i data-ic="email"></i>Respostas</button><button role="tab" data-f="int"><i data-ic="nota"></i>Notas internas</button></div>
+          <div class="linha-t" id="linha-t"></div>
+          <div class="ed-zona">
+            <div class="ed-botoes" id="ed-botoes"><button type="button" class="b fant" id="abrir-resp"><i data-ic="responder"></i>Responder<kbd class="esconde-m">R</kbd></button><button type="button" class="b fant" id="abrir-nota"><i data-ic="nota"></i>Nota interna<kbd class="esconde-m">N</kbd></button><span class="rasc oculto" id="tem-rasc">rascunho salvo</span></div>
+            <form class="editor oculto" id="editor" onsubmit="return false" aria-label="Responder">
+              <div class="ed-cab">
+                <div class="seg-t" role="tablist"><button type="button" class="on" id="ed-pub">Responder</button><button type="button" id="ed-int">Nota interna</button></div>
+                <span id="ed-para"></span><span class="esp"></span>
+                <button type="button" class="b ic fant" id="fechar-ed" title="Fechar (Esc)" aria-label="Fechar editor"><i data-ic="x"></i></button>
+              </div>
+              <div class="aviso-inc oculto" id="aviso-inc"></div>
+              <div class="previa oculto" id="previa"></div>
+              <label for="texto" class="sr">Mensagem</label>
+              <textarea id="texto"></textarea>
+              <div class="ed-rod">
+                <span class="rel"><button type="button" class="b ic fant" id="btn-macro" aria-label="Macros" title="Macros"><i data-ic="macro"></i></button>
+                  <div class="pop cima" id="pop-macro" style="width:320px"><input id="busca-macro" placeholder="Buscar macro (PT ou EN)" aria-label="Buscar macro"><div id="lista-macro"></div></div></span>
+                <button type="button" class="b ic fant" id="anexar" aria-label="Anexar arquivo" title="Anexar"><i data-ic="clipe"></i></button>
+                <button type="button" class="b ic fant" id="melhorar" aria-label="Revisar o texto com IA" title="Revisar o texto com IA"><i data-ic="revisar"></i></button>
+                <span id="rascunho" class="esconde-m">Rascunho salvo</span>
+                <span class="esp"></span>
+                <div class="split">
+                  <button type="submit" class="b sol a" id="enviar"><span id="enviar-rot">Enviar · Em espera</span><kbd class="esconde-m">Ctrl ↵</kbd></button>
+                  <button type="button" class="b sol b2" id="btn-estado" aria-label="Escolher o estado do envio"><i data-ic="chevb"></i></button>
+                  <div class="pop cima dir" id="pop-estado"><div class="pop-tit">Estado após o envio</div><button type="button" data-est="Aberto"><span class="pt" style="background:var(--st-aberto)"></span>Aberto</button><button type="button" data-est="Pendente"><span class="pt" style="background:var(--st-pendente)"></span>Pendente</button><button type="button" data-est="Em espera"><span class="pt" style="background:var(--st-espera)"></span>Em espera</button><button type="button" data-est="Resolvido"><span class="pt" style="background:var(--st-resolvido)"></span>Resolvido</button></div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <aside class="painel" aria-label="Detalhes do ticket" id="painel"></aside>
+      </div>
+    </section>
+
+    <!-- ================= EVENTOS ================= -->
+    <section class="tela" id="t-eventos" aria-label="Eventos de AV">
+      <header class="cab">
+        <button class="b ic fant so-m" data-acao="menu" aria-label="Abrir navegação"><i data-ic="menu"></i></button>
+        <nav class="trilha"><span class="ant">Eventos</span><span class="sep">/</span><span class="atual">Novembro de 2026</span></nav>
+        <button class="b ic fant" id="cal-ant" aria-label="Mês anterior"><i data-ic="cheve"></i></button><button class="b ic fant" id="cal-prox" aria-label="Próximo mês"><i data-ic="chevd"></i></button>
+        <span class="esp"></span>
+        <div class="seg-t esconde-m" id="cal-visao"><button class="on">Mês</button><button>Semana</button></div>
+        <a href="#portal" class="b sol" id="novo-evento"><i data-ic="add"></i>Novo evento</a>
+      </header>
+      <div class="ctrl">
+        <div class="ctrl-e">
+          <div class="seg-t" id="f-campus" role="group" aria-label="Filtrar por campus"><button class="on" data-c="todos">Todos</button><button data-c="barra">Barra</button><button data-c="gavea">Gávea</button><button data-c="entre">Entre campi</button></div>
+          <span class="div-v"></span>
+          <label class="sel-l">Tipo <select id="f-tipo" aria-label="Filtrar por tipo"><option value="">todos</option></select></label>
+        </div>
+        <div class="ctrl-d legenda esconde-m"><span><i class="pt barra"></i>Barra</span><span><i class="pt gavea"></i>Gávea</span><span><i class="pt entre"></i>Entre campi</span><span><i data-ic="ferramenta"></i>montagem</span><span>prazo = início da montagem · mínimo 5 dias úteis</span></div>
+      </div>
+      <div class="ev-grade">
+        <section class="cal-wrap" aria-label="Calendário de novembro de 2026"><div class="cal" id="cal"></div></section>
+        <aside class="painel lado" aria-label="Próximos eventos"><div class="pn-tit">Próximos <small>pela montagem</small></div><div id="prox"></div></aside>
+      </div>
+    </section>
+
+    <!-- ================= QR DA SALA ================= -->
+    <section class="tela" id="t-qr" aria-label="QR da sala">
+      <header class="cab">
+        <button class="b ic fant so-m" data-acao="menu" aria-label="Abrir navegação"><i data-ic="menu"></i></button>
+        <nav class="trilha"><span class="ant">QR da sala</span><span class="sep">/</span><span class="atual">BAR-2-214</span></nav>
+        <span class="esp"></span>
+        <button class="b fant" id="qr-sol"><i data-ic="olho"></i><span class="rot-b">Ver como solicitante</span></button>
+      </header>
+      <div class="qr-grade">
+        <div class="qr-centro">
+          <p class="mut">O que o técnico vê ao escanear o QR</p>
+          <div class="fone">
+            <div class="tela-fone">
+              <div class="fone-st"><span>10:38</span><span>5G</span></div>
+              <div class="fone-url"><i data-ic="chave"></i>help.earj.com.br/s/BAR-2-214</div>
+              <div class="qr-local"><strong>Sala 214</strong><span>Barra · 2º andar · <b id="qr-cont">4</b> tickets abertos aqui</span></div>
+              <div class="qr-lista" id="qr-lista"></div>
+              <div class="qr-rod"><button class="b sol gr larga" id="qr-novo"><i data-ic="add"></i>Abrir ticket aqui</button></div>
+            </div>
+          </div>
+        </div>
+        <aside class="painel lado qr-lado" aria-label="Folha para imprimir">
+          <span class="mut" style="align-self:flex-start">Folha para imprimir</span>
+          <div id="qr-svg"></div>
+          <strong>Sala 214</strong>
+          <span class="mut">Barra · 2º andar · BAR-2-214</span>
+          <p>Trocar o nome da sala não muda o QR. O local do ticket vem do QR ou do formulário.</p>
+          <button class="b" id="imprimir-qr"><i data-ic="imprimir"></i>Imprimir os 5 QR do andar</button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= PORTAL ================= -->
+    <section class="tela portal" id="t-portal" aria-label="Portal do solicitante">
+      <header class="p-topo"><div class="p-in">
+        <a class="p-marca" href="#portal" data-pv="inicio"><span data-marca="24"></span><span data-i18n="p-marca">Central de ajuda</span></a>
+        <nav class="p-nav esconde-m" aria-label="Portal"><a href="#portal" data-pv="novo" data-i18n="p-abrir">Abrir pedido</a><a href="#portal" data-pv="pedidos" data-i18n="p-pedidos">Meus pedidos</a></nav>
+        <span class="esp"></span>
+        <div class="seg-t" id="seg-idioma" role="group" aria-label="Idioma"><button class="on" data-l="pt">PT</button><button data-l="en">EN</button></div>
+        <button class="b ic fant" id="tema-portal" aria-label="Alternar tema"><span id="tema-ic-p"></span></button>
+        <span class="rel"><button class="av-btn" id="btn-conta" aria-haspopup="true" aria-label="Conta"><span class="av m">MC</span></button>
+          <div class="pop dir" id="pop-conta"><div class="pop-cab"><span class="av m">MC</span><span><strong>Mariana Costa</strong><small>mariana.costa@earj.example</small></span></div><hr><button type="button" data-pv="pedidos"><span data-i18n="p-pedidos">Meus pedidos</span></button><button type="button" data-tela="inicio"><span data-i18n="conta-ag">Área do técnico</span></button></div></span>
+      </div></header>
+
+      <div class="pv" id="pv-inicio">
+        <div class="p-heroi">
+          <h1 data-i18n="p-h1">Como podemos ajudar?</h1>
+          <label class="p-busca"><i data-ic="busca"></i><span class="sr">Buscar</span><input id="p-busca" type="search" data-i18n-ph="p-busca" placeholder="Wi-Fi, impressora, projetor, VPN…" autocomplete="off"></label>
+          <div class="p-res lista-art oculto" id="p-res"></div>
+          <div class="p-acoes"><button class="b sol gr" data-pv="novo"><span data-i18n="p-abrir">Abrir pedido</span></button><button class="b gr" data-pv="pedidos"><span data-i18n="p-pedidos">Meus pedidos</span></button></div>
+        </div>
+        <div class="p-sec"><h2 data-i18n="p-cats">Categorias</h2>
+          <div class="cats">
+            <a href="#portal"><i data-ic="wifi"></i><span><strong data-i18n="c-wifi">Wi-Fi e rede</strong><small data-i18n="c-wifi2">8 artigos</small></span></a>
+            <a href="#portal"><i data-ic="imprimir"></i><span><strong data-i18n="c-imp">Impressoras</strong><small data-i18n="c-imp2">6 artigos</small></span></a>
+            <a href="#portal"><i data-ic="projetor"></i><span><strong data-i18n="c-sala">Sala de aula</strong><small data-i18n="c-sala2">projetor, som, câmera</small></span></a>
+            <a href="#portal"><i data-ic="chave"></i><span><strong data-i18n="c-contas">Contas e senhas</strong><small data-i18n="c-contas2">Google, sistemas</small></span></a>
+          </div>
+        </div>
+        <div class="p-sec"><h2 data-i18n="mais">Mais procurados</h2><div class="lista-art" id="p-populares"></div></div>
+      </div>
+
+      <div class="pv oculto" id="pv-novo">
+        <div class="p-form">
+          <nav class="trilha"><a href="#portal" data-pv="inicio" data-i18n="p-inicio">Início</a><span class="sep">/</span><span class="atual" data-i18n="p-abrir">Abrir pedido</span></nav>
+          <div class="seg-t" role="tablist" id="abas-portal"><button role="tab" class="on" data-p="sup" data-i18n="tab-sup">Suporte</button><button role="tab" data-p="ev" data-i18n="tab-ev">Evento de AV</button></div>
+
+          <form class="form" id="form-sup" onsubmit="return false" aria-label="Abrir um pedido">
+            <div><h1 data-i18n="f-tit">Abrir um pedido</h1><p class="mut" data-i18n="f-sub">Os próximos campos aparecem conforme as suas escolhas.</p></div>
+            <button type="button" class="b fant" id="sim-qr" style="align-self:flex-start;margin-left:-10px"><i data-ic="qr"></i><span data-i18n="qr-sim">Simular QR da Sala 214</span></button>
+            <div class="campo"><label for="p-tipo" data-i18n="l-tipo">Você é</label><select id="p-tipo"><option>Funcionário(a) da escola</option><option>Responsável por aluno</option></select></div>
+            <div class="local-box" id="local-sup">
+              <div class="local-cab"><span data-i18n="l-onde">Onde é o problema?</span><span class="selo-qr oculto" id="selo-qr"><span data-i18n="via-qr">via QR</span> · BAR-2-214</span><button type="button" class="btn-link oculto" id="nao-estou" data-i18n="nao-estou">Não estou nesta sala</button></div>
+              <div class="grade3">
+                <div class="campo"><label for="p-campus" data-i18n="l-campus">Campus</label><select id="p-campus"></select></div>
+                <div class="campo" id="w-p-andar"><label for="p-andar" data-i18n="l-andar">Andar</label><select id="p-andar"></select></div>
+                <div class="campo" id="w-p-sala"><label for="p-sala" data-i18n="l-sala">Sala</label><select id="p-sala"></select></div>
+              </div>
+            </div>
+            <div class="campo"><span class="lbl" data-i18n="l-motivo">Motivo do contato</span><div class="motivos" role="radiogroup" aria-label="Motivo do contato" id="motivos"></div></div>
+            <div class="grade2" id="w-equip">
+              <div class="campo"><label for="p-equip" data-i18n="l-equip">Equipamento</label><select id="p-equip"><option value="">Escolha…</option><option value="projetor" selected>Projetor</option><option value="impressora">Impressora</option><option value="notebook">Notebook / Chromebook</option><option value="som">Caixa de som</option></select></div>
+              <div class="campo" id="w-sint"><label for="p-sint" data-i18n="l-sint">O que está acontecendo?</label><select id="p-sint"></select></div>
+            </div>
+            <div class="campo"><label for="p-ass" data-i18n="l-ass">Assunto</label><input id="p-ass" value="Projetor da sala 204 não liga" autocomplete="off"></div>
+            <section class="sugest" id="sugest" aria-live="polite"></section>
+            <div class="campo"><label for="p-desc" data-i18n="l-desc">Descrição</label><textarea id="p-desc">Tenho aula às 10:30 e preciso do projetor.</textarea></div>
+            <div class="form-rod"><button type="button" class="b fant" id="p-anexar"><i data-ic="clipe"></i><span data-i18n="anexar">Anexar foto ou arquivo</span></button><span class="esp"></span><button type="submit" class="b sol gr" id="enviar-pedido" data-i18n="enviar">Enviar pedido</button></div>
+          </form>
+
+          <form class="form oculto" id="form-ev" onsubmit="return false" aria-label="Pedir suporte de AV para um evento">
+            <div><h1 data-i18n="ev-tit">Suporte de AV para um evento</h1><p class="mut" data-i18n="ev-sub">Peça com pelo menos 5 dias úteis de antecedência. O prazo da equipe é o início da montagem.</p></div>
+            <div class="grade2">
+              <div class="campo"><label for="e-nome" data-i18n="e-nome">Nome do evento</label><input id="e-nome" placeholder="Ex.: Assembly do Ensino Fundamental"></div>
+              <div class="campo"><label for="e-tipo" data-i18n="e-tipo">Tipo</label><select id="e-tipo"></select></div>
+            </div>
+            <div class="grade3">
+              <div class="campo"><label for="e-data" data-i18n="e-data">Data</label><input id="e-data" type="date" value="2026-11-03"></div>
+              <div class="campo"><label for="e-ini" data-i18n="e-ini">Início</label><input id="e-ini" type="time" value="08:00"></div>
+              <div class="campo"><label for="e-fim" data-i18n="e-fim">Fim</label><input id="e-fim" type="time" value="09:30"></div>
+            </div>
+            <div class="aviso-verm oculto" id="e-aviso" role="status"></div>
+            <div class="grade2">
+              <div class="campo"><label for="e-mont" data-i18n="e-mont">Início da montagem</label><input id="e-mont" type="datetime-local" value="2026-11-03T07:00"></div>
+              <div class="campo"><label for="e-pub" data-i18n="e-pub">Público estimado</label><input id="e-pub" type="number" min="1" value="120"></div>
+            </div>
+            <div class="local-box">
+              <div class="local-cab"><span data-i18n="e-local">Local do evento</span></div>
+              <div class="grade3">
+                <div class="campo"><label for="e-campus" data-i18n="l-campus">Campus</label><select id="e-campus"></select></div>
+                <div class="campo" id="w-e-andar"><label for="e-andar" data-i18n="l-andar">Andar</label><select id="e-andar"></select></div>
+                <div class="campo" id="w-e-sala"><label for="e-sala" data-i18n="l-sala">Sala</label><select id="e-sala"></select></div>
+              </div>
+            </div>
+            <fieldset class="equip"><legend data-i18n="e-equip">Equipamentos</legend><div class="checks" id="e-equip"></div></fieldset>
+            <div class="campo"><label for="e-obs" data-i18n="e-obs">Observações</label><textarea id="e-obs" placeholder="Roteiro, quem fala, se precisa de gravação…"></textarea></div>
+            <div class="form-rod"><span class="esp"></span><button type="submit" class="b sol gr" id="enviar-evento" data-i18n="e-enviar">Enviar pedido de evento</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="pv oculto" id="pv-pedidos">
+        <div class="p-larga">
+          <div class="p-cab-l"><h1 data-i18n="p-pedidos">Meus pedidos</h1><div class="seg-t" id="f-pedidos" style="margin-left:8px"><button class="on" data-f="abertos" data-i18n="f-abertos">Abertos</button><button data-f="todos" data-i18n="f-todos">Todos</button></div><span class="esp"></span><button class="b sol" data-pv="novo"><span data-i18n="p-abrir">Abrir pedido</span></button></div>
+          <div class="tab-wrap"><table class="tab" id="tab-pedidos"><thead><tr><th style="width:84px" data-i18n="th-n">Nº</th><th data-i18n="th-ass">Assunto</th><th style="width:170px" data-i18n="th-est">Estado</th><th style="width:130px" data-i18n="th-at">Atualizado</th></tr></thead><tbody id="corpo-pedidos"></tbody></table></div>
+        </div>
+      </div>
+
+      <button class="fab" id="fab" aria-expanded="false"><i data-ic="chat"></i><span data-i18n="fab">Fale com a TI</span></button>
+      <div class="chat" id="chat" role="dialog" aria-label="Chat com a TI">
+        <header>
+          <span data-marca="28"></span>
+          <div style="flex:1"><strong>TI · EARJ</strong><small>Online · costuma responder em minutos</small></div>
+          <button class="b ic fant" id="fechar-chat" aria-label="Fechar chat"><i data-ic="x"></i></button>
+        </header>
+        <div class="corpo" id="corpo-chat">
+          <span class="dia-chat">Hoje · pedido #8431</span>
+          <div class="bal eu">Oi! O som do ginásio não está funcionando e o evento começa às 14h.</div>
+          <div style="display:flex;gap:8px;align-items:flex-end"><span class="av m">RT</span><div class="bal eles">Olá, Bruna! Sou o Rafael, do suporte. Já estou indo ao ginásio verificar a mesa de som.</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-end"><span style="width:28px;flex:0 0 28px"></span><div class="bal eles">Resolvido: era o cabo da caixa principal. Pode testar?</div></div>
+          <section class="aval"><strong>Como foi o atendimento?</strong><div class="notas" role="radiogroup" aria-label="Nota de 1 a 5" id="notas"><button role="radio" aria-checked="false">1</button><button role="radio" aria-checked="false">2</button><button role="radio" aria-checked="false">3</button><button role="radio" aria-checked="false">4</button><button role="radio" aria-checked="false">5</button></div><span class="mut" style="font-size:12px" id="legenda">1 = muito ruim · 5 = excelente</span></section>
+        </div>
+        <div id="digitando">Rafael está escrevendo <span class="digit"></span><span class="digit"></span><span class="digit"></span></div>
+        <form id="form-chat"><label for="m-chat" class="sr">Mensagem</label><input id="m-chat" class="inp" placeholder="Escreva sua mensagem"><button type="submit" class="b ic gr" style="width:32px" aria-label="Enviar"><i data-ic="enviar"></i></button></form>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<aside class="notif" id="notif" aria-label="Notificações">
+  <header>Notificações<span class="esp"></span><button class="b fant" id="notif-lidas">Marcar como lidas</button><button class="b ic fant" id="fechar-notif" aria-label="Fechar notificações"><i data-ic="x"></i></button></header>
+  <div id="notif-lista" style="overflow:auto;flex:1"></div>
+</aside>
+
+<div class="massa" id="massa" role="region" aria-label="Ações em massa">
+  <span id="qtd">0 selecionados</span><span class="div-v"></span>
+  <span class="rel"><button class="b fant" id="m-atribuir"><i data-ic="pessoa"></i>Atribuir</button><div class="pop cima" id="pop-m-atribuir"></div></span>
+  <span class="rel"><button class="b fant" id="m-estado"><i data-ic="checkc"></i>Estado</button><div class="pop cima" id="pop-m-estado"></div></span>
+  <span class="rel"><button class="b fant" id="m-macro"><i data-ic="macro"></i>Macro</button><div class="pop cima" id="pop-m-macro" style="min-width:240px"></div></span>
+  <span class="rel"><button class="b ic fant" id="m-mais" aria-label="Mais ações"><i data-ic="mais"></i></button><div class="pop cima dir" id="pop-m-mais"><button type="button" data-m="Prioridade alterada">Mudar prioridade</button><button type="button" data-m="Etiquetas aplicadas">Etiquetas</button><button type="button" data-m="Mesclados">Mesclar</button><button type="button" data-m="CSV exportado">Exportar CSV</button></div></span>
+  <button class="b ic fant" id="cancelar-sel" aria-label="Cancelar seleção"><i data-ic="x"></i></button>
+</div>
+
+<div class="pop fixo" id="pop-campo"></div>
+
+<div class="veu" id="veu"></div>
+<aside class="gaveta" id="gaveta" role="dialog" aria-label="Rascunho de artigo">
+  <header><div style="flex:1"><strong>Rascunho de artigo</strong><small id="art-origem">a partir do #8401 · sem dados do solicitante</small></div><button class="b ic fant" id="fechar-gaveta" aria-label="Fechar rascunho"><i data-ic="x"></i></button></header>
+  <div class="corpo-g">
+    <div class="grade2">
+      <div class="campo"><label for="art-cat">Categoria</label><select id="art-cat"><option>Impressoras</option><option>Wi-Fi e rede</option><option>Sala de aula</option><option>Contas e senhas</option></select></div>
+      <div class="campo"><span class="lbl">Idioma</span><div class="seg-t" id="art-idioma" style="height:32px"><button type="button" class="on">PT</button><button type="button" id="art-en">EN (pedir)</button></div></div>
+    </div>
+    <div class="campo"><label for="art-tit">Título</label><input id="art-tit"></div>
+    <div class="campo"><label for="art-txt">Texto</label><textarea id="art-txt" style="min-height:260px;line-height:1.55"></textarea></div>
+    <p class="mut" style="font-size:12px">Só o admin publica. O rascunho guarda o ticket de origem e entra nas sugestões do portal depois de publicado.</p>
+  </div>
+  <footer><button class="b" id="art-variante">Pedir variante EN</button><span class="esp"></span><button class="b sol" id="art-salvar">Salvar rascunho</button></footer>
+</aside>
+<div class="toast" id="toast" role="status"></div>
+<div class="dlg-veu" id="paleta-veu"><div class="paleta" role="dialog" aria-label="Buscar"><input id="paleta-q" placeholder="Ir para ticket, visão ou tela…" aria-label="Buscar comando" autocomplete="off"><div class="res" id="paleta-res"></div><div class="dica">↑ ↓ escolhe · Enter abre · Esc fecha</div></div></div>
+<div class="dlg-veu" id="atalhos-veu"><div class="dlg" role="dialog" aria-label="Atalhos de teclado"><header>Atalhos<span class="esp"></span><button class="b ic fant" id="fechar-atalhos" aria-label="Fechar"><i data-ic="x"></i></button></header>
+  <dl><dt>Buscar e ir para</dt><dd><kbd>Ctrl K</kbd></dd><dt>Responder</dt><dd><kbd>R</kbd></dd><dt>Nota interna</dt><dd><kbd>N</kbd> ou <kbd>I</kbd></dd><dt>Estado</dt><dd><kbd>S</kbd></dd><dt>Atribuir</dt><dd><kbd>A</kbd></dd><dt>Prioridade</dt><dd><kbd>P</kbd></dd><dt>Ticket anterior / seguinte</dt><dd><kbd>Shift ←</kbd> <kbd>Shift →</kbd></dd><dt>Enviar</dt><dd><kbd>Ctrl ↵</kbd></dd><dt>Fechar</dt><dd><kbd>Esc</kbd></dd><dt>Esta lista</dt><dd><kbd>?</kbd></dd></dl></div></div>
+
+<script>
+const $ = (s, e = document) => e.querySelector(s);
+const $$ = (s, e = document) => [...e.querySelectorAll(s)];
+
+// ---------- Ícones próprios: traço 1.5, contorno, 16px ----------
+const P = {
+  busca:'<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 13.5 13.5"/>',
+  sino:'<path d="M4 11.5V7.5a4 4 0 0 1 8 0v4l1 1H3z"/><path d="M6.5 14h3"/>',
+  casa:'<path d="M2.5 7 8 2.5 13.5 7v6.5h-11z"/><path d="M6.5 13.5v-4h3v4"/>',
+  ticket:'<path d="M2.5 4.5h11v2.2a1.5 1.5 0 0 0 0 2.6v2.2h-11V9.3a1.5 1.5 0 0 0 0-2.6z"/><path d="M10 5v1.2M10 7.4v1.2M10 9.8V11"/>',
+  cal:'<rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/>',
+  qr:'<rect x="2.5" y="2.5" width="4" height="4" rx=".5"/><rect x="9.5" y="2.5" width="4" height="4" rx=".5"/><rect x="2.5" y="9.5" width="4" height="4" rx=".5"/><path d="M9.5 9.5h1.5v1.5M13.5 9.5v.01M12 12v1.5h1.5M9.5 13.5v.01"/>',
+  graf:'<path d="M2.5 13.5h11M4.5 11V8M8 11V4.5M11.5 11V6.5"/>',
+  relogio:'<circle cx="8" cy="8" r="5.5"/><path d="M8 5v3l2 1.5"/>',
+  pessoa:'<circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.8-2.4 2.8-3.5 5-3.5s4.2 1.1 5 3.5"/>',
+  pessoax:'<circle cx="7" cy="5.5" r="2.5"/><path d="M2.5 13.5c.7-2.3 2.5-3.5 4.5-3.5 1 0 1.9.3 2.6.8M11 10.5l2.5 2.5M13.5 10.5 11 13"/>',
+  pausa:'<circle cx="8" cy="8" r="5.5"/><path d="M6.5 6v4M9.5 6v4"/>',
+  ampulheta:'<path d="M4.5 2.5h7M4.5 13.5h7M5.5 2.5c0 3 5 3.2 5 5.5s-5 2.5-5 5.5M10.5 2.5c0 3-5 3.2-5 5.5s5 2.5 5 5.5"/>',
+  checkc:'<circle cx="8" cy="8" r="5.5"/><path d="M5.7 8.2 7.3 9.8 10.4 6.4"/>',
+  check:'<path d="M3.5 8.5 6.5 11.5 12.5 4.5"/>',
+  portal:'<rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M2.5 6h11M5 4.5h.01M7 4.5h.01"/>',
+  lua:'<path d="M13 9.6A5.5 5.5 0 1 1 6.4 3a4.4 4.4 0 0 0 6.6 6.6z"/>',
+  sol:'<circle cx="8" cy="8" r="2.8"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M3.6 12.4l1-1M11.4 4.6l1-1"/>',
+  lateral:'<rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M6 2.5v11M10.5 6.5 9 8l1.5 1.5"/>',
+  chevb:'<path d="M4.5 6.5 8 10l3.5-3.5"/>',
+  chevd:'<path d="M6.5 4.5 10 8l-3.5 3.5"/>',
+  cheve:'<path d="M9.5 4.5 6 8l3.5 3.5"/>',
+  mais:'<circle cx="3.5" cy="8" r=".9" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/><circle cx="12.5" cy="8" r=".9" fill="currentColor" stroke="none"/>',
+  add:'<path d="M8 3.5v9M3.5 8h9"/>',
+  atualizar:'<path d="M13 8a5 5 0 1 1-1.6-3.7"/><path d="M13 2.8v2.7h-2.7"/>',
+  filtro:'<path d="M2.5 3.5h11l-4.2 5v3.8l-2.6 1.2V8.5z"/>',
+  ordenar:'<path d="M5 3v10M2.8 10.8 5 13l2.2-2.2M11 13V3M8.8 5.2 11 3l2.2 2.2"/>',
+  colunas:'<rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M6.2 3v10M9.8 3v10"/>',
+  responder:'<path d="M6.5 4 2.5 8l4 4"/><path d="M2.5 8h7a4 4 0 0 1 4 4v.5"/>',
+  nota:'<path d="M3.5 2.5h6l3 3v8h-9z"/><path d="M9.5 2.5v3h3M5.5 8.5h5M5.5 11h3"/>',
+  clipe:'<path d="M10.5 4.5 5.2 9.8a1.6 1.6 0 0 0 2.3 2.3L12.6 7a3 3 0 0 0-4.2-4.2L3.4 7.8a4.3 4.3 0 0 0 6.1 6.1L13 10.4"/>',
+  macro:'<path d="M3 4h10M3 8h10M3 12h6"/>',
+  revisar:'<path d="M2.5 12.5 5.5 4l3 8.5M3.6 9.5h3.8"/><path d="M9.5 10.5 11 12l3-3.2"/>',
+  enviar:'<path d="M2.5 8 13.5 3l-4 11-2-4.5z"/><path d="M7.5 9.5 13.5 3"/>',
+  x:'<path d="M4 4l8 8M12 4l-8 8"/>',
+  link:'<path d="M7 9a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 9 3.5l-.7.7"/><path d="M9 7a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 7 12.5l.7-.7"/>',
+  encaminhar:'<path d="M9.5 4l4 4-4 4"/><path d="M13.5 8h-7a4 4 0 0 0-4 4v.5"/>',
+  mesclar:'<path d="M4 2.5v2a4 4 0 0 0 4 4h5.5M11 6l2.5 2.5L11 11M4 13.5v-3"/>',
+  artigo:'<path d="M2.5 3.5h4A1.5 1.5 0 0 1 8 5v8.5a1.2 1.2 0 0 0-1.2-1.2H2.5zM13.5 3.5h-4A1.5 1.5 0 0 0 8 5v8.5a1.2 1.2 0 0 1 1.2-1.2h4.3z"/>',
+  resumo:'<path d="M3 3.5h10M3 6.5h10M3 9.5h7M3 12.5h4"/>',
+  email:'<rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M2.5 5 8 9l5.5-4"/>',
+  chat:'<path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z"/>',
+  ferramenta:'<path d="M10 2.5a3 3 0 0 0-2.8 4L2.8 10.9a1.4 1.4 0 0 0 2 2l4.4-4.4A3 3 0 0 0 13.5 6l-2 .5L10 5l.5-2z"/>',
+  menu:'<path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>',
+  local:'<path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"/><circle cx="8" cy="6.5" r="1.5"/>',
+  imprimir:'<path d="M4.5 6V2.5h7V6M4.5 11.5h-2V6h11v5.5h-2"/><rect x="4.5" y="9.5" width="7" height="4"/>',
+  info:'<circle cx="8" cy="8" r="5.5"/><path d="M8 7.5v3.5M8 5h.01"/>',
+  olho:'<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
+  urgente:'<rect x="2.5" y="2.5" width="11" height="11" rx="2.5"/><path d="M8 5v3.5M8 11h.01"/>',
+  wifi:'<path d="M2 6.5a9 9 0 0 1 12 0M4 9a5.5 5.5 0 0 1 8 0M6.2 11.3a2.4 2.4 0 0 1 3.6 0M8 13.5h.01"/>',
+  projetor:'<rect x="1.5" y="5" width="13" height="6" rx="1.5"/><circle cx="10.5" cy="8" r="1.5"/><path d="M4 11v2M12 11v2"/>',
+  chave:'<circle cx="5.5" cy="10.5" r="3"/><path d="M7.6 8.4 13 3M11 5l1.5 1.5"/>',
+  setad:'<path d="M3 8h10M9 4l4 4-4 4"/>'
+};
+const ic = (n, cls = '', s = 16) => `<svg class="i ${cls}" width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
+const PANTERA = '<path d="M4 9 L9 4 L14 8 L19 4 L24 9 L24 17 C24 22 19 25 14 25 C9 25 4 22 4 17 Z" fill="#FFFFFF"/><circle cx="10.5" cy="14.5" r="1.9" fill="#D62839"/><circle cx="17.5" cy="14.5" r="1.9" fill="#D62839"/>';
+const marca = px => `<span class="marca-t" style="width:${px}px;height:${px}px;border-radius:${Math.round(px / 4)}px"><svg width="${Math.round(px * .8)}" height="${Math.round(px * .8)}" viewBox="0 0 28 28" aria-hidden="true">${PANTERA}</svg></span>`;
+function hidratar(){
+  $$('[data-ic]').forEach(el => { const t = document.createElement('template'); t.innerHTML = ic(el.dataset.ic, el.className); el.replaceWith(t.content.firstChild); });
+  $$('[data-marca]').forEach(el => { const t = document.createElement('template'); t.innerHTML = marca(+el.dataset.marca); el.replaceWith(t.content.firstChild); });
+}
+hidratar();
+
+// ---------- Datas de referência ----------
+const HOJE = new Date(2026, 9, 29); // quinta, 29/10/2026
+const AGORA = 10 * 60 + 38;         // 10:38
+const pIso = iso => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
+const diasAte = iso => Math.round((pIso(iso) - HOJE) / 864e5);
+function diasUteis(iso){ const alvo = pIso(iso); const c = new Date(HOJE); let n = 0; while (c < alvo) { c.setDate(c.getDate() + 1); const w = c.getDay(); if (w && w < 6) n++; } return n; }
+const faltam = n => n <= 0 ? 'é hoje' : n === 1 ? 'falta 1 dia' : `faltam ${n} dias`;
+const ddmm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
+const iniciais = nome => nome.split(' ').map(p => p[0]).slice(0, 2).join('');
+const semAcento = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const emailDe = nome => semAcento(nome).replace(/ /g, '.') + '@earj.example';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[c]));
+const semTags = s => s.replace(/<[^>]+>/g, '').trim();
+function rel(h){
+  if (!h || h === 'agora') return 'agora';
+  if (/^ontem/.test(h)) return 'ontem';
+  if (/^\d{2}\/\d{2}/.test(h)) { const d = -diasAte('2026-' + h.slice(3, 5) + '-' + h.slice(0, 2)); return d <= 0 ? 'hoje' : d === 1 ? 'ontem' : `há ${d} dias`; }
+  const m = h.match(/(\d{1,2}):(\d{2})/); if (!m) return h;
+  const diff = AGORA - (+m[1] * 60 + +m[2]);
+  return diff < 1 ? 'agora' : diff < 60 ? `há ${diff} min` : `há ${Math.floor(diff / 60)} h`;
+}
+
+// ---------- Cadastro de locais ----------
+const locais = {
+  barra:{nome:'Barra', andares:[
+    {id:'sub', nome:'Subsolo', salas:['Sala de servidores','Depósito de AV','Garagem']},
+    {id:'ter', nome:'Térreo', salas:['Recepção','Secretaria','Enfermaria','Ginásio','Refeitório']},
+    {id:'1', nome:'1º andar', salas:['Sala 101','Sala 104','Sala 110','Laboratório de informática']},
+    {id:'2', nome:'2º andar', salas:['Sala 201','Sala 204','Sala 210','Sala 214','Sala dos professores']},
+    {id:'cob', nome:'Cobertura', salas:['Auditório','Terraço','Estúdio de música']}]},
+  gavea:{nome:'Gávea', andares:[
+    {id:'a-t', nome:'Prédio A · Térreo', salas:['Recepção','Biblioteca','Sala A-02']},
+    {id:'a-1', nome:'Prédio A · 1º andar', salas:['Sala A-11','Sala A-12','Laboratório de ciências']},
+    {id:'b-t', nome:'Prédio B · Térreo', salas:['RH','Financeiro','Refeitório']},
+    {id:'b-2', nome:'Prédio B · 2º andar', salas:['Teatro','Sala B-21','Sala B-22']}]},
+  entre:{nome:'Entre campi', andares:[{id:'ambos', nome:'Barra + Gávea', salas:['Auditório (Barra) + Teatro (Gávea)','Ginásio (Barra) + Teatro (Gávea)','Transmissão para os dois campi']}]}
+};
+
+// ---------- Eventos de AV ----------
+const tipos = {assembly:'Assembly', homecoming:'Homecoming', traducao:'Tradução simultânea', entre:'Evento entre campi', pequeno:'Pequeno evento', outro:'Outro'};
+const eventos = [
+  {n:8426, nome:'Palestra para pais com tradução simultânea', tipo:'traducao', campus:'gavea', data:'2026-11-04', ini:'18:30', fim:'20:00', mont:'2026-11-04', montH:'14:00', local:'Prédio B · 2º andar · Teatro', pub:180, equip:['Cabines de tradução','Fones de tradução','Microfone sem fio','Projetor'], sol:'Lívia Prates', foraPrazo:true},
+  {n:8425, nome:'Assembly do Ensino Médio', tipo:'assembly', campus:'barra', data:'2026-11-06', ini:'08:00', fim:'09:30', mont:'2026-11-05', montH:'15:00', local:'Cobertura · Auditório', pub:420, equip:['Mesa de som','Microfone sem fio','Projetor','Telão'], sol:'Paula Mendes'},
+  {n:8428, nome:'Apresentação de música do 5º ano', tipo:'pequeno', campus:'gavea', data:'2026-11-10', ini:'10:00', fim:'11:00', mont:'2026-11-10', montH:'08:00', local:'Prédio A · Térreo · Biblioteca', pub:60, equip:['Caixas de som','Microfone sem fio'], sol:'Helena Ribas'},
+  {n:8439, nome:'Orientação do 9º ano', tipo:'pequeno', campus:'barra', data:'2026-11-11', ini:'13:30', fim:'14:30', mont:'2026-11-11', montH:'12:30', local:'1º andar · Sala 110', pub:45, equip:['Projetor'], sol:'Bruno Faria'},
+  {n:8430, nome:'Homecoming Panthers', tipo:'homecoming', campus:'barra', data:'2026-11-14', ini:'10:00', fim:'16:00', mont:'2026-11-13', montH:'13:00', local:'Térreo · Ginásio', pub:900, equip:['Mesa de som','Caixas de som','Microfone sem fio','Telão','Transmissão ao vivo'], sol:'Carla Nunes', espera:true},
+  {n:8431, nome:'Conselho de classe entre campi', tipo:'entre', campus:'entre', data:'2026-11-18', ini:'14:00', fim:'16:30', mont:'2026-11-18', montH:'12:00', local:'Auditório (Barra) + Teatro (Gávea)', pub:120, equip:['Transmissão ao vivo','Projetor','Microfone sem fio'], sol:'Diana Prado'},
+  {n:8433, nome:'Feira de ciências', tipo:'outro', campus:'gavea', data:'2026-11-20', ini:'09:00', fim:'15:00', mont:'2026-11-19', montH:'14:00', local:'Prédio A · 1º andar · Laboratório de ciências', pub:300, equip:['Projetor','Caixas de som'], sol:'Otávio Reis'},
+  {n:8436, nome:'Reunião de pais com tradução', tipo:'traducao', campus:'barra', data:'2026-11-24', ini:'19:00', fim:'20:30', mont:'2026-11-24', montH:'16:00', local:'Cobertura · Auditório', pub:250, equip:['Cabines de tradução','Fones de tradução','Mesa de som'], sol:'Paula Mendes'},
+  {n:8435, nome:'Thanksgiving Assembly', tipo:'assembly', campus:'barra', data:'2026-11-26', ini:'08:00', fim:'09:00', mont:'2026-11-25', montH:'15:00', local:'Cobertura · Auditório', pub:450, equip:['Mesa de som','Microfone sem fio','Projetor'], sol:'Daniel Brooks'},
+  {n:8438, nome:'Recital de fim de semestre', tipo:'entre', campus:'entre', data:'2026-11-28', ini:'17:00', fim:'19:00', mont:'2026-11-28', montH:'13:00', local:'Teatro (Gávea) + transmissão para a Barra', pub:350, equip:['Transmissão ao vivo','Gravação','Mesa de som'], sol:'Lívia Prates'}
+];
+
+// ---------- Tickets fictícios ----------
+const tickets = [
+  {n:8420, sol:'Lucas Andrade', ini:'LA', email:'lucas.andrade@earj.example', lang:'PT', ass:'Wi-Fi fora no 2º andar da Barra', prev:'Desde 9h30 nenhuma sala do 2º andar conecta. 14 pedidos vinculados.', hora:'09:40', dia:'Hoje', sla:['alerta','vence em 30 min'], meta:'#8420 · Barra · 2º andar', estado:['Aberto'], pri:['Urgente'], canal:'Formulário do portal', grupo:'Suporte Barra', filhos:14,
+    det:{sla:['1ª resposta vence às 11:08','30 min',70,'alerta'], campus:'Barra', andar:'2º andar', sala:'5 salas', motivo:'Rede e internet', equip:'Access points', sint:'Sem conexão', tags:['wi-fi','incidente','barra-2'], cargo:'Coordenador', maq:'NB-BAR-0233', ant:1}},
+  {n:8412, sol:'Mariana Costa', ini:'MC', email:'mariana.costa@earj.example', lang:'PT', ass:'Projetor da sala 204 não liga', prev:'Rafael: lâmpada queimada, @Paula temos reserva?', hora:'08:12', dia:'Hoje', sla:['alerta','vence em 1 h 20'], meta:'#8412 · Barra · 2º andar', estado:['Aberto'], pri:['Alta'], canal:'Formulário do portal', grupo:'Suporte Barra',
+    det:{sla:['vence às 11:58','1 h 20 min',80,'alerta'], campus:'Barra', andar:'2º andar', sala:'Sala 204', motivo:'Audiovisual', equip:'Projetor', sint:'Não liga', tags:['projetor','barra','sala-de-aula'], cargo:'Professora', maq:'NB-BAR-0417', ant:3, seg:'Paula M.'}},
+  {n:8411, sol:'Daniel Brooks', ini:'DB', email:'daniel.brooks@earj.example', lang:'EN', ass:'Smartboard in room 214 not responding to touch', prev:'The board turns on but ignores touch since this morning.', hora:'07:55', dia:'Hoje', sla:['ok','vence em 3 h'], meta:'#8411 · Barra · 2º andar', estado:['Aberto'], pri:['Normal'], canal:'E-mail', grupo:'Suporte Barra', novo:true,
+    det:{sla:['vence às 13:38','3 h',35,'ok'], campus:'Barra', andar:'2º andar', sala:'Sala 214', motivo:'Audiovisual', equip:'Lousa digital', sint:'Toque não responde', tags:['lousa','barra'], cargo:'Teacher', maq:'NB-BAR-0388', ant:2}},
+  {n:8409, sol:'Marcos Teixeira', ini:'MT', email:'marcos.teixeira@earj.example', lang:'PT', ass:'Site bloqueado no laboratório', prev:'Preciso liberar um site de matemática para a turma.', hora:'07:40', dia:'Hoje', sla:['ok','vence em 2 d'], meta:'#8409 · e-mail', estado:['Aberto'], pri:['Normal'], canal:'E-mail', grupo:'Suporte Barra', novo:true,
+    det:{sla:['vence sáb. 11:40','2 d',20,'ok'], campus:'Barra', andar:'1º andar', sala:'Laboratório de informática', motivo:'Software educacional', equip:'—', sint:'Site bloqueado', tags:['filtro-web','barra'], cargo:'Professor', maq:'LAB-BAR-12', ant:5}},
+  {n:8401, sol:'Carla Nunes', ini:'CN', email:'carla.nunes@earj.example', lang:'PT', ass:'Impressora da sala dos professores não imprime frente e verso', prev:'Resolvido: deixamos frente e verso como padrão.', hora:'14:30', dia:'Ontem', sla:['pausa','resolvido no prazo'], meta:'#8401 · resolvido', estado:['Resolvido'], pri:['Normal'], canal:'Formulário do portal', grupo:'Suporte Barra', resolvido:true,
+    det:{sla:['resolvido ontem 15:20','no prazo',100,'ok'], campus:'Barra', andar:'2º andar', sala:'Sala dos professores', motivo:'Equipamento', equip:'Impressora', sint:'Não imprime frente e verso', tags:['impressora','barra'], cargo:'Coordenadora', maq:'PC-BAR-PROF-02', ant:4}},
+  {n:8398, sol:'Bruno Faria', ini:'BF', email:'bruno.faria@earj.example', lang:'PT', ass:'Troca de notebook autorizada', prev:'Em espera: entrega do fornecedor em até 5 dias úteis.', hora:'16:05', dia:'Ontem', sla:['venc','vencido há 2 h'], meta:'#8398 · em espera', estado:['Em espera'], pri:['Normal'], canal:'Formulário do portal', grupo:'Suporte Barra',
+    det:{sla:['venceu às 08:38','vencido há 2 h',100,'venc'], campus:'Barra', andar:'Térreo', sala:'Secretaria', motivo:'Equipamento', equip:'Notebook', sint:'Troca autorizada', tags:['notebook','fornecedor'], cargo:'Secretário', maq:'NB-BAR-0102', ant:2}},
+  {n:8390, sol:'Helena Ribas', ini:'HR', email:'helena.ribas@earj.example', lang:'PT', ass:'Document camera sem imagem', prev:'Via chat · a câmera liga mas o projetor não mostra.', hora:'13:12', dia:'Ontem', sla:['ok','vence em 4 d'], meta:'#8390 · chat', estado:['Aberto'], pri:['Normal'], canal:'Chat', grupo:'Suporte Barra',
+    det:{sla:['vence seg. 13:12','4 d',15,'ok'], campus:'Barra', andar:'1º andar', sala:'Sala 104', motivo:'Audiovisual', equip:'Document camera', sint:'Sem imagem', tags:['av','barra'], cargo:'Professora', maq:'NB-BAR-0290', ant:1}}
+];
+eventos.forEach(e => tickets.push({n:e.n, sol:e.sol, ini:iniciais(e.sol), email:emailDe(e.sol), lang:e.sol === 'Daniel Brooks' ? 'EN' : 'PT', ass:e.nome, prev:`Pedido de evento: ${tipos[e.tipo]} em ${ddmm(e.data)}, ${e.ini}–${e.fim}. Público estimado: ${e.pub}. Equipamentos: ${e.equip.join(', ')}.`, hora:'09:00', dia:'Eventos', sla:['evt', faltam(diasAte(e.mont)) + ' p/ montagem'], meta:`#${e.n} · ${locais[e.campus].nome}`, estado:e.espera ? ['Em espera'] : ['Aberto'], pri:['Normal'], canal:'Formulário de evento', grupo:'Eventos', evento:e, idade:'3 dias'}));
+
+const conversas = {
+  8420: [
+    {t:'pub', quem:'Lucas Andrade', ini:'LA', sub:'lucas.andrade@earj.example', hora:'hoje, 09:40', txt:'Desde as 9h30 nenhuma sala do 2º andar conecta no Wi-Fi. Os alunos estão sem acesso ao Classroom.'},
+    {t:'int', quem:'Você', ini:'VC', hora:'hoje, 09:48', txt:'Marquei como <b>incidente</b> e vinculei 13 pedidos de outras salas do 2º andar (11 PT, 3 EN). Suspeita: switch do rack do 2º andar.'},
+    {t:'int', quem:'Rafael Torres', ini:'RT', hora:'hoje, 09:55', txt:'Switch reiniciando em loop. <span class="mencao">@Você</span> vou trocar pelo reserva do subsolo.'}
+  ],
+  8412: [
+    {t:'pub', quem:'Mariana Costa', ini:'MC', sub:'mariana.costa@earj.example', hora:'hoje, 08:12', txt:'Bom dia! O projetor da sala 204 não liga. Tenho aula às 10:30 e preciso dele para a apresentação dos alunos.', anexo:'foto-projetor.png'},
+    {t:'pub', quem:'Você', ini:'VC', sub:'para Mariana Costa', hora:'hoje, 08:20', txt:'Olá, Mariana! Recebemos o seu pedido e um técnico vai até a sala 204 nos próximos minutos.'},
+    {t:'int', quem:'Rafael Torres', ini:'RT', hora:'hoje, 08:41', txt:'Lâmpada queimada. <span class="mencao">@Paula Mendes</span> temos lâmpada reserva no almoxarifado da Barra?'},
+    {t:'par', hora:'hoje, 08:55', txt:'Precisamos de uma lâmpada para projetor modelo XG-300 no campus Barra. Qual o prazo de entrega?'}
+  ],
+  8411: [
+    {t:'pub', quem:'Daniel Brooks', ini:'DB', sub:'daniel.brooks@earj.example · EN', hora:'hoje, 07:55', txt:'Good morning! The smartboard in room 214 turns on but does not respond to touch since this morning. I have a class at 11:00.'}
+  ],
+  8401: [
+    {t:'pub', quem:'Carla Nunes', ini:'CN', sub:'carla.nunes@earj.example', hora:'ontem, 14:30', txt:'A impressora da sala dos professores só imprime de um lado. Preciso das provas em frente e verso.'},
+    {t:'pub', quem:'Você', ini:'VC', sub:'para Carla Nunes', hora:'ontem, 15:20', txt:'Olá, Carla! Ajustamos o driver: em Imprimir › Propriedades › Acabamento, marque “Imprimir nos dois lados” e escolha “Virar na borda longa”. Deixamos essa opção como padrão em todos os computadores da sala dos professores.'}
+  ]
+};
+// Eventos de sistema: linhas cinza curtas na linha do tempo (apos = índice da mensagem anterior)
+const sistema = {
+  8420: [{apos:0, txt:'<b>Você</b> marcou como incidente', q:'há 50 min'}, {apos:0, txt:'<b>Você</b> vinculou 13 tickets do 2º andar', q:'há 50 min'}, {apos:0, txt:'Prioridade mudou para Urgente', q:'há 49 min'}, {apos:0, txt:'<b>Rafael Torres</b> passou a seguir', q:'há 47 min'}],
+  8412: [{apos:0, txt:'<b>Rafael Torres</b> atribuiu a você', q:'há 2 h'}, {apos:2, txt:'<b>Paula Mendes</b> passou a seguir', q:'há 1 h'}],
+  8401: [{apos:1, txt:'<b>Você</b> mudou o estado para Resolvido', q:'ontem'}]
+};
+const resumos = {8412:'Projetor da sala 204 não liga desde a manhã; aula às 10:30. Lâmpada queimada. Projetor portátil entregue; troca pedida ao fornecedor.'};
+const rascunhos = {8412:'Mariana, a lâmpada queimou. Deixamos um projetor portátil na sala 204 para a sua aula das 10:30 e já pedimos a troca ao fornecedor.'};
+
+// ---------- Macros por intenção ----------
+const macros = [
+  {id:'local', nome:'Atendimento no local', en:'On-site visit', pt_:'Olá, {nome}! Um técnico vai até o local em alguns minutos.', en_:'Hi {nome}! A technician is on the way and will be there in a few minutes.'},
+  {id:'analise', nome:'Pendente — em análise', en:'Pending — investigating', pt_:'Olá, {nome}! Estamos analisando a causa e daremos retorno em breve.', en_:'Hi {nome}! We are looking into the cause and will get back to you shortly.'},
+  {id:'fornecedor', nome:'Em espera — fornecedor', en:'On hold — vendor', pt_:'Olá, {nome}! Já contatamos a empresa responsável e estamos acompanhando o prazo.', en_:'Hi {nome}! We have contacted the vendor and are tracking the timeline.'},
+  {id:'outra', nome:'Encaminhado a outra equipe', en:'Forwarded to another team', pt_:'Olá, {nome}! Encaminhamos o seu pedido para a equipe responsável, que vai continuar o atendimento.', en_:'Hi {nome}! We have forwarded your request to the responsible team, who will follow up.'},
+  {id:'incidente', nome:'Incidente — atualização geral', en:'Incident — general update', pt_:'Olá, {nome}! Identificamos uma falha no Wi-Fi do 2º andar da Barra e a equipe já está trabalhando nela. Avisaremos assim que normalizar.', en_:'Hi {nome}! We have identified a Wi-Fi outage on the 2nd floor at Barra and the team is already working on it. We will let you know as soon as it is back.'},
+  {id:'resolvido', nome:'Resolvido — encerramento', en:'Resolved — closing', pt_:'Olá, {nome}! Problema resolvido. Se precisar, é só responder este e-mail.', en_:'Hi {nome}! The issue is resolved. If you need anything else, just reply to this email.'}
+];
+
+// ---------- Visões (antigas filas) ----------
+const filas = {
+  'Quase escalando': {desc:'Próximo prazo vence em até 1 h útil, ou já estourado', linhas:[
+    ['Troca de notebook autorizada','#8398 · Barra · Térreo · fornecedor','Bruno Faria','Suporte Barra','Você',['venc','vencido há 2 h'],'2 dias'],
+    ['Licença do sistema administrativo','#8355 · entre campi · fornecedor','Diana Prado','Sistemas','André S.',['alerta','vence em 45 min'],'4 dias'],
+    ['Impressora do RH sem toner','#8417 · Gávea · Prédio B · Térreo','Diana Prado','Suporte Gávea','—',['alerta','vence em 45 min'],'40 min'],
+    ['Wi-Fi fora no 2º andar da Barra','#8420 · Barra · 2º andar','Lucas Andrade','Suporte Barra','Você',['alerta','vence em 30 min'],'58 min']]},
+  'Em espera': {desc:'Aguardando fornecedor ou outra equipe', linhas:[
+    ['Troca de notebook autorizada','#8398 · Barra · fornecedor','Bruno Faria','Suporte Barra','Rafael T.',['venc','vencido há 2 h'],'2 dias'],
+    ['Licença do sistema administrativo','#8355 · entre campi · fornecedor','Diana Prado','Sistemas','André S.',['alerta','vence em 45 min'],'4 dias'],
+    ['Soundbar do auditório com chiado','#8380 · Barra · encaminhado por você a Eventos','Carla Nunes','Eventos','—',['pausa','pausado'],'3 h'],
+    ['Homecoming Panthers','#8430 · Barra · Térreo · Ginásio','Carla Nunes','Eventos','Rafael T.',['evt','faltam 15 dias p/ montagem'],'5 dias'],
+    ['Acesso à VPN negado após atualização','#8402 · Gávea','João Lemos','Sistemas','André S.',['pausa','pausado'],'1 dia'],
+    ['Integração do diário de classe parada','#8366 · entre campi','Otávio Reis','Sistemas','—',['pausa','pausado'],'3 dias']]},
+  'Meus abertos': {desc:'Não resolvidos atribuídos a você', linhas:[
+    ['Wi-Fi fora no 2º andar da Barra','#8420 · Barra · 2º andar','Lucas Andrade','Suporte Barra','Você',['alerta','vence em 30 min'],'58 min'],
+    ['Projetor da sala 204 não liga','#8412 · Barra · 2º andar · formulário','Mariana Costa','Suporte Barra','Você',['alerta','vence em 1 h 20'],'2 h'],
+    ['Smartboard in room 214 not responding <span class="lng">EN</span>','#8411 · Barra · 2º andar · e-mail','Daniel Brooks','Suporte Barra','Você',['ok','vence em 3 h'],'2 h'],
+    ['Site bloqueado no laboratório','#8409 · Barra · 1º andar · e-mail','Marcos Teixeira','Suporte Barra','Você',['ok','vence em 2 d'],'3 h'],
+    ['Troca de notebook autorizada','#8398 · Barra · Térreo · fornecedor','Bruno Faria','Suporte Barra','Você',['venc','vencido há 2 h'],'2 dias'],
+    ['Document camera sem imagem','#8390 · Barra · 1º andar · chat','Helena Ribas','Suporte Barra','Você',['ok','vence em 4 d'],'1 dia']]},
+  'Sem responsável': {desc:'Ninguém pegou ainda', linhas:[
+    ['Impressora do RH sem toner','#8417 · Gávea · Prédio B · Térreo','Diana Prado','Suporte Gávea','—',['alerta','vence em 45 min'],'40 min'],
+    ['Projetor da Sala 214 sem imagem','#8423 · Barra · 2º andar · QR','Ana Ribeiro','Suporte Barra','—',['alerta','vence em 50 min'],'20 min'],
+    ['Wi-Fi fraco no ginásio','#8415 · Barra · Térreo · formulário','Otávio Reis','Suporte Barra','—',['ok','vence em 1 d'],'1 h'],
+    ['Caixa de som com chiado <span class="lng">EN</span>','#8424 · Barra · 2º andar · QR','Daniel Brooks','Suporte Barra','—',['ok','vence em 1 d'],'1 h'],
+    ['Microfone da biblioteca','#8414 · Gávea · Prédio A · chat','Lívia Prates','Eventos','—',['ok','vence em 2 d'],'2 h'],
+    ['Teclado sem funcionar','#8413 · Barra · 1º andar · formulário','Pedro Alves','Suporte Barra','—',['ok','vence em 3 d'],'3 h']]}
+};
+filas['Não resolvidos'] = {desc:'Todos os não resolvidos dos seus grupos', linhas:[...filas['Meus abertos'].linhas, ...filas['Sem responsável'].linhas,
+  ['Assembly do Ensino Médio','#8425 · Barra · Cobertura · Auditório','Paula Mendes','Eventos','Rafael T.',['evt','faltam 7 dias p/ montagem'],'3 dias'],
+  ['Palestra para pais com tradução','#8426 · Gávea · Prédio B · Teatro','Lívia Prates','Eventos','—',['evt','faltam 6 dias p/ montagem'],'1 dia']]};
+filas['Pendentes'] = {desc:'Aguardando o solicitante', linhas:filas['Em espera'].linhas.slice(1, 3)};
+filas['Resolvidos hoje'] = {desc:'Resolvidos nas últimas 12 h', linhas:[['Impressora da sala dos professores não imprime frente e verso','#8401 · Barra · 2º andar','Carla Nunes','Suporte Barra','Você',['pausa','resolvido no prazo'],'—']]};
+const VIS_LAT = [['Quase escalando','relogio'],['Meus abertos','pessoa'],['Sem responsável','pessoax'],['Em espera','pausa'],['Pendentes','ampulheta'],['Resolvidos hoje','checkc']];
+
+const feed = [
+  {f:'mencao', ini:'RT', txt:'<strong>Rafael Torres</strong> mencionou você em <strong>#8420 Wi-Fi 2º andar</strong>', meta:'há 9 min', cit:'“Switch reiniciando em loop. Vou trocar pelo reserva do subsolo.”', nova:true, n:8420},
+  {f:'sla', ini:'!', txt:'Prazo de resolução de <strong>#8398</strong> estourou', meta:'há 25 min · gestor avisado em 8 h úteis', nova:true, n:8398},
+  {f:'atrib', ini:'VC', txt:'<strong>#8420</strong> virou incidente com 14 vinculados', meta:'há 50 min'},
+  {f:'sla', ini:'!', txt:'<strong>#8425 Assembly do Ensino Médio</strong>: faltam 7 dias para a montagem', meta:'Barra · Cobertura', n:8425},
+  {f:'atrib', ini:'EV', txt:'<strong>Eventos</strong> devolveu <strong>#8380</strong> para você', meta:'há 1 h · encaminhamento com retorno'},
+  {f:'tudo', ini:'CN', txt:'<strong>Carla Nunes</strong> avaliou <strong>#8341</strong> com nota 5', meta:'ontem', cit:'“Rápido e gentil, obrigada!”'}
+];
+const notificacoes = [
+  {n:8412, ini:'RT', txt:'<strong>Rafael</strong> mencionou você em #8412', q:'há 12 min'},
+  {n:8398, ini:'!', txt:'Prazo de <strong>#8398</strong> estourou', q:'há 25 min'},
+  {n:0, ini:'EV', txt:'<strong>Eventos</strong> devolveu #8380', q:'há 1 h'}
+];
+
+// ---------- Normalização: cada linha das visões vira um ticket único ----------
+const COR_EST = {'Aberto':'var(--st-aberto)', 'Pendente':'var(--st-pendente)', 'Em espera':'var(--st-espera)', 'Resolvido':'var(--st-resolvido)'};
+const ESTADO_DA_VISAO = {'Em espera':'Em espera', 'Pendentes':'Pendente', 'Resolvidos hoje':'Resolvido'};
+const PRI_EXTRA = {8417:'Alta', 8423:'Alta', 8355:'Alta', 8366:'Alta', 8413:'Baixa'};
+const NAO_LIDOS = new Set([8417, 8423, 8424, 8415]);
+tickets.forEach(t => { t.est = t.estado[0]; t.prio = t.pri[0]; t.tipo = t.filhos ? 'Incidente' : t.evento ? 'Evento de AV' : 'Pedido'; });
+const porN = new Map(tickets.map(t => [t.n, t]));
+const visoes = {};
+Object.keys(filas).forEach(nome => {
+  visoes[nome] = [...new Set(filas[nome].linhas.map(l => {
+    const n = +l[1].match(/#(\d+)/)[1];
+    let t = porN.get(n);
+    if (!t) {
+      const meta = semTags(l[1]); const partes = meta.split(' · ');
+      t = {n, sol:l[2], ini:iniciais(l[2]), email:emailDe(l[2]), lang:/EN<\/span>/.test(l[0]) ? 'EN' : 'PT', ass:semTags(l[0]).replace(/\s+EN$/, ''), prev:'Sem mais detalhes no protótipo.', hora:'09:00', dia:'Hoje', sla:l[5], meta,
+        est:ESTADO_DA_VISAO[nome] || 'Aberto', prio:PRI_EXTRA[n] || 'Normal', tipo:'Pedido', canal:/QR/.test(meta) ? 'QR da sala' : /chat/.test(meta) ? 'Chat' : /e-mail/.test(meta) ? 'E-mail' : 'Formulário do portal', grupo:l[3], novo:NAO_LIDOS.has(n),
+        det:{campus:partes[1] || '—', andar:partes.slice(2).join(' · ') || '—', sala:'—', motivo:'—', equip:'—', sint:'—', tags:[], ant:1}};
+      tickets.push(t); porN.set(n, t);
+    }
+    if (t.resp === undefined) t.resp = l[4] === '—' ? null : l[4];
+    if (!t.idade) t.idade = l[6];
+    if (!t.slaF) t.slaF = l[5];
+    return n;
+  }))];
+});
+tickets.forEach(t => { if (t.resp === undefined) t.resp = t.evento ? 'Rafael T.' : 'Você'; if (!t.idade) t.idade = t.dia === 'Ontem' ? '1 dia' : '2 h'; });
+
+// ---------- Células comuns às listas ----------
+const iniResp = r => r === 'Você' ? 'VC' : iniciais(r.replace('.', ''));
+const avatar = (ini, cls = '') => ini === '!' ? `<span class="av ${cls}">${ic('relogio', '', 12)}</span>` : `<span class="av ${cls} ${ini === 'VC' ? 'voce' : ''}">${ini}</span>`;
+const curto = s => s.replace(/^vence em /, '').replace(/^vencido há /, '').replace(/^faltam (\d+) dias.*/, '$1 d').replace(/^falta 1 dia.*/, '1 d').replace(/^é hoje.*/, 'hoje');
+function prazos(t){
+  const [tipo, txt] = t.slaF || t.sla;
+  const ok = {c:'ok', t:'cumprido', d:'Cumprido no prazo'};
+  if (t.est === 'Resolvido') return [ok, {c:'ok', t:'cumprido', d:'Resolvido no prazo'}];
+  if (tipo === 'venc') return [ok, {c:'estourado', t:'−' + curto(txt), d:'Estourou ' + txt.replace('vencido ', '')}];
+  if (tipo === 'pausa') return [ok, {c:'pausa', t:'pausado', d:'Prazo pausado enquanto espera'}];
+  if (tipo === 'evt') return [ok, {c:'', t:curto(txt), d:txt.replace('p/', 'para a')}];
+  const corre = {c:tipo === 'alerta' ? 'perto' : '', t:curto(txt), d:txt[0].toUpperCase() + txt.slice(1)};
+  if (t.filhos) return [corre, {c:'', t:'4 h', d:'Resolução vence às 14:38'}];
+  if (!t.resp) return [corre, {c:'nada', t:'—', d:'Conta depois da 1ª resposta'}];
+  return [ok, corre];
+}
+const emb = p => `<span class="emb ${p.c}" title="${p.d}">${p.t}</span>`;
+const proxPrazo = t => { const [a, b] = prazos(t); return a.c === 'ok' ? b : a; };
+const RANK = {estourado:0, perto:1, '':2, pausa:3, nada:4, ok:5};
+const idadeMin = s => { const m = (s || '').match(/(\d+)\s*(min|h|dia)/); return !m ? 1e6 : +m[1] * (m[2] === 'min' ? 1 : m[2] === 'h' ? 60 : 1440); };
+const criado = t => t.idade === '—' ? 'ontem' : 'há ' + t.idade;
+const estHTML = e => `<span class="est"><i class="pt" style="background:${COR_EST[e] || 'var(--st-espera)'}"></i>${e}</span>`;
+function barras(p){
+  if (p === 'Urgente') return ic('urgente');
+  const n = {Baixa:1, Normal:2, Alta:3}[p] || 2;
+  return `<svg class="i" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">${[[3,10,3],[7,7,6],[11,4,9]].map(([x, y, h], i) => `<rect x="${x}" y="${y}" width="2.2" height="${h}" rx=".6" fill="${i < n ? 'currentColor' : 'var(--contorno-forte)'}"/>`).join('')}</svg>`;
+}
+const priHTML = p => `<span class="pri ${p === 'Urgente' ? 'urg' : ''}">${barras(p)}${p}</span>`;
+const respHTML = r => r ? `<span class="resp">${avatar(iniResp(r))}${r}</span>` : '<span class="mut4">Sem responsável</span>';
+const COLS = {sel:{r:'', w:44}, n:{r:'Nº', w:70}, ass:{r:'Assunto'}, est:{r:'Estado', w:118}, sla1:{r:'1ª resposta', w:100}, sla2:{r:'Resolução', w:96}, prazo:{r:'Prazo', w:96}, resp:{r:'Responsável', w:156}, pri:{r:'Prioridade', w:110}, criado:{r:'Criado', w:96}, sol:{r:'Solicitante', w:150}, grupo:{r:'Grupo', w:130}, canal:{r:'Canal', w:150}};
+function celula(id, t){
+  switch (id) {
+    case 'sel': return `<input type="checkbox" class="chk sel" data-n="${t.n}" aria-label="Selecionar #${t.n}" ${L.sel.has(t.n) ? 'checked' : ''}>`;
+    case 'n': return t.n;
+    case 'ass': return `<div><span class="ass" title="${esc(t.ass)}">${t.ass}</span>${t.filhos ? `<span class="emb">${t.filhos} vinculados</span>` : ''}${t.lang === 'EN' ? '<span class="tag-l">EN</span>' : ''}</div>`;
+    case 'est': return estHTML(t.est);
+    case 'sla1': return emb(prazos(t)[0]);
+    case 'sla2': return emb(prazos(t)[1]);
+    case 'prazo': return emb(proxPrazo(t));
+    case 'resp': return respHTML(t.resp);
+    case 'pri': return priHTML(t.prio);
+    case 'criado': return `<span title="Na fila há ${t.idade}">${criado(t)}</span>`;
+    default: return esc(t[id] || '');
+  }
+}
+function tabela(lista, cols, comSel){
+  const th = cols.map(c => c === 'sel' ? `<th class="c-sel" style="width:44px"><input type="checkbox" class="chk" id="sel-todos" aria-label="Selecionar todos"></th>` : `<th class="c-${c}"${COLS[c].w ? ` style="width:${COLS[c].w}px"` : ''}>${COLS[c].r}</th>`).join('');
+  const tb = lista.map(t => `<tr data-n="${t.n}" class="${t.novo ? 'nl' : ''} ${comSel && L.sel.has(t.n) ? 'sel' : ''}">${cols.map(c => `<td class="c-${c}">${celula(c, t)}</td>`).join('')}</tr>`).join('');
+  return `<thead><tr>${th}</tr></thead><tbody>${tb}</tbody>`;
+}
+function esqueleto(cols, n){
+  const th = cols.map(c => `<th class="c-${c}"${COLS[c].w ? ` style="width:${COLS[c].w}px"` : ''}>${COLS[c].r}</th>`).join('');
+  const w = [40, 72, 55, 64, 48, 80, 60, 50];
+  return `<thead><tr>${th}</tr></thead><tbody>${Array.from({length:n}, (_, i) => `<tr class="esq-l">${cols.map((c, k) => `<td class="c-${c}"><span class="esq" style="width:${c === 'sel' ? 14 + 'px' : (c === 'ass' ? 40 + (i * 13) % 45 : w[(i + k) % w.length]) + '%'}"></span></td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+
+// ---------- Utilidades de interface ----------
+const reduz = matchMedia('(prefers-reduced-motion: reduce)');
+const transicao = fn => {
+  if (!document.startViewTransition || reduz.matches || document.hidden) { fn(); return; }
+  const t = document.startViewTransition(fn);
+  [t.ready, t.finished, t.updateCallbackDone].forEach(p => p.catch(() => {}));
+};
+function fecharPops(){ $$('.pop.aberto').forEach(p => p.classList.remove('aberto')); }
+function alternarPop(pop, aoAbrir){ const p = $(pop); const abre = !p.classList.contains('aberto'); fecharPops(); p.classList.toggle('aberto', abre); if (abre && aoAbrir) aoAbrir(p); }
+function ligar(btn, pop, aoAbrir){ $(btn).addEventListener('click', e => { e.stopPropagation(); alternarPop(pop, aoAbrir); }); }
+document.addEventListener('click', e => { if (!e.target.closest('.pop')) fecharPops(); });
+function toast(txt){ const t = $('#toast'); t.textContent = txt; t.classList.remove('vis'); void t.offsetWidth; t.classList.add('vis'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('vis'), 2800); }
+
+// ---------- Navegação ----------
+const TELAS = ['entrar','inicio','tickets','ticket','portal','qr','eventos'];
+let telaAtual = null;
+function marcarNav(tela){
+  $$('.lateral [aria-current]').forEach(a => a.removeAttribute('aria-current'));
+  let ativo = null;
+  if (tela === 'tickets') ativo = $(`#lista-visoes [data-visao="${L.visao}"]`) || $('#nav-tickets');
+  else if (tela === 'ticket') ativo = $('#nav-tickets');
+  else ativo = $(`.lateral [data-tela="${tela}"]`);
+  if (ativo) ativo.setAttribute('aria-current', 'page');
+}
+function mostrar(tela, {visao} = {}){
+  if (tela === 'filas') tela = 'tickets';
+  if (visao && visoes[visao] && visao !== L.visao) { L.visao = visao; L.sel.clear(); }
+  const aplicar = () => {
+    $$('.tela').forEach(t => t.classList.toggle('ativa', t.id === 't-' + tela));
+    $('#app').classList.toggle('sem-lateral', tela === 'entrar' || tela === 'portal');
+    $('#app').classList.remove('nav-aberta');
+    marcarNav(tela);
+    if (tela === 'tickets') carregarLista();
+    if (tela === 'ticket') desenharTicket();
+    if (tela === 'eventos') desenharCal();
+    if (tela === 'inicio') desenharInicio();
+    if (tela !== 'tickets') { L.sel.clear(); atualizarSel(); }
+    if (tela !== 'portal') fecharChat();
+    fecharPops(); fecharGaveta(); fecharNotif();
+    window.scrollTo({top:0});
+    telaAtual = tela;
+  };
+  if (telaAtual) transicao(aplicar); else aplicar();
+}
+function ir(tela, opts){ history.replaceState(null, '', '#' + tela); mostrar(tela, opts); }
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-tela]');
+  if (!a) return;
+  e.preventDefault();
+  if (a.id === 'sair') toast('Você saiu do PantherDesk');
+  if (a.closest('.lateral')) { if (a.dataset.visao) L.visao = a.dataset.visao; marcarNav(a.dataset.tela); }
+  ir(a.dataset.tela, {visao:a.dataset.visao});
+});
+window.addEventListener('hashchange', () => {
+  let h = location.hash.slice(1);
+  if (h === 'filas') { history.replaceState(null, '', '#tickets'); h = 'tickets'; }
+  if (TELAS.includes(h) && h !== telaAtual) mostrar(h);
+});
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-acao]'); if (!a) return;
+  const acao = a.dataset.acao;
+  if (acao === 'busca') { e.preventDefault(); abrirPaleta(); }
+  if (acao === 'menu') { e.stopPropagation(); $('#app').classList.toggle('nav-aberta'); }
+  if (acao === 'relatorios') toast('Relatórios (protótipo)');
+});
+$('#veu-nav').addEventListener('click', () => $('#app').classList.remove('nav-aberta'));
+
+// ---------- Barra lateral: perfil, visões, tema, recolher ----------
+ligar('#btn-perfil', '#pop-perfil');
+$('#perfil-status').addEventListener('click', e => { fecharPops(); const aus = e.currentTarget.textContent === 'Ficar ausente'; e.currentTarget.textContent = aus ? 'Ficar disponível' : 'Ficar ausente'; $('#perfil-disp').textContent = aus ? 'Ausente' : 'Disponível'; toast(aus ? 'Você está ausente' : 'Você está disponível'); });
+$('#perfil-pref').addEventListener('click', () => { fecharPops(); toast('Preferências (protótipo)'); });
+$('#perfil-atalhos').addEventListener('click', () => { fecharPops(); abrirAtalhos(); });
+function desenharVisoesLat(){ $('#lista-visoes').innerHTML = VIS_LAT.map(([k, i]) => `<a class="ni" href="#tickets" data-tela="tickets" data-visao="${k}" title="${k}">${ic(i)}<span class="rot-l">${k}</span><span class="cont rot-l">${visoes[k].length}</span></a>`).join(''); }
+desenharVisoesLat();
+$('#grupo-visoes').addEventListener('click', e => { const b = e.currentTarget; const abre = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', abre); $('#visoes-c').classList.toggle('fechado', !abre); });
+function rotTema(){ const d = document.documentElement.dataset.theme === 'dark'; $('#tema-ic').innerHTML = ic(d ? 'sol' : 'lua'); $('#tema-ic-p').innerHTML = ic(d ? 'sol' : 'lua'); $('#tema-rot').textContent = d ? 'Tema claro' : 'Tema escuro'; }
+function trocarTema(){ transicao(() => { const d = document.documentElement; d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pd-tema', d.dataset.theme); } catch (e) {} rotTema(); }); }
+try { if (localStorage.getItem('pd-tema') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+rotTema();
+$('#tema').addEventListener('click', trocarTema); $('#tema-portal').addEventListener('click', trocarTema);
+try { if (localStorage.getItem('pd-lateral') === 'mini') $('#app').classList.add('mini'); } catch (e) {}
+$('#recolher').addEventListener('click', () => { const m = $('#app').classList.toggle('mini'); try { localStorage.setItem('pd-lateral', m ? 'mini' : ''); } catch (e) {} });
+
+// ---------- Notificações ----------
+function desenharNotif(){ $('#notif-lista').innerHTML = notificacoes.map(x => `<button class="notif-i" data-n="${x.n}">${avatar(x.ini)}<span><span>${x.txt}</span><small>${x.q}</small></span></button>`).join(''); }
+desenharNotif();
+function fecharNotif(){ $('#notif').classList.remove('aberta'); }
+$('#btn-notif').addEventListener('click', e => { e.stopPropagation(); $('#notif').classList.toggle('aberta'); });
+$('#fechar-notif').addEventListener('click', fecharNotif);
+$('#notif-lidas').addEventListener('click', () => { $('#notif-cont').textContent = ''; toast('Notificações lidas'); });
+$('#notif-lista').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (!b) return; fecharNotif(); const n = +b.dataset.n; if (n) abrirTicket(n); else toast('#8380 · devolvido por Eventos (protótipo)'); });
+document.addEventListener('click', e => { if (!e.target.closest('#notif') && !e.target.closest('#btn-notif')) fecharNotif(); });
+
+// ---------- Entrar ----------
+$('#entrar-google').addEventListener('click', () => { ir('inicio'); toast('Você entrou com a conta Google @earj.com.br'); });
+$('#entrar-link').addEventListener('click', e => { const f = $('#form-link'); const abre = f.classList.contains('oculto'); revelar(f, abre); e.currentTarget.setAttribute('aria-expanded', abre); if (abre) $('#e-link').focus(); });
+$('#form-link').addEventListener('submit', () => { if (!$('#e-link').value.trim()) { $('#e-link').focus(); return; } $('#e-link').value = ''; toast('Link de acesso enviado · confira o seu e-mail'); });
+
+// ---------- Início ----------
+function desenharInicio(){
+  const meus = tickets.filter(t => t.resp === 'Você' && t.est !== 'Resolvido' && !t.evento).sort((a, b) => RANK[proxPrazo(a).c] - RANK[proxPrazo(b).c]).slice(0, 5);
+  $('#tab-inicio').innerHTML = tabela(meus, ['n', 'ass', 'est', 'prazo', 'pri', 'criado'], false);
+}
+function desenharFeed(f){ $('#feed').innerHTML = feed.filter(x => f === 'tudo' || x.f === f).map(x => `<a href="#ticket" class="fd" data-abrir="${x.n || ''}">${avatar(x.ini)}<span class="fd-t"><span>${x.txt}</span> <span class="mut">· ${x.meta}</span>${x.cit ? `<span class="cit">${x.cit}</span>` : ''}</span>${x.nova ? '<i class="pt-nl" aria-label="não lida"></i>' : ''}</a>`).join('') || '<p class="mut" style="padding:8px 0">Nada por aqui.</p>'; }
+desenharFeed('tudo');
+$('#feed').addEventListener('click', e => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); abrirTicket(+a.dataset.abrir || ticketAtual); });
+$('#abas-feed').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#abas-feed button').forEach(x => x.classList.toggle('on', x === b)); desenharFeed(b.dataset.f); });
+$('#ler-tudo').addEventListener('click', () => { feed.forEach(x => x.nova = false); desenharFeed($('#abas-feed .on').dataset.f); toast('Tudo marcado como lido'); });
+$('#tab-inicio').addEventListener('click', e => { const tr = e.target.closest('tr[data-n]'); if (tr) abrirTicket(+tr.dataset.n); });
+
+// ---------- Lista de tickets ----------
+const L = {visao:'Não resolvidos', texto:'', grupo:'', meus:false, estados:new Set(), ordem:'padrao', ocultas:new Set(['sol', 'grupo', 'canal']), pag:20, sel:new Set()};
+const BASE = ['sel', 'n', 'ass', 'est', 'sla1', 'sla2', 'resp', 'pri', 'criado', 'sol', 'grupo', 'canal'];
+const colsVisiveis = () => BASE.filter(c => !L.ocultas.has(c));
+const ORDENS = [['padrao', 'Padrão da visão'], ['prazo', 'Prazo mais próximo'], ['recentes', 'Mais recentes'], ['prioridade', 'Prioridade']];
+const PRI_RANK = {Urgente:0, Alta:1, Normal:2, Baixa:3};
+function linhasVisiveis(){
+  const q = semAcento(L.texto.trim());
+  let l = visoes[L.visao].map(n => porN.get(n)).filter(t =>
+    (!q || semAcento(t.ass + ' ' + t.n + ' ' + t.sol).includes(q.replace('#', ''))) &&
+    (!L.grupo || t.grupo === L.grupo) && (!L.meus || t.resp === 'Você') && (!L.estados.size || L.estados.has(t.est)));
+  if (L.ordem === 'prazo') l = [...l].sort((a, b) => RANK[proxPrazo(a).c] - RANK[proxPrazo(b).c]);
+  if (L.ordem === 'recentes') l = [...l].sort((a, b) => idadeMin(a.idade) - idadeMin(b.idade));
+  if (L.ordem === 'prioridade') l = [...l].sort((a, b) => PRI_RANK[a.prio] - PRI_RANK[b.prio]);
+  return l;
+}
+const filtrosAtivos = () => !!(L.texto || L.grupo || L.meus || L.estados.size);
+function desenharLista(){
+  const todas = linhasVisiveis(); const l = todas.slice(0, L.pag);
+  $('#visao-nome').textContent = L.visao;
+  $('#tab-tickets').innerHTML = l.length ? tabela(l, colsVisiveis(), true) : '';
+  const total = visoes[L.visao].length;
+  $('#contagem').textContent = `${l.length} de ${todas.length}`;
+  $('#vazio-lista').innerHTML = l.length ? '' : filtrosAtivos()
+    ? `<div class="vazio">${ic('filtro', '', 32)}<strong>Nenhum ticket com esses filtros</strong><span>${total} na visão “${L.visao}”.</span><button class="b" id="limpar-filtros">Limpar filtros</button></div>`
+    : `<div class="vazio">${ic('ticket', '', 32)}<strong>Nada nesta visão</strong><span>Quando entrar algo aqui, aparece nesta lista.</span></div>`;
+  $('#salvar-visao').classList.toggle('oculto', !filtrosAtivos() && L.ordem === 'padrao');
+  $('#n-filtros').textContent = L.estados.size ? ` · ${L.estados.size}` : '';
+  atualizarSel();
+}
+function carregarLista(){
+  $('#tab-tickets').innerHTML = esqueleto(colsVisiveis(), Math.min(visoes[L.visao].length || 6, 8)); $('#vazio-lista').innerHTML = '';
+  clearTimeout(carregarLista._h); carregarLista._h = setTimeout(desenharLista, 260);
+}
+function atualizarSel(){
+  const n = L.sel.size; const m = $('#massa');
+  if (n && !m.classList.contains('vis')) m.classList.add('vis'); if (!n) m.classList.remove('vis');
+  $('#qtd').textContent = n === 1 ? '1 selecionado' : `${n} selecionados`;
+  $$('#tab-tickets tbody tr').forEach(tr => tr.classList.toggle('sel', L.sel.has(+tr.dataset.n)));
+  const todos = $('#sel-todos'); if (todos) { const vis = linhasVisiveis().slice(0, L.pag); todos.checked = vis.length > 0 && vis.every(t => L.sel.has(t.n)); todos.indeterminate = n > 0 && !todos.checked; }
+}
+function limparSel(){ L.sel.clear(); $$('#tab-tickets .sel').forEach(c => c.checked = false); atualizarSel(); }
+$('#tab-tickets').addEventListener('change', e => {
+  if (e.target.id === 'sel-todos') { linhasVisiveis().slice(0, L.pag).forEach(t => e.target.checked ? L.sel.add(t.n) : L.sel.delete(t.n)); $$('#tab-tickets .sel').forEach(c => c.checked = e.target.checked); }
+  else if (e.target.classList.contains('sel')) { const n = +e.target.dataset.n; e.target.checked ? L.sel.add(n) : L.sel.delete(n); }
+  atualizarSel();
+});
+$('#tab-tickets').addEventListener('click', e => {
+  if (e.target.closest('input')) return;
+  const td = e.target.closest('td'); const tr = e.target.closest('tbody tr[data-n]'); if (!tr) return;
+  if (td && td.classList.contains('c-sel')) { const c = $('.sel', td); c.checked = !c.checked; c.dispatchEvent(new Event('change', {bubbles:true})); return; }
+  abrirTicket(+tr.dataset.n);
+});
+$('#vazio-lista').addEventListener('click', e => { if (e.target.closest('#limpar-filtros')) { L.texto = ''; L.grupo = ''; L.meus = false; L.estados.clear(); $('#f-texto').value = ''; $('#f-grupo-v').textContent = 'todos'; $('#f-meus').setAttribute('aria-pressed', 'false'); desenharLista(); } });
+ligar('#btn-visao', '#pop-visao', p => {
+  const item = k => `<button type="button" data-v="${k}" class="${k === L.visao ? 'on' : ''}">${ic(k === 'Não resolvidos' ? 'ticket' : (VIS_LAT.find(x => x[0] === k) || [0, 'ticket'])[1])}${k}<span class="cont">${visoes[k].length}</span></button>`;
+  p.innerHTML = `<div class="pop-tit">Padrão</div>${item('Não resolvidos')}<div class="pop-tit">Visões salvas</div>${VIS_LAT.map(([k]) => item(k)).join('')}<hr><button type="button" data-v="">${ic('add')}Nova visão</button>`;
+});
+$('#pop-visao').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; fecharPops(); if (!b.dataset.v) { toast('Ajuste os filtros e use “Salvar visão”'); return; } L.visao = b.dataset.v; L.sel.clear(); marcarNav('tickets'); carregarLista(); });
+ligar('#btn-grupo', '#pop-grupo', p => { p.innerHTML = ['', 'Suporte Barra', 'Suporte Gávea', 'Eventos', 'Sistemas'].map(g => `<button type="button" data-g="${g}" class="${g === L.grupo ? 'on' : ''}">${g || 'Todos os grupos'}${g === L.grupo ? ic('check', 'fim') : ''}</button>`).join(''); });
+$('#pop-grupo').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; L.grupo = b.dataset.g; $('#f-grupo-v').textContent = L.grupo || 'todos'; fecharPops(); desenharLista(); });
+$('#f-meus').addEventListener('click', e => { L.meus = !L.meus; e.currentTarget.setAttribute('aria-pressed', L.meus); desenharLista(); });
+$('#f-texto').addEventListener('input', e => { L.texto = e.target.value; desenharLista(); });
+$('#atualizar').addEventListener('click', carregarLista);
+$('#salvar-visao').addEventListener('click', () => toast('Visão salva em “Visões salvas” (protótipo)'));
+const menuFiltrar = p => { p.innerHTML = `<div class="pop-tit">Estado</div>${Object.keys(COR_EST).map(s => `<button type="button" data-st="${s}" class="${L.estados.has(s) ? 'on' : ''}"><span class="pt" style="background:${COR_EST[s]}"></span>${s}${L.estados.has(s) ? ic('check', 'fim') : ''}</button>`).join('')}<hr><button type="button" data-st="">Limpar</button>`; };
+ligar('#btn-filtrar', '#pop-filtrar', menuFiltrar);
+$('#pop-filtrar').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-st]'); if (!b) return; const s = b.dataset.st; if (!s) L.estados.clear(); else L.estados.has(s) ? L.estados.delete(s) : L.estados.add(s); menuFiltrar($('#pop-filtrar')); desenharLista(); });
+ligar('#btn-ordenar', '#pop-ordenar', p => { p.innerHTML = ORDENS.map(([k, r]) => `<button type="button" data-o="${k}" class="${k === L.ordem ? 'on' : ''}">${r}${k === L.ordem ? ic('check', 'fim') : ''}</button>`).join(''); });
+$('#pop-ordenar').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if (!b) return; L.ordem = b.dataset.o; fecharPops(); desenharLista(); });
+const menuColunas = p => { p.innerHTML = `<div class="pop-tit">Colunas</div>${BASE.filter(c => c !== 'sel' && c !== 'ass').map(c => `<button type="button" data-c="${c}">${COLS[c].r}${L.ocultas.has(c) ? '' : ic('check', 'fim')}</button>`).join('')}`; };
+ligar('#btn-colunas', '#pop-colunas', menuColunas);
+$('#pop-colunas').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-c]'); if (!b) return; const c = b.dataset.c; L.ocultas.has(c) ? L.ocultas.delete(c) : L.ocultas.add(c); menuColunas($('#pop-colunas')); desenharLista(); });
+$('#pag').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b) return; L.pag = +b.dataset.p; $$('#pag button').forEach(x => x.classList.toggle('on', x === b)); desenharLista(); });
+$('#novo-ticket').addEventListener('click', () => { ir('portal'); portalVista('novo'); abaPortal('sup'); toast('Formulário do solicitante · abra em nome de alguém'); });
+
+// Ações em massa: no máximo 3 visíveis, o resto em "mais"
+const selecionados = () => [...L.sel].map(n => porN.get(n));
+function emMassa(msg, fn){ const l = selecionados(); l.forEach(fn); toast(`${msg} · ${l.length} ${l.length === 1 ? 'ticket' : 'tickets'}`); L.sel.clear(); desenharLista(); }
+ligar('#m-atribuir', '#pop-m-atribuir', p => { p.innerHTML = ['Você', 'Rafael T.', 'André S.', 'Paula M.', ''].map(r => `<button type="button" data-r="${r}">${r ? avatar(iniResp(r)) : ic('pessoax')}${r || 'Ninguém'}</button>`).join(''); });
+$('#pop-m-atribuir').addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b) return; fecharPops(); const r = b.dataset.r || null; emMassa(r ? `Atribuído a ${r}` : 'Sem responsável', t => t.resp = r); });
+ligar('#m-estado', '#pop-m-estado', p => { p.innerHTML = Object.keys(COR_EST).map(s => `<button type="button" data-st="${s}"><span class="pt" style="background:${COR_EST[s]}"></span>${s}</button>`).join(''); });
+$('#pop-m-estado').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (!b) return; fecharPops(); const s = b.dataset.st; emMassa(`Estado: ${s}`, t => { t.est = s; t.resolvido = s === 'Resolvido'; }); });
+ligar('#m-macro', '#pop-m-macro', p => { p.innerHTML = macros.map(m => `<button type="button" data-mc="${m.id}">${m.nome}<span class="var">PT · EN</span></button>`).join(''); });
+$('#pop-m-macro').addEventListener('click', e => { const b = e.target.closest('[data-mc]'); if (!b) return; fecharPops(); const m = macros.find(x => x.id === b.dataset.mc); emMassa(`Macro “${m.nome}” enviada, cada um no seu idioma`, () => {}); });
+ligar('#m-mais', '#pop-m-mais');
+$('#pop-m-mais').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; fecharPops(); emMassa(b.dataset.m + ' (protótipo)', () => {}); });
+$('#cancelar-sel').addEventListener('click', limparSel);
+
+// ---------- Ticket ----------
+let ticketAtual = 8412, filtroTL = 'tudo', estadoEnvio = 'Em espera', macroAtual = null;
+const abertas = new Set(), gruposAbertos = new Set(), secoesAbertas = new Set(['det']);
+const tAtual = () => porN.get(ticketAtual);
+const primeiro = nome => nome.split(' ')[0];
+const msgsDe = t => conversas[t.n] || [{t:'pub', quem:t.sol, ini:t.ini, sub:t.email, hora:t.dia === 'Eventos' ? '26/10, 09:00' : (t.dia === 'Ontem' ? 'ontem, ' : 'hoje, ') + t.hora, txt:t.prev}];
+function sisDe(t){ if (!sistema[t.n]) sistema[t.n] = [{apos:0, txt:`Criado por ${t.canal.toLowerCase()}`, q:rel(msgsDe(t)[0].hora)}]; return sistema[t.n]; }
+function registrar(t, txt){ sisDe(t).push({apos:msgsDe(t).length - 1, txt, q:'agora'}); }
+
+function msgHTML(m){
+  if (m.t === 'par') return `<div class="it">${avatar('', 'm it-av').replace('></span>', `>${ic('email', '', 14)}</span>`)}<article class="msg forn"><header><strong>Conversa com o fornecedor</strong><span class="mut">só a equipe vê</span><time title="${m.hora}">${rel(m.hora)}</time><span class="msg-acoes"><button type="button" class="b ic fant" data-ma="mais" title="Mais" aria-label="Mais">${ic('mais')}</button></span></header><div class="msg-c">${m.txt}</div></article></div>`;
+  const nota = m.t === 'int';
+  return `<div class="it"><span class="av m it-av ${m.ini === 'VC' ? 'voce' : ''}">${m.ini}<i class="mini">${ic(nota ? 'nota' : 'email', '', 9)}</i></span><article class="msg ${nota ? 'nota' : ''}"><header><strong>${m.quem}</strong><span class="mut">${nota ? 'nota interna' : (m.sub || '')}</span><time title="${m.hora}">${rel(m.hora)}</time><span class="msg-acoes">${nota ? '' : `<button type="button" class="b ic fant" data-ma="responder" title="Responder" aria-label="Responder">${ic('responder')}</button>`}<button type="button" class="b ic fant" data-ma="link" title="Copiar link" aria-label="Copiar link">${ic('link')}</button><button type="button" class="b ic fant" data-ma="mais" title="Mais" aria-label="Mais">${ic('mais')}</button></span></header><div class="msg-c">${m.txt}</div>${m.anexo ? `<span class="anexo">${ic('clipe', '', 14)}${m.anexo} · 1,2 MB</span>` : ''}</article></div>`;
+}
+function desenharLinhaTempo(){
+  const t = tAtual(); const msgs = msgsDe(t); const sis = sisDe(t);
+  const meio = filtroTL === 'tudo' && msgs.length > 3 && !abertas.has(t.n) ? msgs.length - 3 : 0;
+  let h = '', mostrados = 0;
+  const visivel = m => filtroTL === 'tudo' || (filtroTL === 'pub' ? m.t === 'pub' : m.t !== 'pub');
+  msgs.forEach((m, i) => {
+    if (meio && i >= 1 && i <= meio) { if (i === 1) h += `<button type="button" class="recolhidas" id="ver-todas">${meio} ${meio === 1 ? 'mensagem anterior' : 'mensagens anteriores'}</button>`; return; }
+    if (visivel(m)) { h += msgHTML(m); mostrados++; }
+    if (filtroTL !== 'tudo') return;
+    const run = sis.filter(s => s.apos === i); const chave = t.n + '-' + i;
+    const curtos = run.length >= 3 && !gruposAbertos.has(chave) ? run.slice(0, 1) : run;
+    curtos.forEach(s => h += `<div class="sis"><span>${s.txt}</span><span>· ${s.q}</span></div>`);
+    if (curtos.length < run.length) h += `<div class="sis"><button type="button" class="sis-mais" data-grupo="${chave}">+${run.length - 1} alterações</button></div>`;
+  });
+  const fix = filtroTL === 'tudo' && resumos[t.n] ? `<div class="fixado">${ic('resumo')}<div><div class="linha-res"><strong>Resumo</strong><span>feito com IA · você pode editar</span></div><p>${resumos[t.n]}</p></div></div>` : '';
+  const vazio = !mostrados && filtroTL !== 'tudo' ? `<div class="vazio">${ic(filtroTL === 'int' ? 'nota' : 'email', '', 32)}<strong>${filtroTL === 'int' ? 'Nenhuma nota interna' : 'Nenhuma resposta ainda'}</strong><span>${filtroTL === 'int' ? 'Use N para escrever uma.' : 'Use R para responder.'}</span></div>` : '';
+  $('#linha-t').innerHTML = fix + (vazio || `<div class="tl">${h}</div>`);
+}
+$('#linha-t').addEventListener('click', e => {
+  if (e.target.closest('#ver-todas')) { abertas.add(ticketAtual); desenharLinhaTempo(); return; }
+  const g = e.target.closest('[data-grupo]'); if (g) { gruposAbertos.add(g.dataset.grupo); desenharLinhaTempo(); return; }
+  const a = e.target.closest('[data-ma]'); if (!a) return;
+  if (a.dataset.ma === 'responder') abrirEditor(false);
+  else if (a.dataset.ma === 'link') toast('Link da mensagem copiado');
+  else toast('Encaminhar, dividir ou fixar (protótipo)');
+});
+$('#abas-tl').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filtroTL = b.dataset.f; $$('#abas-tl button').forEach(x => x.classList.toggle('on', x === b)); desenharLinhaTempo(); });
+
+function prop(r, v, cls = ''){ return `<div class="prop"><span class="r">${r}</span><span class="v ${cls}">${v}</span></div>`; }
+const valCampo = (campo, html, vazio) => `<button type="button" class="val ${vazio ? 'vazio-v' : ''}" data-campo="${campo}">${html}</button>`;
+function secao(id, titulo, corpo, cont){ const ab = secoesAbertas.has(id); return `<section class="sec-p ${ab ? 'aberta' : ''}" data-sec="${id}"><button type="button" class="sec-cab" aria-expanded="${ab}">${titulo}${cont ? `<span class="cont">${cont}</span>` : ''}${ic('chevb')}</button><div class="sec-corpo"><div><div class="sec-in">${corpo}</div></div></div></section>`; }
+const ANTERIORES = [['Senha do Google bloqueada', 'set.', 8102], ['Impressora sem toner', 'ago.', 7955], ['Projetor sem imagem', 'jun.', 7710], ['Wi-Fi lento na sala', 'mai.', 7604], ['Instalar software de geometria', 'abr.', 7488]];
+function desenharPainel(t){
+  const d = t.det || {}, e = t.evento; const [p1, p2] = prazos(t);
+  const vp = p => `<span class="${p.c === 'perto' ? 'v-perto' : p.c === 'estourado' ? 'v-estourado' : p.c === 'ok' ? 'v-ok' : ''}">${p.c === 'ok' ? 'Cumprido' : p.c === 'nada' ? '—' : p.c === 'pausa' ? 'Pausado' : p.t}</span><span title="${p.d}">${ic('info', '', 14)}</span>`;
+  let h = `<div class="pn-topo"><div class="sol-c"><span class="av g">${t.ini}</span><div style="min-width:0"><strong>${t.sol}</strong><small>#${t.n} · ${t.canal}</small></div></div><div>`;
+  if (e) { const N = diasAte(e.mont); h += prop('Montagem', `${ddmm(e.mont)} às ${e.montH}`) + prop('Faltam', `<span class="${N <= 2 ? 'v-perto' : ''}">${faltam(N).replace(/^falta[m]? /, '')}</span><span title="O prazo da equipe é o início da montagem">${ic('info', '', 14)}</span>`); }
+  else h += prop('1ª resposta', vp(p1)) + prop('Resolução', vp(p2));
+  h += '</div></div>';
+  h += secao('det', 'Detalhes',
+    prop('Responsável', valCampo('resp', t.resp ? `${avatar(iniResp(t.resp))}${t.resp}` : 'Atribuir', !t.resp)) +
+    prop('Grupo', valCampo('grupo', t.grupo)) +
+    prop('Prioridade', valCampo('prio', priHTML(t.prio))) +
+    prop('Tipo', valCampo('tipo', t.tipo)) +
+    prop('Etiquetas', (d.tags && d.tags.length ? d.tags.map(x => `<span class="etq">${x}</span>`).join('') : '<span class="mut4">nenhuma</span>')) +
+    (d.seg ? prop('Seguindo', d.seg) : ''));
+  h += secao('loc', 'Local e classificação', e
+    ? prop('Evento', `${ddmm(e.data)} · ${e.ini}–${e.fim}`) + prop('Tipo', tipos[e.tipo]) + prop('Local', `${locais[e.campus].nome} · ${e.local}`) + prop('Público', e.pub + ' pessoas') + prop('Equipamentos', e.equip.join(', ')) + (e.foraPrazo ? `<p class="nota-p v-estourado">Pedido abaixo da antecedência mínima</p>` : '')
+    : prop('Local', [d.campus, d.andar, d.sala].filter(x => x && x !== '—').join(' · ') || '—') + prop('Motivo', d.motivo || '—') + prop('Equipamento', d.equip || '—') + prop('Sintoma', d.sint || '—') + (d.maq ? prop('Máquina', d.maq) : '') + prop('Idioma', t.lang === 'EN' ? 'Inglês' : 'Português'));
+  if (t.filhos) {
+    const locs = [['Sala 201', 2], ['Sala 204', 3], ['Sala 210', 2], ['Sala 214', 4], ['Sala dos professores', 3]];
+    h += secao('vinc', 'Tickets vinculados', `<div class="mini-l">${locs.map(([s, n]) => `<div class="li"><span>${s}</span><small>${n}</small></div>`).join('')}</div><p class="nota-p">Resolver este ticket resolve os vinculados. A resposta vai a cada solicitante no idioma dele.</p>`, t.filhos);
+  }
+  const ant = d.ant || 1;
+  h += secao('ant', 'Pedidos anteriores', `<div class="mini-l">${ANTERIORES.slice(0, ant).map(([a, m, n]) => `<button type="button" class="li" data-toast="#${n} · ${a} (protótipo)"><span>${a}</span><small>${m} · ${n}</small><i class="pt" style="background:var(--st-resolvido)"></i></button>`).join('')}</div>`, ant);
+  $('#painel').innerHTML = h;
+}
+$('#painel').addEventListener('click', e => {
+  const s = e.target.closest('.sec-cab');
+  if (s) { const sec = s.parentElement; const id = sec.dataset.sec; const ab = !sec.classList.contains('aberta'); sec.classList.toggle('aberta', ab); s.setAttribute('aria-expanded', ab); ab ? secoesAbertas.add(id) : secoesAbertas.delete(id); return; }
+  const v = e.target.closest('[data-campo]'); if (v) { e.stopPropagation(); abrirCampo(v.dataset.campo, v); return; }
+  const tt = e.target.closest('[data-toast]'); if (tt) toast(tt.dataset.toast);
+});
+// Edição no lugar: o valor vira seletor, salva na hora
+const OPCOES = {resp:['Você', 'Rafael T.', 'André S.', 'Paula M.', ''], grupo:['Suporte Barra', 'Suporte Gávea', 'Eventos', 'Sistemas'], prio:['Urgente', 'Alta', 'Normal', 'Baixa'], tipo:['Incidente', 'Problema', 'Pedido', 'Evento de AV']};
+const ROT_CAMPO = {resp:'o responsável', grupo:'o grupo', prio:'a prioridade', tipo:'o tipo'};
+function abrirCampo(campo, ancora){
+  const t = tAtual(); const p = $('#pop-campo'); const atual = t[campo] || '';
+  p.innerHTML = OPCOES[campo].map(v => `<button type="button" data-v="${v}" class="${atual === v ? 'on' : ''}">${campo === 'prio' ? `<span class="pri ${v === 'Urgente' ? 'urg' : ''}">${barras(v)}</span>` : campo === 'resp' ? (v ? avatar(iniResp(v)) : ic('pessoax')) : ''}${v || 'Ninguém'}${atual === v ? ic('check', 'fim') : ''}</button>`).join('');
+  const r = ancora.getBoundingClientRect();
+  p.style.left = Math.max(8, Math.min(r.left, innerWidth - 216)) + 'px'; p.style.top = Math.min(r.bottom + 4, innerHeight - 200) + 'px';
+  fecharPops(); p.dataset.campo = campo; p.classList.add('aberto');
+}
+$('#pop-campo').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]'); if (!b) return;
+  const t = tAtual(); const campo = $('#pop-campo').dataset.campo; const v = b.dataset.v || null;
+  if ((t[campo] || null) !== v) { t[campo] = v; registrar(t, `<b>Você</b> mudou ${ROT_CAMPO[campo]} para ${v || 'ninguém'}`); }
+  fecharPops(); desenharPainel(t); desenharLinhaTempo(); toast('Salvo');
+});
+
+function desenharTicket(){
+  const t = tAtual();
+  $('#trilha-ass').textContent = t.ass; $('#trilha-ass').title = `#${t.n} · ${t.ass}`;
+  $('#status-nome').textContent = t.est; $('#status-pt').style.background = COR_EST[t.est];
+  const res = t.est === 'Resolvido';
+  $('#criar-artigo').classList.toggle('oculto', !res); $('#sep-artigo').classList.toggle('oculto', !res);
+  desenharLinhaTempo();
+  fecharEditor(true);
+  $('#previa').classList.add('oculto'); macroAtual = null;
+  $('#texto').value = rascunhos[t.n] || '';
+  $('#tem-rasc').classList.toggle('oculto', !rascunhos[t.n]);
+  modo(false);
+  desenharPainel(t);
+}
+function abrirTicket(n){
+  if (!porN.has(n)) return;
+  const t = porN.get(n);
+  const troca = () => { ticketAtual = n; t.novo = false; filtroTL = 'tudo'; $$('#abas-tl button').forEach(x => x.classList.toggle('on', x.dataset.f === 'tudo')); desenharTicket(); };
+  if (telaAtual === 'ticket') { transicao(troca); return; }
+  ticketAtual = n; t.novo = false; filtroTL = 'tudo'; $$('#abas-tl button').forEach(x => x.classList.toggle('on', x.dataset.f === 'tudo'));
+  ir('ticket');
+}
+ligar('#btn-status', '#pop-status');
+$('#pop-status').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (!b) return; fecharPops(); const t = tAtual(); if (t.est === b.dataset.st) return; t.est = b.dataset.st; t.resolvido = t.est === 'Resolvido'; registrar(t, `<b>Você</b> mudou o estado para ${t.est}`); desenharTicket(); toast(`Estado: ${t.est}`); });
+ligar('#btn-mais', '#pop-mais');
+$('#pop-mais').addEventListener('click', e => { const b = e.target.closest('[data-toast]'); if (!b) return; fecharPops(); toast(b.dataset.toast); });
+$('#resumir').addEventListener('click', () => { fecharPops(); const t = tAtual(); if (!resumos[t.n]) { const m = msgsDe(t); resumos[t.n] = semTags(m[0].txt).slice(0, 140) + (m.length > 1 ? ` ${m.length - 1} ${m.length === 2 ? 'mensagem seguinte' : 'mensagens seguintes'} na conversa.` : ''); } filtroTL = 'tudo'; $$('#abas-tl button').forEach(x => x.classList.toggle('on', x.dataset.f === 'tudo')); desenharLinhaTempo(); $('#linha-t').scrollTop = 0; toast('Resumo feito e fixado no topo'); });
+$('#encaminhar').addEventListener('click', () => { fecharPops(); const t = tAtual(); registrar(t, '<b>Você</b> encaminhou a Eventos com retorno'); desenharLinhaTempo(); toast('Encaminhado a Eventos · volta para você quando concluírem'); });
+$('#criar-artigo').addEventListener('click', () => { fecharPops(); criarArtigo(tAtual()); });
+$('#btn-painel').addEventListener('click', e => { e.stopPropagation(); $('#tk').classList.toggle('painel-aberto'); });
+document.addEventListener('click', e => { if (!e.target.closest('#painel') && !e.target.closest('#btn-painel') && !e.target.closest('#pop-campo')) $('#tk').classList.remove('painel-aberto'); });
+
+// Editor preso ao rodapé
+function modo(interna){
+  const t = tAtual(); const ed = $('#editor');
+  ed.classList.toggle('interna', interna);
+  $('#ed-pub').classList.toggle('on', !interna); $('#ed-int').classList.toggle('on', interna);
+  $('#ed-para').textContent = interna ? 'só a equipe vê · @ menciona' : t.filhos ? `para ${t.filhos} solicitantes` : `para ${t.sol}${t.lang === 'EN' ? ' (EN)' : ''}`;
+  $('#texto').placeholder = interna ? 'Nota para a equipe…' : `Responder a ${primeiro(t.sol)}…`;
+  const av = $('#aviso-inc');
+  if (t.filhos && !interna) { av.textContent = `Vai para os ${t.filhos} solicitantes, cada um no seu idioma, e fica registrada em cada ticket vinculado.`; av.classList.remove('oculto'); } else av.classList.add('oculto');
+  $('#btn-estado').classList.toggle('oculto', interna);
+  $('#enviar').classList.toggle('a', !interna);
+  $('#enviar-rot').textContent = interna ? 'Adicionar nota' : `Enviar · ${estadoEnvio}`;
+}
+function abrirEditor(interna){
+  const ed = $('#editor');
+  $('#ed-botoes').classList.add('oculto');
+  if (ed.classList.contains('oculto')) { ed.classList.remove('oculto', 'sobe'); void ed.offsetWidth; ed.classList.add('sobe'); }
+  modo(interna); $('#texto').focus();
+}
+function fecharEditor(silencioso){ $('#editor').classList.add('oculto'); $('#ed-botoes').classList.remove('oculto'); $('#tem-rasc').classList.toggle('oculto', !(rascunhos[ticketAtual] || '').trim()); if (!silencioso) fecharPops(); }
+$('#abrir-resp').addEventListener('click', () => abrirEditor(false));
+$('#abrir-nota').addEventListener('click', () => abrirEditor(true));
+$('#fechar-ed').addEventListener('click', () => fecharEditor());
+$('#ed-pub').addEventListener('click', () => modo(false)); $('#ed-int').addEventListener('click', () => modo(true));
+$('#texto').addEventListener('input', e => { rascunhos[ticketAtual] = e.target.value; });
+$('#texto').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); enviar(); } });
+ligar('#btn-estado', '#pop-estado');
+$('#pop-estado').addEventListener('click', e => { const b = e.target.closest('[data-est]'); if (!b) return; estadoEnvio = b.dataset.est; $('#enviar-rot').textContent = `Enviar · ${estadoEnvio}`; fecharPops(); });
+$('#anexar').addEventListener('click', () => toast('Anexar arquivo (protótipo)'));
+
+// Macros: a variante entra no idioma do solicitante, com troca na prévia
+function desenharMacros(q){
+  q = semAcento(q);
+  const l = macros.filter(m => !q || semAcento(m.nome + ' ' + m.en).includes(q));
+  $('#lista-macro').innerHTML = l.length ? l.map(m => `<button type="button" data-macro="${m.id}"><span>${m.nome}<span class="sub-m">${m.en}</span></span><span class="var">PT · EN</span></button>`).join('') : '<div class="mut" style="padding:8px">Nenhuma intenção encontrada</div>';
+}
+ligar('#btn-macro', '#pop-macro', () => { $('#busca-macro').value = ''; desenharMacros(''); $('#busca-macro').focus(); });
+function aplicarMacro(id, lang){
+  const t = tAtual(); const m = macros.find(x => x.id === id); macroAtual = m;
+  const nome = t.filhos ? (lang === 'EN' ? 'everyone' : 'pessoal') : primeiro(t.sol);
+  const texto = m[lang === 'EN' ? 'en_' : 'pt_'].replace('{nome}', nome);
+  $('#texto').value = texto; rascunhos[t.n] = texto;
+  const nota = t.filhos ? 'cada um recebe a variante do seu idioma · prévia' : `idioma de ${primeiro(t.sol)}: ${t.lang || 'PT'} · prévia`;
+  $('#previa').innerHTML = `<b>${m.nome}</b><span class="mut">${nota}</span><div class="seg-t" id="seg-prev"><button type="button" data-l="PT" class="${lang === 'PT' ? 'on' : ''}">PT</button><button type="button" data-l="EN" class="${lang === 'EN' ? 'on' : ''}">EN</button></div><span class="esp"></span><button type="button" class="b ic fant" id="fechar-previa" aria-label="Remover prévia da macro">${ic('x')}</button>`;
+  $('#previa').classList.remove('oculto');
+}
+$('#busca-macro').addEventListener('input', e => desenharMacros(e.target.value));
+$('#lista-macro').addEventListener('click', e => {
+  const b = e.target.closest('[data-macro]'); if (!b) return;
+  const t = tAtual(); const lang = t.lang || 'PT';
+  modo(false); aplicarMacro(b.dataset.macro, lang); fecharPops();
+  toast(t.filhos ? `Macro aplicada: os ${t.filhos} solicitantes recebem cada um a sua variante` : `Macro aplicada · variante ${lang} (idioma de ${primeiro(t.sol)})`);
+});
+$('#previa').addEventListener('click', e => {
+  if (e.target.closest('#fechar-previa')) { $('#previa').classList.add('oculto'); macroAtual = null; return; }
+  const b = e.target.closest('[data-l]'); if (b && macroAtual) aplicarMacro(macroAtual.id, b.dataset.l);
+});
+$('#melhorar').addEventListener('click', () => {
+  if (ticketAtual === 8412) $('#texto').value = 'Olá, Mariana! A lâmpada do projetor queimou. Para não atrapalhar a sua aula das 10:30, deixamos um projetor portátil na sala 204, e a troca já foi pedida ao fornecedor. Avisaremos assim que estiver resolvido.';
+  else if (!$('#texto').value.trim()) { toast('Escreva algo primeiro'); return; }
+  rascunhos[ticketAtual] = $('#texto').value; toast('Texto revisado · confira antes de enviar');
+});
+function enviar(){
+  const txt = $('#texto').value.trim(); if (!txt) { $('#texto').focus(); return; }
+  const t = tAtual(); const interna = $('#editor').classList.contains('interna');
+  const msgs = conversas[t.n] = msgsDe(t);
+  const corpo = esc(txt).replace(/\n/g, '<br>');
+  msgs.push(interna ? {t:'int', quem:'Você', ini:'VC', hora:'agora', txt:corpo} : {t:'pub', quem:'Você', ini:'VC', sub:t.filhos ? `para os ${t.filhos} solicitantes, cada um no seu idioma` : `para ${t.sol}${macroAtual ? ' · variante ' + (($('#seg-prev .on') || {}).textContent || t.lang) : ''}`, hora:'agora', txt:corpo});
+  if (!interna && t.est !== estadoEnvio) { t.est = estadoEnvio; t.resolvido = estadoEnvio === 'Resolvido'; registrar(t, `Estado mudou para ${estadoEnvio}`); }
+  rascunhos[t.n] = ''; $('#texto').value = '';
+  desenharTicket();
+  const lt = $('#linha-t'); lt.scrollTo({top:lt.scrollHeight, behavior:reduz.matches ? 'auto' : 'smooth'});
+  toast(interna ? 'Nota interna adicionada' : t.filhos ? `Enviado aos ${t.filhos} solicitantes (11 PT · 3 EN) e registrado em cada vinculado` : `Enviado · ${t.est}`);
+}
+$('#enviar').addEventListener('click', enviar);
+
+// ---------- Criar artigo a partir de ticket resolvido ----------
+function criarArtigo(t){
+  toast(`Rascunho criado na base (PT) a partir do #${t.n}`);
+  $('#art-origem').textContent = `a partir do #${t.n} · sem dados do solicitante`;
+  if (t.n === 8401) {
+    $('#art-tit').value = 'Impressora não imprime frente e verso: como ativar';
+    $('#art-txt').value = 'Se a impressora imprime só de um lado, ative a impressão nos dois lados no seu computador:\n\n1. Em Imprimir, abra Propriedades.\n2. Na aba Acabamento, marque “Imprimir nos dois lados”.\n3. Escolha “Virar na borda longa”.\n\nNos computadores da sala dos professores essa opção já vem marcada. Se continuar imprimindo de um lado só, abra um pedido na Central de ajuda.';
+  } else { $('#art-tit').value = t.ass + ': o que fazer'; $('#art-txt').value = semTags(msgsDe(t).map(m => m.txt).join('\n\n')); }
+  $('#veu').classList.add('vis'); $('#gaveta').classList.add('aberta'); setTimeout(() => $('#art-tit').focus(), 50);
+}
+function fecharGaveta(){ $('#gaveta').classList.remove('aberta'); $('#veu').classList.remove('vis'); }
+$('#fechar-gaveta').addEventListener('click', fecharGaveta); $('#veu').addEventListener('click', fecharGaveta);
+$('#art-salvar').addEventListener('click', () => { fecharGaveta(); toast('Rascunho salvo na base · só o admin publica'); });
+$('#art-variante').addEventListener('click', () => toast('Variante EN pedida como rascunho vinculado'));
+$('#art-en').addEventListener('click', () => toast('Variante EN pedida como rascunho vinculado'));
+
+// ---------- Eventos: calendário de novembro de 2026 ----------
+let filtroCampus = 'todos';
+$('#f-tipo').innerHTML += Object.entries(tipos).map(([v, r]) => `<option value="${v}">${r}</option>`).join('');
+function eventosVisiveis(){ const ft = $('#f-tipo').value; return eventos.filter(e => (filtroCampus === 'todos' || e.campus === filtroCampus) && (!ft || e.tipo === ft)); }
+function desenharCal(){
+  const vis = eventosVisiveis();
+  const prim = new Date(2026, 10, 1); const ini = new Date(prim); ini.setDate(1 - prim.getDay());
+  const total = Math.ceil((prim.getDay() + 30) / 7) * 7;
+  let h = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < total; i++) {
+    const d = new Date(ini); d.setDate(ini.getDate() + i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const fora = d.getMonth() !== 10, fds = d.getDay() === 0 || d.getDay() === 6;
+    const evs = vis.filter(e => e.data === iso).map(e => `<button class="ev" data-n="${e.n}" title="${e.nome} · ${e.ini}–${e.fim} · ${locais[e.campus].nome}"><i class="pt ${e.campus}"></i><span>${e.ini} ${e.nome}</span></button>`).join('');
+    const monts = vis.filter(e => e.mont === iso && e.mont !== e.data).map(e => `<button class="ev mont" data-n="${e.n}" title="Montagem de ${e.nome} às ${e.montH}">${ic('ferramenta', '', 12)}<span>${e.montH} ${e.nome}</span></button>`).join('');
+    h += `<div class="dia ${fora ? 'fora' : ''} ${fds && !fora ? 'fds' : ''}"><span class="n">${d.getDate()}</span>${monts}${evs}</div>`;
+  }
+  $('#cal').innerHTML = h;
+  const prox = vis.filter(e => diasAte(e.mont) >= 0).sort((a, b) => (a.mont + a.montH).localeCompare(b.mont + b.montH));
+  $('#prox').innerHTML = prox.length ? prox.map(e => { const N = diasAte(e.mont); return `<button class="prox" data-n="${e.n}"><span class="prox-d"><strong>${e.data.slice(8)}</strong><small>nov</small></span><span class="prox-t"><span class="ass">${e.nome}</span><span class="mut"><i class="pt ${e.campus}" style="margin-right:6px"></i>${tipos[e.tipo]} · ${locais[e.campus].nome}</span><span class="linha"><span class="emb ${N <= 2 ? 'perto' : ''}" title="Montagem ${ddmm(e.mont)} às ${e.montH}">montagem: ${faltam(N).replace(/^falta[m]? /, '')}</span>${e.foraPrazo ? '<span class="emb estourado">fora do prazo</span>' : ''}</span></span></button>`; }).join('') : `<div class="vazio">${ic('cal', '', 32)}<span>Nenhum evento com esses filtros.</span></div>`;
+}
+$('#f-campus').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; filtroCampus = b.dataset.c; $$('#f-campus button').forEach(x => x.classList.toggle('on', x === b)); desenharCal(); });
+$('#f-tipo').addEventListener('change', desenharCal);
+$('#cal').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) abrirTicket(+b.dataset.n); });
+$('#prox').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) abrirTicket(+b.dataset.n); });
+$('#cal-ant').addEventListener('click', () => toast('Protótipo: só novembro de 2026'));
+$('#cal-prox').addEventListener('click', () => toast('Protótipo: só novembro de 2026'));
+$('#cal-visao').addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.textContent === 'Semana') toast('Visão de semana (protótipo)'); });
+$('#novo-evento').addEventListener('click', e => { e.preventDefault(); ir('portal'); portalVista('novo'); abaPortal('ev'); });
+
+// ---------- QR da sala (visão do técnico) ----------
+const qrTickets = [
+  {n:8423, ass:'Projetor da Sala 214 sem imagem', meta:'há 20 min · Ana Ribeiro', sla:['perto','50 min'], resp:null},
+  {n:8424, ass:'Caixa de som com chiado', meta:'há 1 h · Daniel Brooks · EN', sla:['','1 d'], resp:null},
+  {n:8411, ass:'Smartboard not responding to touch', meta:'hoje 07:55 · Daniel Brooks · EN', sla:['','3 h'], resp:'Você'},
+  {n:8422, ass:'Sem Wi-Fi na sala', meta:'vinculado ao incidente #8420', sla:['perto','30 min'], resp:'Você', inc:true}
+];
+function desenharQr(){
+  $('#qr-lista').innerHTML = qrTickets.map(q => `<div class="qr-item"><div class="l1"><span>#${q.n}</span>${q.inc ? '<span>· incidente</span>' : ''}<span class="emb ${q.sla[0]}" title="Prazo">${q.sla[1]}</span></div><button class="tit" data-abrir="${q.inc ? 8420 : q.n}">${q.ass}</button><div class="l3"><span>${q.meta}</span>${q.resp ? `<span class="resp">${avatar('VC')}com você</span>` : `<button class="b" data-assumir="${q.n}">Assumir</button>`}</div></div>`).join('');
+  $('#qr-cont').textContent = qrTickets.length;
+}
+$('#qr-lista').addEventListener('click', e => {
+  const a = e.target.closest('[data-assumir]');
+  if (a) { const q = qrTickets.find(x => x.n === +a.dataset.assumir); q.resp = 'Você'; const t = porN.get(q.n); if (t) t.resp = 'Você'; desenharQr(); toast(`#${q.n} atribuído a você`); return; }
+  const t = e.target.closest('[data-abrir]');
+  if (t) { const n = +t.dataset.abrir; if (porN.has(n)) abrirTicket(n); else toast(`#${n} · detalhe do ticket (protótipo)`); }
+});
+function qrSvg(code, px){
+  let h = 7; for (const ch of code) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  let r = '';
+  for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) { const f = (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12); if (!f && rnd() < .48) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }
+  const fin = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7" fill="currentColor"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="var(--sup)"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="currentColor"/>`;
+  return `<svg viewBox="-1 -1 23 23" width="${px}" height="${px}" role="img" aria-label="QR ilustrativo da sala ${code}" style="color:var(--tinta);display:block"><rect x="-1" y="-1" width="23" height="23" fill="var(--sup)"/><g fill="currentColor">${r}</g>${fin(0, 0)}${fin(14, 0)}${fin(0, 14)}</svg>`;
+}
+$('#qr-svg').innerHTML = qrSvg('BAR-2-214', 168);
+desenharQr();
+$('#qr-novo').addEventListener('click', () => { ir('portal'); setTimeout(() => simularQR(true), 0); toast('Novo ticket com o local Barra · 2º andar · Sala 214'); });
+$('#qr-sol').addEventListener('click', () => { ir('portal'); setTimeout(() => simularQR(true), 0); });
+$('#imprimir-qr').addEventListener('click', () => toast('Folha com 5 QR do 2º andar pronta para imprimir (protótipo)'));
+
+// ---------- Portal: idioma PT/EN ----------
+const EN = {'p-marca':'Help center','p-abrir':'Open a request','p-pedidos':'My requests','conta-ag':'Agent area','p-h1':'How can we help?','p-busca':'Wi-Fi, printer, projector, VPN…','p-cats':'Categories','c-wifi':'Wi-Fi and network','c-wifi2':'8 articles','c-imp':'Printers','c-imp2':'6 articles','c-sala':'Classroom','c-sala2':'projector, sound, camera','c-contas':'Accounts and passwords','c-contas2':'Google, systems','mais':'Most viewed','p-inicio':'Home','tab-sup':'Support','tab-ev':'AV event','f-tit':'Open a request','f-sub':'More fields appear based on your choices.','qr-sim':'Simulate QR for Room 214','l-tipo':'You are','l-onde':'Where is the problem?','via-qr':'via QR','nao-estou':'I’m not in this room','l-campus':'Campus','l-andar':'Floor','l-sala':'Room','l-motivo':'Reason','l-equip':'Equipment','l-sint':'What is happening?','l-ass':'Subject','l-desc':'Description','anexar':'Attach photo or file','enviar':'Submit request','ev-tit':'AV support for an event','ev-sub':'Ask at least 5 business days ahead. The team’s deadline is the setup start.','e-nome':'Event name','e-tipo':'Type','e-data':'Date','e-ini':'Start','e-fim':'End','e-mont':'Setup starts','e-pub':'Expected audience','e-local':'Event location','e-equip':'Equipment','e-obs':'Notes','e-enviar':'Submit event request','f-abertos':'Open','f-todos':'All','th-n':'No.','th-ass':'Subject','th-est':'Status','th-at':'Updated','fab':'Chat with IT'};
+let idioma = 'pt';
+$$('#t-portal [data-i18n]').forEach(el => el.dataset.pt = el.textContent);
+$$('#t-portal [data-i18n-ph]').forEach(el => el.dataset.pt = el.placeholder);
+function trocarIdioma(l){
+  idioma = l;
+  $$('#t-portal [data-i18n]').forEach(el => el.textContent = l === 'en' ? (EN[el.dataset.i18n] || el.dataset.pt) : el.dataset.pt);
+  $$('#t-portal [data-i18n-ph]').forEach(el => el.placeholder = l === 'en' ? (EN[el.dataset.i18nPh] || el.dataset.pt) : el.dataset.pt);
+  $$('#seg-idioma button').forEach(b => b.classList.toggle('on', b.dataset.l === l));
+  $('#t-portal').lang = l === 'en' ? 'en' : 'pt-BR';
+  condicionais(); avisoPrazo(); sugerir(); desenharPopulares(); desenharPedidos(); buscarPortal();
+}
+$('#seg-idioma').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b) trocarIdioma(b.dataset.l); });
+ligar('#btn-conta', '#pop-conta');
+
+// ---------- Portal: vistas (início, abrir pedido, meus pedidos) ----------
+function portalVista(v){
+  ['inicio', 'novo', 'pedidos'].forEach(k => $('#pv-' + k).classList.toggle('oculto', k !== v));
+  $$('.p-nav a').forEach(a => a.classList.toggle('on', a.dataset.pv === v));
+  if (v === 'pedidos') desenharPedidos();
+  window.scrollTo({top:0});
+}
+document.addEventListener('click', e => { const a = e.target.closest('[data-pv]'); if (!a) return; e.preventDefault(); fecharPops(); if (telaAtual !== 'portal') ir('portal'); portalVista(a.dataset.pv); });
+const ARTIGOS = [
+  {pt:'Projetor não liga: o que verificar', en:'Projector won’t turn on: what to check', k:'projetor projector liga sala'},
+  {pt:'Conectar o notebook ao projetor da sala', en:'Connect your laptop to the classroom projector', k:'projetor notebook hdmi imagem'},
+  {pt:'Conectar ao Wi-Fi da escola', en:'Connect to the school Wi-Fi', k:'wi-fi wifi rede internet senha'},
+  {pt:'Instalar a impressora do seu setor', en:'Install your department printer', k:'impressora printer imprimir'},
+  {pt:'Acessar a VPN de casa', en:'Use the VPN from home', k:'vpn casa acesso'},
+  {pt:'Recuperar a senha do Google', en:'Recover your Google password', k:'senha google conta password'},
+  {pt:'Imprimir frente e verso', en:'Print double-sided', k:'impressora frente verso imprimir'},
+  {pt:'Sala sem som: o que verificar', en:'No sound in the classroom', k:'som caixa audio chiado microfone'}
+];
+const artTit = a => idioma === 'en' ? a.en : a.pt;
+function achar(q){ const ps = semAcento(q).split(/[^a-z0-9-]+/).filter(p => p.length >= 3); if (!ps.length) return []; return ARTIGOS.filter(a => ps.some(p => semAcento(a.k + ' ' + a.pt + ' ' + a.en).includes(p))).slice(0, 3); }
+const linkArt = a => `<a href="#portal" data-art>${artTit(a)}${ic('setad', '', 14)}</a>`;
+function desenharPopulares(){ $('#p-populares').innerHTML = [2, 3, 4, 5].map(i => linkArt(ARTIGOS[i])).join(''); }
+function sugerir(){ const l = achar($('#p-ass').value); const s = $('#sugest'); s.classList.toggle('oculto', !l.length); s.innerHTML = `<div class="s-tit">${idioma === 'en' ? 'This might solve it now' : 'Talvez isto resolva agora'}</div>${l.map(a => `<a href="#portal" data-art>${artTit(a)}${ic('setad', '', 14)}</a>`).join('')}`; }
+function buscarPortal(){ const q = $('#p-busca').value; const l = achar(q); const r = $('#p-res'); r.classList.toggle('oculto', !q.trim()); r.innerHTML = l.length ? l.map(linkArt).join('') : `<p class="mut" style="padding:8px 0">${idioma === 'en' ? 'Nothing found. Open a request and we’ll help.' : 'Nada encontrado. Abra um pedido e a gente ajuda.'}</p>`; }
+$('#p-ass').addEventListener('input', sugerir);
+$('#p-busca').addEventListener('input', buscarPortal);
+document.addEventListener('click', e => { if (e.target.closest('[data-art]')) { e.preventDefault(); toast(idioma === 'en' ? 'Article (prototype)' : 'Artigo da base (protótipo)'); } });
+const PEDIDOS = [
+  {n:8412, pt:'Projetor da sala 204 não liga', en:'Projector in room 204 won’t turn on', est:'Aberto', q:'hoje', qe:'today'},
+  {n:8233, pt:'Som da sala 204 muito baixo', en:'Sound in room 204 too low', est:'Pendente', q:'há 3 dias', qe:'3 days ago'},
+  {n:7980, pt:'Senha do Wi-Fi para visitantes', en:'Guest Wi-Fi password', est:'Resolvido', q:'há 2 semanas', qe:'2 weeks ago'}
+];
+const EST_PORTAL = {Aberto:['Em andamento', 'In progress'], Pendente:['Aguardando você', 'Waiting on you'], Resolvido:['Resolvido · avalie', 'Resolved · rate it']};
+let filtroPedidos = 'abertos';
+function desenharPedidos(){
+  const en = idioma === 'en';
+  $('#corpo-pedidos').innerHTML = PEDIDOS.filter(p => filtroPedidos === 'todos' || p.est !== 'Resolvido').map(p => `<tr data-n="${p.n}"><td class="c-n">${p.n}</td><td><span class="ass">${en ? p.en : p.pt}</span></td><td>${estHTML(EST_PORTAL[p.est][en ? 1 : 0]).replace(/background:[^"]+/, 'background:' + COR_EST[p.est])}</td><td class="c-criado">${en ? p.qe : p.q}</td></tr>`).join('');
+}
+$('#f-pedidos').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filtroPedidos = b.dataset.f; $$('#f-pedidos button').forEach(x => x.classList.toggle('on', x === b)); desenharPedidos(); });
+$('#corpo-pedidos').addEventListener('click', e => { const tr = e.target.closest('tr[data-n]'); if (tr) toast(idioma === 'en' ? `Request #${tr.dataset.n} (prototype)` : `Pedido #${tr.dataset.n} (protótipo)`); });
+
+// ---------- Portal: abas Suporte / Evento de AV ----------
+function abaPortal(p){ $$('#abas-portal button').forEach(b => b.classList.toggle('on', b.dataset.p === p)); revelar($('#form-sup'), p === 'sup'); revelar($('#form-ev'), p === 'ev'); }
+$('#abas-portal').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) abaPortal(b.dataset.p); });
+
+// ---------- Portal: locais em cascata (campus → andar → sala) ----------
+function revelar(el, mostrar){ if (mostrar && el.classList.contains('oculto')) { el.classList.remove('oculto', 'cond'); void el.offsetWidth; el.classList.add('cond'); } else if (!mostrar) el.classList.add('oculto'); }
+const ESCOLHA = () => idioma === 'en' ? 'Choose…' : 'Escolha…';
+function preencherCampus(p, comEntre){ $(`#${p}-campus`).innerHTML = `<option value="">${ESCOLHA()}</option>` + Object.entries(locais).filter(([k]) => comEntre || k !== 'entre').map(([k, v]) => `<option value="${k}">${v.nome}</option>`).join(''); }
+function preencherAndares(p){
+  const c = locais[$(`#${p}-campus`).value];
+  if (!c) { revelar($(`#w-${p}-andar`), false); revelar($(`#w-${p}-sala`), false); return; }
+  $(`#${p}-andar`).innerHTML = `<option value="">${ESCOLHA()}</option>` + c.andares.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+  revelar($(`#w-${p}-andar`), true); revelar($(`#w-${p}-sala`), false);
+  if (c.andares.length === 1) { $(`#${p}-andar`).value = c.andares[0].id; preencherSalas(p); }
+}
+function preencherSalas(p){
+  const c = locais[$(`#${p}-campus`).value]; const a = c && c.andares.find(x => x.id === $(`#${p}-andar`).value);
+  if (!a) { revelar($(`#w-${p}-sala`), false); return; }
+  $(`#${p}-sala`).innerHTML = a.salas.map(s => `<option>${s}</option>`).join('');
+  revelar($(`#w-${p}-sala`), true);
+}
+function setLocal(p, c, a, s){ $(`#${p}-campus`).value = c; preencherAndares(p); $(`#${p}-andar`).value = a; preencherSalas(p); $(`#${p}-sala`).value = s; }
+['p', 'e'].forEach(p => { $(`#${p}-campus`).addEventListener('change', () => preencherAndares(p)); $(`#${p}-andar`).addEventListener('change', () => preencherSalas(p)); });
+preencherCampus('p', false); preencherCampus('e', true);
+setLocal('p', 'barra', '2', 'Sala 204'); setLocal('e', 'barra', 'cob', 'Auditório');
+
+// QR simulado: campus, andar e sala preenchidos e travados
+function travarLocal(travar){
+  ['campus', 'andar', 'sala'].forEach(k => $('#p-' + k).disabled = travar);
+  $('#local-sup').classList.toggle('qr', travar);
+  $('#selo-qr').classList.toggle('oculto', !travar); $('#nao-estou').classList.toggle('oculto', !travar);
+}
+function simularQR(rolar){
+  portalVista('novo'); abaPortal('sup'); setLocal('p', 'barra', '2', 'Sala 214'); travarLocal(true);
+  $('#p-ass').value = ''; $('#p-ass').placeholder = idioma === 'en' ? 'E.g.: Projector in Room 214 shows no image' : 'Ex.: Projetor da Sala 214 sem imagem'; sugerir();
+  if (rolar) setTimeout(() => $('#local-sup').scrollIntoView({behavior:reduz.matches ? 'auto' : 'smooth', block:'center'}), 300);
+}
+$('#sim-qr').addEventListener('click', () => { simularQR(false); toast(idioma === 'en' ? 'QR read: Room 214 · Barra · 2nd floor' : 'QR lido: Sala 214 · Barra · 2º andar'); });
+$('#nao-estou').addEventListener('click', () => { travarLocal(false); $('#p-campus').focus(); toast(idioma === 'en' ? 'Location unlocked: choose your room' : 'Local destravado: escolha a sua sala'); });
+
+// Motivo → equipamento → sintoma
+const sintomas = {projetor:['Não liga','Liga mas sem imagem','Imagem fraca ou piscando'], impressora:['Não imprime','Sem toner','Papel enroscado','Não liga'], notebook:['Não liga','Muito lento','Tela quebrada'], som:['Sem som','Chiado','Volume baixo']};
+const motivos = [['hardware','Equipamento','Hardware'],['edu','Software educacional','Educational software'],['adm','Software administrativo','Administrative software'],['rede','Rede e internet','Network & internet'],['av','Audiovisual','Audiovisual'],['outros','Outros','Other']];
+let motivo = 'hardware';
+function opts(sel, l){ sel.innerHTML = l.map(v => `<option>${v}</option>`).join(''); }
+function condicionais(){
+  revelar($('#w-equip'), motivo === 'hardware');
+  const s = sintomas[$('#p-equip').value]; revelar($('#w-sint'), !!s); if (s) opts($('#p-sint'), s);
+  $('#motivos').innerHTML = motivos.map(([v, pt, en]) => `<button type="button" role="radio" aria-checked="${v === motivo}" data-m="${v}">${idioma === 'en' ? en : pt}</button>`).join('');
+}
+$('#p-equip').addEventListener('change', condicionais);
+$('#motivos').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; motivo = b.dataset.m; condicionais(); });
+$('#p-anexar').addEventListener('click', () => toast(idioma === 'en' ? 'Attach (prototype)' : 'Anexar (protótipo)'));
+$('#enviar-pedido').addEventListener('click', () => toast(idioma === 'en' ? 'Request #8432 submitted · confirmation by email' : `Pedido #8432 enviado · ${$('#p-sala').value || 'local'} · confirmação por e-mail`));
+condicionais(); sugerir(); desenharPopulares();
+
+// Evento de AV: tipo, equipamentos e aviso de prazo mínimo (5 dias úteis)
+$('#e-tipo').innerHTML = Object.entries(tipos).map(([v, r]) => `<option value="${v}">${r}</option>`).join('');
+$('#e-equip').innerHTML = ['Projetor','Telão','Microfone sem fio','Mesa de som','Caixas de som','Transmissão ao vivo','Gravação','Cabines de tradução','Fones de tradução'].map(x => `<label><input type="checkbox" value="${x}">${x}</label>`).join('');
+function avisoPrazo(){
+  const v = $('#e-data').value, av = $('#e-aviso');
+  if (!v) { av.classList.add('oculto'); return; }
+  const du = diasUteis(v);
+  if (diasAte(v) < 0) { av.textContent = idioma === 'en' ? 'This date is in the past.' : 'Esta data já passou.'; av.classList.remove('oculto'); return; }
+  if (du < 5) {
+    av.innerHTML = idioma === 'en' ? `<b>Below the minimum notice:</b> ${du} business day${du === 1 ? '' : 's'} left (minimum is 5). The request is accepted but marked “late”.` : `<b>Abaixo da antecedência mínima:</b> ${du === 1 ? 'falta 1 dia útil' : `faltam ${du} dias úteis`} (o mínimo é 5). O pedido é aceito, mas fica marcado “fora do prazo”.`;
+    av.classList.remove('oculto');
+  } else av.classList.add('oculto');
+}
+$('#e-data').addEventListener('change', () => { const v = $('#e-data').value; if (v) $('#e-mont').value = v + 'T07:00'; avisoPrazo(); });
+$('#e-data').addEventListener('input', avisoPrazo);
+$('#enviar-evento').addEventListener('click', () => {
+  const fora = !$('#e-aviso').classList.contains('oculto');
+  toast(idioma === 'en' ? `Event request #8440 submitted${fora ? ' · marked late' : ''}` : `Pedido de evento #8440 enviado${fora ? ' · marcado “fora do prazo”' : ''} · entra no calendário da equipe`);
+});
+avisoPrazo();
+
+// ---------- Chat ----------
+function fecharChat(){ $('#chat').classList.remove('aberto'); $('#fab').setAttribute('aria-expanded', 'false'); }
+$('#fab').addEventListener('click', () => { const c = $('#chat'); const abre = !c.classList.contains('aberto'); c.classList.toggle('aberto', abre); $('#fab').setAttribute('aria-expanded', abre); if (abre) $('#m-chat').focus(); });
+$('#fechar-chat').addEventListener('click', fecharChat);
+const legendas = ['', 'Sentimos muito. Conte o que deu errado?', 'Obrigado. O que podemos melhorar?', 'Obrigado pelo retorno.', 'Que bom! Obrigado.', 'Que ótimo! Obrigado pela avaliação.'];
+$('#notas').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#notas button').forEach(x => x.setAttribute('aria-checked', x === b)); $('#legenda').textContent = legendas[+b.textContent]; });
+$('#form-chat').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('#m-chat').value.trim(); if (!v) return;
+  const d = document.createElement('div'); d.className = 'bal eu'; d.textContent = v;
+  $('#corpo-chat').appendChild(d); $('#m-chat').value = ''; d.scrollIntoView({behavior:reduz.matches ? 'auto' : 'smooth'});
+  setTimeout(() => { const r = document.createElement('div'); r.style.cssText = 'display:flex;gap:8px;align-items:flex-end'; r.innerHTML = '<span class="av m">RT</span><div class="bal eles">Anotado! Já estou vendo isso.</div>'; $('#corpo-chat').appendChild(r); r.scrollIntoView({behavior:reduz.matches ? 'auto' : 'smooth'}); }, 1400);
+});
+
+// ---------- Paleta de comandos (Ctrl+K) ----------
+let paletaSel = 0, paletaItens = [];
+function itensPaleta(q){
+  const telas = [['inicio','Início'],['tickets','Tickets'],['eventos','Eventos'],['qr','QR da sala'],['portal','Portal do solicitante']].map(([id, r]) => ({r, s:'tela', go:() => ir(id)}));
+  const vs = Object.keys(visoes).map(k => ({r:k, s:'visão · ' + visoes[k].length, go:() => { L.visao = k; ir('tickets', {visao:k}); }}));
+  const tk = tickets.map(x => ({r:`#${x.n} ${x.ass}`, s:x.sol, go:() => abrirTicket(x.n)}));
+  if (!q) return [...tk.slice(0, 5), ...vs.slice(0, 3), ...telas.slice(0, 2)];
+  const n = semAcento(q).replace(/[^a-z0-9# ]/g, '');
+  return [...tk, ...vs, ...telas].filter(i => semAcento(i.r + ' ' + i.s).includes(n)).slice(0, 12);
+}
+function desenharPaleta(){
+  paletaItens = itensPaleta($('#paleta-q').value.trim());
+  paletaSel = Math.min(paletaSel, Math.max(0, paletaItens.length - 1));
+  $('#paleta-res').innerHTML = paletaItens.length ? paletaItens.map((i, k) => `<button type="button" data-k="${k}" class="${k === paletaSel ? 'on' : ''}"><span>${i.r}</span><small>${i.s}</small></button>`).join('') : '<div class="mut" style="padding:12px">Nada encontrado</div>';
+}
+function abrirPaleta(){ fecharPops(); $('#paleta-veu').classList.add('vis'); $('#paleta-q').value = ''; paletaSel = 0; desenharPaleta(); $('#paleta-q').focus(); }
+function fecharPaleta(){ $('#paleta-veu').classList.remove('vis'); }
+function escolher(k){ const i = paletaItens[k]; if (!i) return; fecharPaleta(); i.go(); }
+$('#paleta-q').addEventListener('input', () => { paletaSel = 0; desenharPaleta(); });
+$('#paleta-q').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); paletaSel = (paletaSel + (e.key === 'ArrowDown' ? 1 : -1) + paletaItens.length) % (paletaItens.length || 1); desenharPaleta(); }
+  if (e.key === 'Enter') { e.preventDefault(); escolher(paletaSel); }
+});
+$('#paleta-res').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) escolher(+b.dataset.k); });
+$('#paleta-veu').addEventListener('click', e => { if (e.target.id === 'paleta-veu') fecharPaleta(); });
+function abrirAtalhos(){ $('#atalhos-veu').classList.add('vis'); }
+function fecharAtalhos(){ $('#atalhos-veu').classList.remove('vis'); }
+$('#fechar-atalhos').addEventListener('click', fecharAtalhos);
+$('#atalhos-veu').addEventListener('click', e => { if (e.target.id === 'atalhos-veu') fecharAtalhos(); });
+
+// ---------- Atalhos (desligados enquanto se digita e com menus abertos) ----------
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirPaleta(); return; }
+  if (e.key === 'Escape') {
+    const algo = $('.pop.aberto') || $('#paleta-veu.vis') || $('#atalhos-veu.vis') || $('#gaveta.aberta') || $('#notif.aberta') || $('#chat.aberto');
+    fecharPops(); fecharPaleta(); fecharAtalhos(); fecharGaveta(); fecharNotif(); fecharChat(); $('#app').classList.remove('nav-aberta');
+    if (!algo && telaAtual === 'ticket' && !$('#editor').classList.contains('oculto')) { fecharEditor(); return; }
+    if (!algo && L.sel.size) limparSel();
+    return;
+  }
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if ($('.pop.aberto') || $('.dlg-veu.vis') || $('#gaveta.aberta')) return;
+  if (e.key === '?') { abrirAtalhos(); e.preventDefault(); return; }
+  if (telaAtual !== 'ticket') return;
+  const k = e.key.toLowerCase();
+  if (k === 'r' && !e.shiftKey) { abrirEditor(false); e.preventDefault(); }
+  else if ((k === 'n' || k === 'i') && !e.shiftKey) { abrirEditor(true); e.preventDefault(); }
+  else if (k === 's') { e.preventDefault(); alternarPop('#pop-status'); }
+  else if (k === 'a') { e.preventDefault(); const v = $('#painel [data-campo="resp"]'); if (v) abrirCampo('resp', v); }
+  else if (k === 'p') { e.preventDefault(); const v = $('#painel [data-campo="prio"]'); if (v) abrirCampo('prio', v); }
+  else if (e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    e.preventDefault(); const l = linhasVisiveis().map(t => t.n); const i = l.indexOf(ticketAtual);
+    const n = l[(i + (e.key === 'ArrowRight' ? 1 : -1) + l.length) % l.length];
+    if (n && n !== ticketAtual) abrirTicket(n);
+  }
+});
+
+// ---------- Partida ----------
+(() => {
+  let h = location.hash.slice(1);
+  if (h === 'filas') { h = 'tickets'; history.replaceState(null, '', '#tickets'); }
+  mostrar(TELAS.includes(h) ? h : 'entrar');
+})();
+</script>
+<script>
+// Recarregamento automático do protótipo (só no localhost): a página confere a cada 2 s se o arquivo mudou.
+(function(){
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  var anterior = null;
+  function assinatura(t){ var h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+  setInterval(function(){
+    fetch(location.pathname, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+      var a = assinatura(t);
+      if (anterior && a !== anterior) { try { sessionStorage.setItem('pd-tela', location.hash); } catch (e) {} location.reload(); }
+      anterior = a;
+    }).catch(function(){});
+  }, 2000);
+})();
+</script>
+</body>
+</html>

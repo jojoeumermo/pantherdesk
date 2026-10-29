@@ -35,9 +35,22 @@ desenvolvimento e some quando o provedor Google está configurado. O endereço d
 produção do portal é help.earj.com.br (Δ32); no localhost, o portal fica no
 mesmo host da aplicação.
 
-## Identidade visual (revisado em 2026-10-29)
-Paleta **Panthers**: azul-marinho, azul royal e vermelho (spec 13 Δ30). Ela
-substitui o grafite com âmbar usado nos primeiros protótipos.
+## Identidade visual (revisado em 2026-10-29, à tarde)
+Valem as **cores oficiais da EARJ** e a fonte **Montserrat**, instalada com a
+aplicação (sem serviço externo de fontes). Isso substitui a paleta Panthers do
+Δ30 na área do técnico e no portal. Os valores ficam num único arquivo de
+tokens (claro e escuro); a marca é o azul institucional, usado só no botão
+primário, no item ativo e no foco, e os neutros puxam levemente para ele.
+
+Estados na lista e no ticket em selo **discreto**, sempre com texto (aberto
+cinza, novo azul-claro, pendente e em espera neutros); verde só para
+resolvido. "Novo" **não** é estado: é rótulo derivado de "aberto sem 1ª
+resposta" (spec 01 §4.1 continua valendo). Vermelho fica reservado a SLA
+estourado e prioridade Urgente; âmbar para SLA em risco (menos de 1 h ou menos
+de 20% do prazo). A linha estourada tem fundo suave e borda esquerda vermelha.
+No máximo 3 cores de destaque na lista (vermelho, âmbar, azul de seleção).
+(Revisado em 2026-10-29 na revisão da tela Geral; substitui o "aberto
+vermelho sólido".)
 
 A entrega só termina depois de verificar no navegador que a aplicação abre e que
 os fluxos principais funcionam.
@@ -73,14 +86,24 @@ O usuário é técnico ou analista e quer ver o problema e resolver. Regras:
    fixa e valor alinhado que vira seletor ao clicar.
 4. **Uma ação principal por tela.** O resto vai para o menu "⋯" ou aparece no
    hover.
-5. **Lista de tickets em tabela de largura total:** seleção, nº, assunto,
-   estado (ponto + texto), 1ª resposta e resolução (emblema suave com contagem
-   curta), responsável, prioridade (ícone de barras cinza) e criado (relativo).
-   Negrito só para não lido; ações em massa só com seleção. O ticket abre em
-   página própria.
-6. **Conversa em linha do tempo** com fio vertical fino, abas Atividade /
-   Respostas / Notas internas e eventos de sistema como linhas cinza curtas.
-   Nota interna com tratamento distinto e suave.
+5. **Lista de tickets em tabela densa de largura total** (linhas de 32–36 px,
+   texto 13 px, cabeçalho fixo), nesta ordem: seleção, estado (etiqueta
+   sólida), nº, local ("Barra · Sala 204"; "—" sem local; "Entre campi"),
+   SLA (uma coluna só com o próximo prazo: "em 30 min", "estourado há 2 h";
+   vazia quando cumprido; ícone de pausa em pendente/em espera), assunto (com
+   ícone e texto antes só para Alta e Urgente; "incidente · N vinculados" e
+   "EN" discretos), solicitante, responsável ("—" se vazio) e atualizado
+   (relativo, data completa na dica). Não lido: negrito e bolinha. Filtros em
+   chips com "Limpar filtros", contador "N tickets · atualizado há X min",
+   atualização automática, 50 por página. O ticket abre em página própria.
+   A visão "Geral" (não resolvidos de todos os campi, respeitando as
+   permissões) é a rota inicial; o painel de números sai do Início e vai para
+   Relatórios.
+6. **Conversa em dois lados** na área do técnico: as mensagens e notas do
+   usuário logado à esquerda; solicitante, outros técnicos e fornecedor à
+   direita. Nota interna em fundo amarelo claro. O histórico de alterações
+   fica recolhido e separado da conversa, sem perder nenhum item (R32). O
+   chat do portal segue o padrão de chat.
 7. **Editor recolhido em dois botões** ("Responder" e "Nota interna") preso ao
    rodapé; abre ao clicar ou com R; Ctrl+Enter envia e Esc fecha. Macros, anexo
    e revisão de texto como ícones discretos.

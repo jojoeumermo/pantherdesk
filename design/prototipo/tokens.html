@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PantherDesk — tokens</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--tinta);font-family:var(--fonte);font-size:var(--t-14);line-height:var(--altura-linha)}
+.pag{max-width:1100px;margin:0 auto;padding:var(--e-6) var(--e-4) var(--e-8)}
+header{display:flex;align-items:center;gap:var(--e-3);margin-bottom:var(--e-6)}
+h1{font-size:var(--t-20);font-weight:var(--peso-forte);margin:0}
+h2{font-size:var(--t-16);font-weight:var(--peso-forte);margin:var(--e-8) 0 var(--e-3)}
+.sub{color:var(--tinta-3);font-size:var(--t-13)}
+.btn{height:32px;padding:0 var(--e-3);border-radius:var(--raio);border:var(--borda);background:var(--superficie);color:var(--tinta);font:inherit;font-size:var(--t-13);cursor:pointer}
+.btn.prim{background:var(--marca);border-color:var(--marca);color:var(--marca-tinta);font-weight:var(--peso-forte)}
+.btn.prim:hover{background:var(--marca-hover)}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--e-2)}
+.am{border:var(--borda);border-radius:var(--raio);background:var(--superficie);overflow:hidden}
+.am i{display:block;height:40px}
+.am div{padding:var(--e-2);font-size:var(--t-12)}
+.am code{color:var(--tinta-3);font-size:var(--t-12)}
+.etq{display:inline-flex;align-items:center;height:20px;padding:0 var(--e-2);border-radius:var(--raio);font-size:var(--t-12);font-weight:var(--peso-forte);white-space:nowrap}
+.e-novo{background:var(--est-novo-fundo);color:var(--est-novo-texto)}
+.e-aberto{background:var(--est-aberto-fundo);color:var(--est-aberto-texto)}
+.e-pendente{background:var(--est-pendente-fundo);color:var(--est-pendente-texto)}
+.e-espera{background:var(--est-espera-fundo);color:var(--est-espera-texto)}
+.e-resolvido{background:var(--est-resolvido-fundo);color:var(--est-resolvido-texto)}
+.e-fechado{background:var(--est-fechado-fundo);color:var(--est-fechado-texto)}
+.linha{display:flex;flex-wrap:wrap;gap:var(--e-2);align-items:center}
+.tipo p{margin:var(--e-1) 0}
+table{width:100%;border-collapse:collapse;background:var(--superficie);border:var(--borda);border-radius:var(--raio);font-size:var(--t-13)}
+th{height:var(--cabecalho-tabela);text-align:left;font-size:var(--t-12);font-weight:var(--peso-normal);color:var(--tinta-3);background:var(--superficie-2);padding:0 var(--e-2);border-bottom:var(--borda)}
+td{height:var(--linha-tabela);padding:0 var(--e-2);border-bottom:1px solid var(--linha-2);white-space:nowrap}
+tr.est td{background:var(--sla-estouro-fundo)}
+tr.est td:first-child{box-shadow:inset 3px 0 0 var(--sla-estouro-borda)}
+.n{font-variant-numeric:var(--num);color:var(--tinta-3)}
+.sla-at{color:var(--sla-atencao-texto);font-weight:var(--peso-forte)}
+.sla-es{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.pri-u{color:var(--pri-urgente);font-weight:var(--peso-forte)}
+.pri-a{color:var(--pri-alta);font-weight:var(--peso-forte)}
+.mut{color:var(--tinta-3)}
+.nota{background:var(--nota-fundo);border:1px solid var(--nota-borda);border-radius:var(--raio);padding:var(--e-3)}
+</style>
+</head>
+<body>
+<div class="pag">
+  <header>
+    <div style="flex:1"><h1>Tokens do PantherDesk</h1><div class="sub">Etapa 2 · cores oficiais da EARJ · Montserrat · contraste AA conferido nos dois temas</div></div>
+    <button class="btn" id="tema" type="button">Tema escuro</button>
+    <button class="btn prim" type="button">Botão primário</button>
+  </header>
+
+  <h2>Marca e neutros</h2>
+  <div class="grade" id="cores"></div>
+
+  <h2>Estados do ticket</h2>
+  <div class="linha"><span class="etq e-novo">Novo</span><span class="etq e-aberto">Aberto</span><span class="etq e-pendente">Pendente</span><span class="etq e-espera">Em espera</span><span class="etq e-resolvido">Resolvido</span><span class="etq e-fechado">Fechado</span></div>
+
+  <h2>Tabela densa (34 px por linha, texto 13 px)</h2>
+  <table>
+    <thead><tr><th>Estado</th><th>Nº</th><th>Local</th><th>SLA</th><th>Assunto</th><th>Solicitante</th><th>Responsável</th><th>Atualizado</th></tr></thead>
+    <tbody>
+      <tr class="est"><td><span class="etq e-aberto">Aberto</span></td><td class="n">8398</td><td>Barra · Secretaria</td><td class="sla-es">estourado há 2 h</td><td>Troca de notebook autorizada</td><td>Bruno Faria</td><td>Rafael Torres</td><td class="n">há 2 h</td></tr>
+      <tr><td><span class="etq e-novo">Novo</span></td><td class="n">8420</td><td>Barra · 2º andar</td><td class="sla-at">em 30 min</td><td><span class="pri-u">Urgente</span> Wi-Fi fora no 2º andar <span class="mut">· incidente · 20 vinculados</span></td><td>Lucas Andrade</td><td class="mut">—</td><td class="n">há 58 min</td></tr>
+      <tr><td><span class="etq e-pendente">Pendente</span></td><td class="n">8411</td><td>Barra · Sala 214</td><td class="mut">pausado</td><td>Smartboard in room 214 not responding <span class="mut">· EN</span></td><td>Daniel Brooks</td><td>Ana Lima</td><td class="n">há 2 h</td></tr>
+      <tr><td><span class="etq e-espera">Em espera</span></td><td class="n">8355</td><td>Entre campi</td><td class="mut">pausado</td><td><span class="pri-a">Alta</span> Licença do sistema administrativo</td><td class="mut">—</td><td>André Souza</td><td class="n">há 4 dias</td></tr>
+      <tr><td><span class="etq e-resolvido">Resolvido</span></td><td class="n">8401</td><td>Barra · Sala dos professores</td><td></td><td>Impressora não imprime frente e verso</td><td>Carla Nunes</td><td>Rafael Torres</td><td class="n">ontem</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Nota interna</h2>
+  <div class="nota">Switch reiniciando em loop. Vou trocar pelo reserva do subsolo.</div>
+
+  <h2>Tipografia (12 / 13 / 14 / 16 / 20)</h2>
+  <div class="tipo">
+    <p style="font-size:var(--t-20);font-weight:var(--peso-forte)">20 · Título de página</p>
+    <p style="font-size:var(--t-16);font-weight:var(--peso-forte)">16 · Título de seção</p>
+    <p style="font-size:var(--t-14)">14 · Texto da conversa e dos formulários</p>
+    <p style="font-size:var(--t-13)">13 · Texto da tabela e do painel</p>
+    <p style="font-size:var(--t-12);color:var(--tinta-3)">12 · Metadados e cabeçalho de tabela</p>
+    <p style="font-size:var(--t-13);font-variant-numeric:var(--num)">Números tabulares: 8398 · 8411 · 10:04 · 11:11</p>
+  </div>
+</div>
+<script>
+const nomes = ['marca','marca-texto','marca-suave','fundo','superficie','superficie-2','linha','tinta','tinta-2','tinta-3','sla-atencao-texto','sla-estouro-texto','sucesso-texto','nota-fundo','campus-barra','campus-gavea','campus-entre'];
+function cores(){
+  const s = getComputedStyle(document.documentElement);
+  document.getElementById('cores').innerHTML = nomes.map(n => `<div class="am"><i style="background:var(--${n})"></i><div>${n}<br><code>${s.getPropertyValue('--' + n).trim()}</code></div></div>`).join('');
+}
+const raiz = document.documentElement, b = document.getElementById('tema');
+try { if (localStorage.getItem('pd-tema') === 'dark') raiz.dataset.theme = 'dark'; } catch (e) {}
+const rotulo = () => b.textContent = raiz.dataset.theme === 'dark' ? 'Tema claro' : 'Tema escuro';
+b.addEventListener('click', () => { raiz.dataset.theme = raiz.dataset.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pd-tema', raiz.dataset.theme); } catch (e) {} rotulo(); cores(); });
+rotulo(); cores();
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+/* PantherDesk — componentes base (etapa 3 do redesenho, 2026-10-29).
+   Só usa as variáveis de tokens.css. Prefixo pd- para não colidir com as
+   telas antigas enquanto a migração acontece. */
+
+/* ---------- Botões ---------- */
+.pd-btn{display:inline-flex;align-items:center;gap:var(--e-1);height:28px;padding:0 var(--e-3);border-radius:var(--raio);border:var(--borda);background:var(--superficie);color:var(--tinta);font:inherit;font-size:var(--t-13);white-space:nowrap;cursor:pointer}
+.pd-btn:hover{background:var(--superficie-2)}
+.pd-btn.prim{background:var(--marca);border-color:var(--marca);color:var(--marca-tinta);font-weight:var(--peso-forte)}
+.pd-btn.prim:hover{background:var(--marca-hover)}
+.pd-btn.fant{border-color:transparent;background:transparent;color:var(--tinta-2)}
+.pd-btn.fant:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-btn svg{width:14px;height:14px;flex:0 0 14px}
+:where(.pd-btn,.pd-chip,.pd-visao,.pd-tabela tr,.pd-tabela a,input,select):focus-visible{outline:2px solid var(--foco);outline-offset:1px}
+
+/* ---------- Etiqueta de estado ----------
+   Discreta: fundo neutro, peso normal. "Novo" (aberto sem 1ª resposta) ganha
+   azul claro e negrito; resolvido é o único verde. */
+.pd-est{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:20px;padding:0 var(--e-2);border-radius:var(--raio);border:1px solid transparent;font-size:var(--t-12);font-weight:var(--peso-normal);line-height:1;white-space:nowrap}
+.pd-est.novo{background:var(--est-novo-fundo);color:var(--est-novo-texto);border-color:var(--est-novo-borda);font-weight:var(--peso-forte)}
+.pd-est.aberto{background:var(--est-aberto-fundo);color:var(--est-aberto-texto);border-color:var(--est-aberto-borda)}
+.pd-est.pendente{background:var(--est-pendente-fundo);color:var(--est-pendente-texto);border-color:var(--est-pendente-borda)}
+.pd-est.espera{background:var(--est-espera-fundo);color:var(--est-espera-texto);border-color:var(--est-espera-borda)}
+.pd-est.resolvido{background:var(--est-resolvido-fundo);color:var(--est-resolvido-texto);border-color:var(--est-resolvido-borda)}
+.pd-est.fechado{background:var(--est-fechado-fundo);color:var(--est-fechado-texto);border-color:var(--est-fechado-borda)}
+
+/* ---------- Célula de SLA ----------
+   Nunca vazia: "em 3 h 25", "estourado há 2 h", "pausado", "resolvido" ou
+   "sem SLA". Nunca só por cor: o texto diz o estado. */
+.pd-sla{display:inline-flex;align-items:center;gap:var(--e-1);font-size:var(--t-13);font-variant-numeric:var(--num);color:var(--sla-ok);white-space:nowrap}
+.pd-sla.atencao{color:var(--sla-atencao-texto);font-weight:var(--peso-forte)}
+.pd-sla.estouro{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.pd-sla.pausa{color:var(--tinta-3)}
+.pd-sla.sem{color:var(--sla-sem)}
+.pd-sla.resolvido{color:var(--sla-resolvido)}
+.pd-sla svg{width:12px;height:12px;flex:0 0 12px}
+
+/* ---------- Prioridade ----------
+   No ticket: ícone + texto. Na lista: só o ícone (.pd-pri-i), antes do assunto. */
+.pd-pri{display:inline-flex;align-items:center;gap:3px;margin-right:var(--e-1);font-size:var(--t-12);font-weight:var(--peso-forte);white-space:nowrap}
+.pd-pri.urgente{color:var(--pri-urgente)}
+.pd-pri.alta{color:var(--pri-alta)}
+.pd-pri svg{width:12px;height:12px}
+.pd-pri-i{display:inline-flex;align-items:center;justify-content:center;flex:0 0 14px;width:14px;height:14px}
+.pd-pri-i svg{width:12px;height:12px}
+.pd-pri-i.urgente{color:var(--pri-urgente)}
+.pd-pri-i.alta{color:var(--pri-alta)}
+
+/* ---------- Tag pequena (#pai, EN, incidente) ---------- */
+.pd-tag{flex:0 0 auto;display:inline-flex;align-items:center;height:18px;padding:0 5px;border:1px solid var(--tag-borda);border-radius:3px;background:var(--tag-fundo);color:var(--tag-texto);font-size:11px;line-height:1;font-variant-numeric:var(--num);white-space:nowrap}
+
+/* ---------- Avatar ---------- */
+.pd-av{display:inline-flex;align-items:center;gap:var(--e-2);min-width:0;white-space:nowrap}
+.pd-av i{width:20px;height:20px;flex:0 0 20px;border-radius:50%;background:var(--superficie-2);border:1px solid var(--linha);color:var(--tinta-2);font-style:normal;font-size:10px;font-weight:var(--peso-forte);display:inline-flex;align-items:center;justify-content:center}
+.pd-av.eu i{background:var(--marca);border-color:var(--marca);color:var(--marca-tinta)}
+.pd-av span{overflow:hidden;text-overflow:ellipsis}
+.pd-vazio-cel{color:var(--tinta-4)}
+.pd-sem-resp{display:inline-flex;align-items:center;gap:var(--e-1);color:var(--sem-resp);font-style:italic;white-space:nowrap}
+.pd-sem-resp svg{width:12px;height:12px;flex:0 0 12px}
+
+/* ---------- Chip de filtro ---------- */
+.pd-chips{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-2)}
+.pd-chip{display:inline-flex;align-items:center;gap:var(--e-1);height:24px;padding:0 var(--e-1) 0 var(--e-2);border:var(--borda);border-radius:var(--raio);background:var(--superficie);font:inherit;font-size:var(--t-12);color:var(--tinta-2)}
+.pd-chip b{color:var(--tinta);font-weight:var(--peso-forte)}
+.pd-chip button{width:18px;height:18px;border:0;border-radius:3px;background:none;color:var(--tinta-3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.pd-chip button:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-chip.add{border-style:dashed;padding-right:var(--e-2);cursor:pointer}
+.pd-limpar{border:0;background:none;color:var(--marca-texto);font:inherit;font-size:var(--t-12);cursor:pointer;padding:0}
+.pd-limpar:hover{text-decoration:underline}
+.pd-contador{margin-left:auto;font-size:var(--t-12);color:var(--tinta-3);font-variant-numeric:var(--num)}
+
+/* ---------- Tabela densa ----------
+   Uma linha = uma decisão. Texto principal em peso normal; secundário em
+   tinta-3; negrito só no assunto não lido. Vermelho só no SLA estourado e
+   no ícone de urgente. */
+.pd-tabela-wrap{border:var(--borda);border-radius:var(--raio);background:var(--superficie);overflow:auto;max-height:100%}
+.pd-tabela{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--t-13);table-layout:fixed}
+.pd-tabela th{position:sticky;top:0;z-index:1;height:var(--cabecalho-tabela);padding:0 var(--e-2);background:var(--superficie-2);border-bottom:var(--borda);text-align:left;font-size:var(--t-12);font-weight:var(--peso-normal);color:var(--tinta-3);white-space:nowrap}
+.pd-tabela td{height:var(--linha-tabela);padding:0 var(--e-2);border-bottom:1px solid var(--linha-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tinta)}
+.pd-tabela td.sel,.pd-tabela th.sel{width:36px;padding:0 0 0 var(--e-3);position:relative}
+.pd-tabela td.est,.pd-tabela th.est{width:86px}
+.pd-tabela td.num,.pd-tabela th.num{width:58px;font-variant-numeric:var(--num);color:var(--tinta-3)}
+.pd-tabela td.local,.pd-tabela th.local{width:140px;color:var(--tinta-3)}
+.pd-tabela td.sla,.pd-tabela th.sla{width:136px}
+.pd-tabela td.sol,.pd-tabela th.sol{width:128px;color:var(--tinta-3)}
+.pd-tabela td.resp,.pd-tabela th.resp{width:164px}
+.pd-tabela td.atu,.pd-tabela th.atu{width:84px;font-variant-numeric:var(--num);color:var(--tinta-3)}
+.pd-tabela td.acoes,.pd-tabela th.acoes{width:40px;padding:0 var(--e-2) 0 0;text-align:right}
+.pd-tabela tbody tr{cursor:pointer}
+.pd-tabela tbody tr:hover td{background:var(--superficie-2)}
+/* Estourado: linha inteira com fundo suave e borda vermelha à esquerda */
+.pd-tabela tbody tr.estouro td{background:var(--sla-estouro-fundo)}
+.pd-tabela tbody tr.estouro td:first-child{box-shadow:inset 3px 0 0 var(--sla-estouro-borda)}
+.pd-tabela tbody tr.marcada td{background:var(--marca-suave)}
+.pd-tabela tbody tr.foco{outline:2px solid var(--foco);outline-offset:-2px}
+.pd-tabela tbody tr.foco td{background:var(--superficie-2)}
+.pd-tabela tbody tr.foco.estouro td{background:var(--sla-estouro-fundo)}
+.pd-tabela tbody tr.foco.marcada td{background:var(--marca-suave)}
+/* Filho de incidente expandido sob o pai: recuado, fundo levemente distinto */
+.pd-tabela tbody tr.filho td{background:var(--linha-filho)}
+.pd-tabela tbody tr.filho td.assunto{padding-left:calc(var(--e-2) + 20px)}
+.pd-tabela tbody tr.filho:hover td,.pd-tabela tbody tr.filho.foco td{background:var(--superficie-2)}
+.pd-tabela tbody tr.filho.marcada td{background:var(--marca-suave)}
+.pd-tabela .ram{flex:0 0 auto;color:var(--tinta-4)}
+/* Assunto: [ícone de prioridade] assunto [tags] */
+.pd-tabela .ass{display:flex;align-items:center;gap:6px;min-width:0}
+.pd-tabela .ass .txt{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;min-width:6em;color:var(--tinta)}
+.pd-tabela .ass .pd-tag,.pd-tabela .ass .pd-vinc{flex-shrink:0}
+.pd-tabela .ass .txt:hover{text-decoration:underline}
+.pd-tabela tr.nao-lido .ass .txt{font-weight:var(--peso-forte)}
+.pd-tabela .nl{position:absolute;left:3px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--marca-texto)}
+/* Botão "+20 vinculados" com seta */
+.pd-vinc{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;height:20px;padding:0 var(--e-1) 0 2px;border:1px solid var(--tag-borda);border-radius:3px;background:var(--superficie);color:var(--tinta-2);font:inherit;font-size:var(--t-12);font-variant-numeric:var(--num);cursor:pointer;white-space:nowrap}
+.pd-vinc:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-vinc svg{width:12px;height:12px;transition:transform .15s}
+.pd-vinc[aria-expanded="true"] svg{transform:rotate(90deg)}
+.pd-vinc.so-n{padding-left:var(--e-1);cursor:default}
+/* Ordenação */
+.pd-tabela th button{border:0;background:none;padding:0;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:3px;cursor:pointer;height:100%}
+.pd-tabela th button:hover{color:var(--tinta)}
+.pd-tabela th .ord{display:inline-flex;width:10px;opacity:0}
+.pd-tabela th .ord svg{width:10px;height:10px}
+.pd-tabela th button:hover .ord{opacity:.5}
+.pd-tabela th[aria-sort] button{color:var(--tinta);font-weight:var(--peso-forte)}
+.pd-tabela th[aria-sort] .ord{opacity:1}
+.pd-tabela th[aria-sort="descending"] .ord svg{transform:rotate(180deg)}
+/* Ações da linha: botão fixo na última coluna; não cobre dados */
+.pd-mais{width:28px;height:24px;border:1px solid transparent;border-radius:var(--raio);background:none;color:var(--tinta-3);font:inherit;font-size:var(--t-14);line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.pd-mais:hover,.pd-mais[aria-expanded="true"]{border-color:var(--linha);background:var(--superficie);color:var(--tinta)}
+/* Skeleton */
+.pd-esq td span{display:block;height:10px;border-radius:2px;background:var(--linha-2);animation:pd-pulso 1.2s ease-in-out infinite}
+@keyframes pd-pulso{50%{opacity:.5}}
+.pd-vazio{padding:var(--e-8) var(--e-4);text-align:center;color:var(--tinta-3);font-size:var(--t-13)}
+
+/* ---------- Barra de ações em massa ---------- */
+.pd-massa{display:none;align-items:center;gap:var(--e-2);padding:var(--e-1) var(--e-2) var(--e-1) var(--e-3);border:1px solid var(--marca);border-radius:var(--raio);background:var(--marca-suave);font-size:var(--t-13)}
+.pd-massa.vis{display:flex}
+.pd-massa strong{font-variant-numeric:var(--num);margin-right:var(--e-2)}
+.pd-massa .fim{margin-left:auto}
+
+/* ---------- Item de visão com contador ---------- */
+.pd-visoes{display:flex;flex-direction:column;gap:1px}
+.pd-visoes h3{margin:var(--e-4) 0 var(--e-1);padding:0 var(--e-2);font-size:var(--t-12);font-weight:var(--peso-forte);color:var(--tinta-3)}
+.pd-visao{display:flex;align-items:center;justify-content:space-between;gap:var(--e-2);height:28px;padding:0 var(--e-2);border-radius:var(--raio);color:var(--tinta-2);text-decoration:none;font-size:var(--t-13)}
+.pd-visao span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pd-visao:hover{background:var(--superficie-2);color:var(--tinta)}
+.pd-visao[aria-current="page"]{background:var(--marca-suave);color:var(--marca-texto);font-weight:var(--peso-forte)}
+.pd-visao .c{font-size:var(--t-12);font-variant-numeric:var(--num);color:var(--tinta-3)}
+.pd-visao .c.alerta{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.pd-visao .c.zero{color:var(--tinta-4)}
+.pd-visao .pd-av{min-width:0}
+.pd-visao .pd-av i{width:18px;height:18px;flex-basis:18px;font-size:9px}
+
+/* ---------- Dica (tooltip) ---------- */
+[data-dica]{position:relative}
+[data-dica]:hover::after,[data-dica]:focus-visible::after{content:attr(data-dica);position:absolute;left:0;top:calc(100% + 4px);z-index:20;max-width:280px;width:max-content;padding:var(--e-1) var(--e-2);border-radius:var(--raio);background:var(--tinta);color:var(--superficie);font-size:var(--t-12);font-weight:var(--peso-normal);white-space:normal;box-shadow:var(--sombra-flutuante)}
+
+@media (prefers-reduced-motion:reduce){.pd-esq td span{animation:none}.pd-vinc svg{transition:none}}

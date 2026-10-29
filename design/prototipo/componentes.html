@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PantherDesk — componentes</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="componentes.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--fundo);color:var(--tinta);font-family:var(--fonte);font-size:var(--t-13);line-height:var(--altura-linha)}
+.demo{display:grid;grid-template-columns:220px minmax(0,1fr);height:100vh}
+.lado{background:var(--superficie);border-right:var(--borda);padding:var(--e-3) var(--e-2);overflow:auto}
+.lado .marca{display:flex;align-items:center;gap:var(--e-2);padding:var(--e-1) var(--e-2) var(--e-2);font-weight:var(--peso-forte);font-size:var(--t-14)}
+.lado .marca svg{width:22px;height:22px}
+.centro{display:flex;flex-direction:column;gap:var(--e-3);padding:var(--e-4) var(--e-5);min-width:0;overflow:hidden}
+.cab{display:flex;align-items:center;gap:var(--e-2)}
+.cab h1{margin:0;font-size:var(--t-20);font-weight:var(--peso-forte);flex:1}
+.ferr{display:flex;gap:var(--e-2);align-items:center;flex-wrap:wrap;font-size:var(--t-12);color:var(--tinta-3)}
+.ferr label{display:inline-flex;gap:4px;align-items:center}
+.tab-area{flex:1;min-height:0;display:flex}
+.tab-area .pd-tabela-wrap{flex:1}
+.rodape{display:flex;align-items:center;gap:var(--e-2);font-size:var(--t-12);color:var(--tinta-3);font-variant-numeric:var(--num)}
+.rodape .fim{margin-left:auto;display:flex;gap:var(--e-1)}
+kbd{font-family:inherit;font-size:11px;border:var(--borda);border-radius:3px;padding:0 4px;color:var(--tinta-3)}
+</style>
+</head>
+<body>
+<div class="demo">
+  <nav class="lado" aria-label="Visões">
+    <div class="marca"><svg viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="5" fill="var(--marca)"/><path d="M6 10 L10 6 L14 9 L18 6 L22 10 L22 17 C22 21 18 23 14 23 C10 23 6 21 6 17 Z" fill="#fff"/><circle cx="11" cy="15" r="1.5" fill="#E4051F"/><circle cx="17" cy="15" r="1.5" fill="#E4051F"/></svg>PantherDesk</div>
+    <div class="pd-visoes" id="visoes"></div>
+  </nav>
+  <main class="centro">
+    <div class="cab">
+      <h1 id="titulo">Geral</h1>
+      <button class="pd-btn" id="b-tema" type="button">Tema escuro</button>
+      <button class="pd-btn prim" type="button">Novo ticket</button>
+    </div>
+    <div class="pd-chips" id="chips"></div>
+    <div class="pd-massa" id="massa" role="region" aria-label="Ações em massa">
+      <strong id="qtd">0 selecionados</strong>
+      <button class="pd-btn" type="button">Atribuir</button>
+      <button class="pd-btn" type="button">Estado</button>
+      <button class="pd-btn" type="button">Prioridade</button>
+      <button class="pd-btn" type="button">Mesclar</button>
+      <button class="pd-btn" type="button">Macro</button>
+      <button class="pd-btn" type="button">Exportar CSV</button>
+      <button class="pd-btn fant fim" type="button" id="limpar-sel">Cancelar</button>
+    </div>
+    <div class="ferr">
+      <span>Prévia:</span>
+      <button class="pd-btn fant" type="button" id="b-esq">Mostrar carregamento</button>
+      <button class="pd-btn fant" type="button" id="b-vazio">Visão vazia</button>
+      <span style="margin-left:auto"><kbd>j</kbd> <kbd>k</kbd> navegar · <kbd>x</kbd> selecionar · <kbd>Enter</kbd> abrir · <kbd>a</kbd> assumir</span>
+    </div>
+    <div class="tab-area">
+      <div class="pd-tabela-wrap" id="wrap">
+        <table class="pd-tabela" aria-label="Tickets">
+          <thead><tr><th class="sel"><input type="checkbox" id="todos" aria-label="Selecionar todos"></th><th class="est">Estado</th><th class="num">Nº</th><th class="local">Local</th><th class="sla">SLA</th><th>Assunto</th><th class="sol">Solicitante</th><th class="resp">Responsável</th><th class="atu">Atualizado</th><th class="acoes"></th></tr></thead>
+          <tbody id="corpo"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="rodape"><span id="pag"></span><span class="fim"><button class="pd-btn" type="button">Anterior</button><button class="pd-btn" type="button">Próxima</button></span></div>
+  </main>
+</div>
+<script>
+// Dados de teste: 320 tickets gerados de forma determinística (sem Math.random), para avaliar a densidade.
+const salas = {Barra:['Sala 101','Sala 104','Sala 110','Lab. de informática','Sala 201','Sala 204','Sala 210','Sala 214','Sala dos professores','Secretaria','Ginásio','Auditório','Biblioteca'], Gávea:['Prédio A · Sala A-11','Prédio A · Sala A-12','Prédio A · Biblioteca','Prédio B · RH','Prédio B · Financeiro','Prédio B · Teatro','Prédio A · Lab. de ciências']};
+const assuntos = ['Projetor não liga','Wi-Fi caindo durante a aula','Impressora não imprime frente e verso','Smartboard not responding to touch','Teclado sem funcionar','Caixa de som com chiado no fundo da sala','Acesso ao Google Classroom negado após troca de senha','Troca de notebook autorizada pela coordenação','Document camera sem imagem no projetor','Printer jammed in the teachers room','Site bloqueado no laboratório','Need a new HDMI adapter for room 204','Licença do sistema administrativo expirou e ninguém consegue emitir boletos','Microfone sem fio descarregando rápido'];
+const pessoas = ['Mariana Costa','Daniel Brooks','Lucas Andrade','Carla Nunes','Bruno Faria','Helena Ribas','Diana Prado','Otávio Reis','Ana Ribeiro','Pedro Alves','Lívia Prates','Paula Mendes','Sarah Collins','James Whitaker',''];
+const tecnicos = ['Você','Rafael Torres','Ana Lima','André Souza',''];
+const estados = ['novo','aberto','aberto','pendente','espera','aberto','resolvido','aberto','novo','fechado'];
+const rotEst = {novo:'Novo',aberto:'Aberto',pendente:'Pendente',espera:'Em espera',resolvido:'Resolvido',fechado:'Fechado'};
+const tickets = [];
+for (let i = 0; i < 320; i++) {
+  const campus = i % 9 === 0 ? 'Entre campi' : i % 3 === 0 ? 'Gávea' : 'Barra';
+  const sala = campus === 'Entre campi' ? '' : salas[campus][(i * 7) % salas[campus].length];
+  const est = i === 0 ? 'novo' : estados[(i * 3) % estados.length];
+  const min = ((i * 37) % 600) - 120; // minutos até o próximo prazo
+  let sla = {t:'', c:''};
+  if (est === 'pendente' || est === 'espera') sla = {t:'pausado', c:'pausa'};
+  else if (est === 'resolvido' || est === 'fechado') sla = {t:'', c:''};
+  else if (min < 0) sla = {t:`estourado há ${Math.ceil(-min / 60)} h`, c:'estouro'};
+  else if (min < 45) sla = {t:`em ${min || 5} min`, c:'atencao'};
+  else sla = {t: min < 60 ? `em ${min} min` : min < 180 && min % 60 ? `em ${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')}` : `em ${Math.round(min / 60)} h`, c:''};
+  tickets.push({
+    n: 8420 - i, est, campus, sala,
+    ass: i === 0 ? 'Wi-Fi fora no 2º andar da Barra' : assuntos[(i * 5) % assuntos.length],
+    en: /[a-z] (not|jammed|Need)/i.test(assuntos[(i * 5) % assuntos.length]),
+    inc: i === 0 ? 20 : 0,
+    pri: i === 0 ? 'urgente' : i % 11 === 0 ? 'urgente' : i % 6 === 0 ? 'alta' : '',
+    sol: pessoas[(i * 3) % pessoas.length], resp: tecnicos[(i * 2) % tecnicos.length],
+    sla, atu: i < 6 ? `há ${(i + 1) * 9} min` : i < 40 ? `há ${Math.ceil(i / 6)} h` : `há ${Math.ceil(i / 40)} dias`,
+    lido: i % 4 !== 1
+  });
+}
+const naoResolvido = t => !['resolvido','fechado'].includes(t.est);
+const visoes = [
+  ['Visões', [['Geral', t => naoResolvido(t)], ['Meus tickets', t => naoResolvido(t) && t.resp === 'Você'], ['Não atribuídos', t => naoResolvido(t) && !t.resp], ['Abertos', t => t.est === 'aberto' || t.est === 'novo'], ['Pendentes', t => t.est === 'pendente'], ['Em espera', t => t.est === 'espera'], ['Estourando SLA', t => t.sla.c === 'estouro', true], ['Resolvidos recentes', t => t.est === 'resolvido'], ['Barra', t => naoResolvido(t) && t.campus === 'Barra'], ['Gávea', t => naoResolvido(t) && t.campus === 'Gávea']]],
+  ['Minhas visões', [['Projetores da Barra', t => naoResolvido(t) && t.campus === 'Barra' && /Projetor/.test(t.ass)], ['Fornecedor', () => false]]]
+];
+let visaoAtual = 'Geral', filtros = [['Campus','todos'],['Responsável','qualquer']], foco = 0, vazio = false;
+const ic = {
+  pausa:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5 V9.5 M8 2.5 V9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  rel:'<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.5 V6 L7.8 7.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  urg:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5 L11 10.5 H1 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 5 V7.2 M6 8.8 V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  alta:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10 V2.5 M2.8 5.5 L6 2.3 L9.2 5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  x:'<svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+};
+const $ = s => document.querySelector(s);
+const fn = () => visoes.flatMap(g => g[1]).find(v => v[0] === visaoAtual)[1];
+const lista = () => vazio ? [] : tickets.filter(fn());
+function desenharVisoes(){
+  $('#visoes').innerHTML = visoes.map(([g, vs]) => `<h3>${g}</h3>` + vs.map(([nome, f, alerta]) => { const n = tickets.filter(f).length; return `<a href="#" class="pd-visao" data-v="${nome}" ${nome === visaoAtual ? 'aria-current="page"' : ''}><span>${nome}</span><span class="c ${n === 0 ? 'zero' : alerta ? 'alerta' : ''}">${n}</span></a>`; }).join('')).join('');
+}
+function desenharChips(){
+  $('#chips').innerHTML = filtros.map(([k, v], i) => `<span class="pd-chip">${k}: <b>${v}</b><button type="button" data-tirar="${i}" aria-label="Remover filtro ${k}">${ic.x}</button></span>`).join('') + '<button class="pd-chip add" type="button">+ Filtro</button>' + (filtros.length ? '<button class="pd-limpar" type="button" id="limpar">Limpar filtros</button>' : '') + `<span class="pd-contador">${lista().length} tickets · atualizado há 1 min</span>`;
+}
+function linha(t, i){
+  const local = t.campus === 'Entre campi' ? 'Entre campi' : t.sala ? `${t.campus} · ${t.sala}` : '—';
+  const pri = t.pri ? `<span class="pd-pri ${t.pri}" data-dica="Prioridade ${t.pri === 'urgente' ? 'urgente' : 'alta'}">${t.pri === 'urgente' ? ic.urg + 'Urgente' : ic.alta + 'Alta'}</span>` : '';
+  const marc = (t.inc ? `<span class="pd-marc" data-dica="Incidente: responder aqui responde aos ${t.inc} tickets vinculados">· incidente · ${t.inc} vinculados</span>` : '') + (t.en ? '<span class="pd-marc" data-dica="Ticket em inglês: macros e respostas saem em inglês">· EN</span>' : '');
+  const sla = t.sla.t ? `<span class="pd-sla ${t.sla.c}">${t.sla.c === 'pausa' ? ic.pausa : ''}${t.sla.t}</span>` : '';
+  const resp = t.resp ? `<span class="pd-av ${t.resp === 'Você' ? 'eu' : ''}"><i>${t.resp === 'Você' ? 'EU' : t.resp.split(' ').map(p => p[0]).join('')}</i><span>${t.resp}</span></span>` : '<span class="pd-vazio-cel">—</span>';
+  const cls = [t.sla.c === 'estouro' ? 'estouro' : '', t.lido ? '' : 'nao-lido', t.resp === 'Você' ? 'meu' : '', i === foco ? 'foco' : ''].join(' ');
+  return `<tr class="${cls}" data-i="${i}" tabindex="-1"><td class="sel"><input type="checkbox" class="mk" aria-label="Selecionar #${t.n}"></td><td class="est"><span class="pd-est ${t.est}">${rotEst[t.est]}</span></td><td class="num">${t.n}</td><td class="local" title="${local}">${local}</td><td class="sla">${sla}</td><td><span class="ass">${pri}<span class="txt" title="${t.ass}">${t.ass}</span>${marc}</span></td><td class="sol">${t.sol || '<span class="pd-vazio-cel">—</span>'}</td><td class="resp">${resp}</td><td class="atu" title="29/10/2026 10:04">${t.atu}</td><td class="acoes"><span class="pd-rapidas"><button class="pd-btn" type="button">Assumir</button><button class="pd-btn" type="button">Estado</button></span></td></tr>`;
+}
+function desenharTabela(){
+  const l = lista().slice(0, 50);
+  $('#titulo').textContent = visaoAtual;
+  $('#corpo').innerHTML = l.length ? l.map(linha).join('') : '<tr><td colspan="10" class="pd-vazio" style="max-width:none">Nenhum ticket nesta visão.</td></tr>';
+  $('#pag').textContent = l.length ? `1–${l.length} de ${lista().length}` : '';
+  atualizarMassa();
+}
+function esqueleto(){
+  $('#corpo').innerHTML = Array.from({length: 14}, () => `<tr class="pd-esq">${'<td><span></span></td>'.repeat(10)}</tr>`).join('');
+  setTimeout(desenharTabela, 1200);
+}
+function atualizarMassa(){ const n = document.querySelectorAll('.mk:checked').length; $('#massa').classList.toggle('vis', n > 0); $('#qtd').textContent = n === 1 ? '1 selecionado' : `${n} selecionados`; document.querySelectorAll('#corpo tr').forEach(tr => { const c = tr.querySelector('.mk'); tr.classList.toggle('marcada', !!(c && c.checked)); }); }
+function tudo(){ desenharVisoes(); desenharChips(); desenharTabela(); }
+
+$('#visoes').addEventListener('click', e => { const a = e.target.closest('[data-v]'); if (!a) return; e.preventDefault(); visaoAtual = a.dataset.v; foco = 0; vazio = false; tudo(); });
+$('#chips').addEventListener('click', e => { const b = e.target.closest('[data-tirar]'); if (b) { filtros.splice(+b.dataset.tirar, 1); desenharChips(); } if (e.target.id === 'limpar') { filtros = []; desenharChips(); } });
+$('#corpo').addEventListener('change', atualizarMassa);
+$('#todos').addEventListener('change', e => { document.querySelectorAll('.mk').forEach(c => c.checked = e.target.checked); atualizarMassa(); });
+$('#limpar-sel').addEventListener('click', () => { document.querySelectorAll('.mk').forEach(c => c.checked = false); $('#todos').checked = false; atualizarMassa(); });
+$('#b-esq').addEventListener('click', esqueleto);
+$('#b-vazio').addEventListener('click', () => { vazio = !vazio; $('#b-vazio').textContent = vazio ? 'Voltar aos dados' : 'Visão vazia'; desenharChips(); desenharTabela(); });
+document.addEventListener('keydown', e => {
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && document.activeElement.type !== 'checkbox') return;
+  const rows = [...document.querySelectorAll('#corpo tr[data-i]')]; if (!rows.length) return;
+  if (e.key === 'j' || e.key === 'k') { foco = Math.max(0, Math.min(rows.length - 1, foco + (e.key === 'j' ? 1 : -1))); rows.forEach((r, i) => r.classList.toggle('foco', i === foco)); rows[foco].scrollIntoView({block: 'nearest'}); }
+  if (e.key === 'x') { const c = rows[foco].querySelector('.mk'); c.checked = !c.checked; atualizarMassa(); }
+});
+const raiz = document.documentElement;
+try { if (localStorage.getItem('pd-tema') === 'dark') raiz.dataset.theme = 'dark'; } catch (e) {}
+const rot = () => $('#b-tema').textContent = raiz.dataset.theme === 'dark' ? 'Tema claro' : 'Tema escuro';
+$('#b-tema').addEventListener('click', () => { raiz.dataset.theme = raiz.dataset.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pd-tema', raiz.dataset.theme); } catch (e) {} rot(); });
+rot(); tudo();
+</script>
+</body>
+</html>

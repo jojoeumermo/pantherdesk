@@ -1,0 +1,2013 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PantherDesk — protótipo</title>
+<script>try{if(localStorage.getItem('pd-tema')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+<link rel="stylesheet" href="antes-geral-tokens.css">
+<link rel="stylesheet" href="antes-geral-componentes.css">
+<style>
+/* ---------- Base ---------- */
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--linha) transparent}
+html,body{margin:0;height:100%}
+body{background:var(--fundo);color:var(--tinta);font-family:var(--fonte);font-size:var(--t-13);line-height:var(--altura-linha);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--marca-texto);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,p{margin:0}
+h1,h2,h3,strong,b{font-weight:var(--peso-forte)}
+:focus-visible{outline:2px solid var(--foco);outline-offset:1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.oculto{display:none!important}
+.mut{color:var(--tinta-3)}
+.esp{flex:1}
+.num-t{font-variant-numeric:var(--num)}
+kbd{font-family:inherit;font-size:11px;border:var(--borda);border-radius:3px;padding:0 4px;color:var(--tinta-3);line-height:16px;white-space:nowrap;background:var(--superficie)}
+svg.i{flex:none;display:block}
+hr{border:0;border-top:1px solid var(--linha-2);margin:var(--e-1) 0}
+input[type=checkbox]{accent-color:var(--marca);width:14px;height:14px;margin:0;vertical-align:middle;cursor:pointer}
+.pd-btn[aria-disabled="true"]{color:var(--tinta-4);cursor:not-allowed}
+.pd-btn.ic{width:28px;padding:0;justify-content:center}
+.pd-btn kbd{margin-left:var(--e-1)}
+/* Dicas: um único balão flutuante (as células da tabela cortam o ::after) */
+[data-dica]:hover::after,[data-dica]:focus-visible::after{content:none!important}
+.dica{position:fixed;z-index:95;max-width:300px;padding:var(--e-1) var(--e-2);border-radius:var(--raio);background:var(--tinta);color:var(--superficie);font-size:var(--t-12);line-height:1.4;box-shadow:var(--sombra-flutuante);pointer-events:none;display:none}
+.dica.vis{display:block}
+.lnk{border:0;background:none;padding:0;color:var(--marca-texto);font-size:inherit;cursor:pointer}
+.lnk:hover{text-decoration:underline}
+
+/* ---------- Moldura: lateral + barra superior + conteúdo ---------- */
+.app{display:grid;grid-template-columns:216px minmax(0,1fr);height:100vh}
+.app.recolhida{grid-template-columns:minmax(0,1fr)}
+.app.recolhida .lateral{display:none}
+.app.externa{display:block;height:auto;min-height:100vh}
+.app.externa .lateral,.app.externa .topo{display:none}
+.lateral{background:var(--superficie);border-right:var(--borda);display:flex;flex-direction:column;min-height:0;overflow:auto;padding:var(--e-2)}
+.marca-l{display:flex;align-items:center;gap:var(--e-2);height:36px;padding:0 var(--e-2);font-weight:var(--peso-forte);font-size:var(--t-14);color:var(--tinta)}
+.marca-l small{font-weight:var(--peso-normal);font-size:var(--t-12);color:var(--tinta-3)}
+.pd-visoes h3:first-child{margin-top:var(--e-2)}
+.nav-telas{margin-top:var(--e-3);padding-top:var(--e-2);border-top:var(--borda)}
+.lat-rod{margin-top:auto;padding-top:var(--e-2);border-top:var(--borda)}
+.lat-rod .pd-visao,.nav-telas .pd-visao{width:100%;border:0;background:none;text-align:left;cursor:pointer}
+.nova-visao{color:var(--tinta-3)!important}
+.principal{display:flex;flex-direction:column;min-width:0;min-height:0}
+.topo{height:48px;flex:none;display:flex;align-items:center;gap:var(--e-2);padding:0 var(--e-4) 0 var(--e-2);border-bottom:var(--borda);background:var(--superficie);position:relative;z-index:30}
+.conteudo{flex:1;min-height:0;overflow:auto;view-transition-name:conteudo}
+.app.externa .conteudo{overflow:visible}
+.tela{display:none}
+.tela.ativa{display:flex;flex-direction:column;min-height:100%}
+
+/* Busca global */
+.busca{position:relative;width:min(440px,42vw)}
+.busca label{display:flex;align-items:center;gap:var(--e-2);height:30px;padding:0 var(--e-2);border:var(--borda);border-radius:var(--raio);background:var(--fundo);color:var(--tinta-3)}
+.busca label:focus-within{border-color:var(--foco);background:var(--superficie)}
+.busca input{border:0;outline:0;background:none;flex:1;min-width:0;color:var(--tinta);font-size:var(--t-13)}
+.busca input::placeholder{color:var(--tinta-3)}
+.busca-res{position:absolute;top:calc(100% + 4px);left:0;width:max(100%,480px);max-width:calc(100vw - 16px);max-height:min(460px,70vh);overflow:auto;background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);box-shadow:var(--sombra-flutuante);padding:var(--e-1);display:none;z-index:60}
+.busca-res.vis{display:block}
+.busca-res .g{font-size:var(--t-12);color:var(--tinta-3);padding:var(--e-2) var(--e-2) 2px}
+.busca-res button{display:flex;align-items:center;gap:var(--e-2);width:100%;min-height:30px;padding:var(--e-1) var(--e-2);border:0;background:none;border-radius:var(--raio);text-align:left;color:var(--tinta)}
+.busca-res button.on,.busca-res button:hover{background:var(--superficie-2)}
+.busca-res .n{font-variant-numeric:var(--num);color:var(--tinta-3);width:44px;flex:none}
+.busca-res .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.busca-res small{color:var(--tinta-3);font-size:var(--t-12);white-space:nowrap}
+.busca-res .vazio-b{padding:var(--e-3) var(--e-2);color:var(--tinta-3)}
+.sino .c{font-weight:var(--peso-forte);color:var(--marca-texto);font-variant-numeric:var(--num)}
+.av-btn{border:0;background:none;padding:2px;border-radius:50%;display:inline-flex}
+.av-btn i,.av-g{width:26px;height:26px;border-radius:50%;background:var(--marca);color:var(--marca-tinta);font-style:normal;font-size:11px;font-weight:var(--peso-forte);display:inline-flex;align-items:center;justify-content:center}
+.av-o{width:24px;height:24px;border-radius:50%;background:var(--superficie-2);border:1px solid var(--linha);color:var(--tinta-2);font-style:normal;font-size:10px;font-weight:var(--peso-forte);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.av-o.eu{background:var(--marca);border-color:var(--marca);color:var(--marca-tinta)}
+
+/* Menus (com sombra) */
+.menu{position:fixed;z-index:70;min-width:180px;max-width:320px;max-height:70vh;overflow:auto;background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);box-shadow:var(--sombra-flutuante);padding:var(--e-1);display:none}
+.menu.vis{display:block}
+.menu button{display:flex;align-items:center;gap:var(--e-2);width:100%;min-height:28px;padding:0 var(--e-2);border:0;background:none;border-radius:var(--raio);text-align:left;color:var(--tinta);font-size:var(--t-13);white-space:nowrap}
+.menu button:hover,.menu button:focus-visible{background:var(--superficie-2);outline:none}
+.menu button.on{font-weight:var(--peso-forte)}
+.menu button.on::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--marca-texto)}
+.menu button[aria-disabled="true"]{color:var(--tinta-4)}
+.menu button kbd{margin-left:auto}
+.menu .menu-tit{font-size:var(--t-12);color:var(--tinta-3);padding:var(--e-2) var(--e-2) 2px}
+.menu .menu-cab{padding:var(--e-2);display:flex;gap:var(--e-2);align-items:center}
+.menu .menu-cab small{display:block;font-size:var(--t-12);color:var(--tinta-3)}
+.menu form{display:flex;flex-direction:column;gap:var(--e-2);padding:var(--e-2);width:260px}
+.menu form label{font-size:var(--t-12);color:var(--tinta-3)}
+.campo-t{height:30px;border:var(--borda);border-radius:var(--raio);padding:0 var(--e-2);background:var(--superficie);color:var(--tinta);min-width:0;width:100%}
+.campo-t:focus{outline:2px solid var(--foco);outline-offset:-1px}
+
+/* Notificações (painel suspenso) */
+.notif{position:absolute;top:calc(100% + 4px);right:var(--e-4);width:400px;max-width:calc(100vw - 16px);max-height:min(560px,80vh);display:none;flex-direction:column;background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);box-shadow:var(--sombra-flutuante);z-index:65}
+.notif.vis{display:flex}
+.notif header{display:flex;align-items:center;gap:var(--e-2);padding:var(--e-2) var(--e-2) var(--e-2) var(--e-3);border-bottom:var(--borda)}
+.abas{display:flex;gap:2px}
+.abas button{height:24px;padding:0 var(--e-2);border:0;background:none;border-radius:var(--raio);color:var(--tinta-3);font-size:var(--t-12)}
+.abas button:hover{color:var(--tinta)}
+.abas button[aria-selected="true"]{background:var(--superficie-2);color:var(--tinta);font-weight:var(--peso-forte)}
+.notif-l{overflow:auto}
+.notif-i{display:flex;gap:var(--e-2);align-items:flex-start;width:100%;padding:var(--e-2) var(--e-3);border:0;border-bottom:1px solid var(--linha-2);background:none;text-align:left;color:var(--tinta-2)}
+.notif-i:hover{background:var(--superficie-2)}
+.notif-i .tx{flex:1;min-width:0}
+.notif-i small{display:block;color:var(--tinta-3);font-size:var(--t-12)}
+.notif-i .cit{display:block;color:var(--tinta-3);font-size:var(--t-12)}
+.notif-i.nova .tx > span:first-child{color:var(--tinta);font-weight:var(--peso-forte)}
+.notif-i .pt{width:6px;height:6px;border-radius:50%;background:var(--marca-texto);margin-top:7px;flex:none}
+
+/* ---------- Transições ---------- */
+::view-transition-old(conteudo){animation:.1s ease both vt-sai}
+::view-transition-new(conteudo){animation:.14s ease both vt-entra}
+@keyframes vt-sai{to{opacity:0}}
+@keyframes vt-entra{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after,::view-transition-old(conteudo),::view-transition-new(conteudo){animation:none!important;transition:none!important}
+}
+
+/* ---------- Lista de tickets ---------- */
+#t-tickets.ativa{height:100%;padding:var(--e-4) var(--e-5) var(--e-3);gap:var(--e-3)}
+.lista-cab{display:flex;align-items:center;gap:var(--e-2);min-height:28px}
+.lista-cab h1{font-size:var(--t-20);line-height:1.2}
+.tab-area{flex:1;min-height:0;display:flex}
+.tab-area .pd-tabela-wrap{flex:1}
+.pd-tabela{min-width:1060px}
+.pd-tabela th button{border:0;background:none;padding:0;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:2px;cursor:pointer}
+.pd-tabela th button:hover{color:var(--tinta)}
+.pd-tabela th[aria-sort] button{color:var(--tinta);font-weight:var(--peso-forte)}
+.pd-tabela .ass a{color:var(--tinta);overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pd-tabela .ass a:hover{text-decoration:underline}
+.pd-tabela td.local{color:var(--tinta-2)}
+.pd-tabela td.sol .em{color:var(--tinta-3)}
+.pd-tabela tr.nao-lido .ass a{font-weight:var(--peso-forte)}
+.pd-sla .mt{width:12px;height:12px}
+.lista-msg{padding:var(--e-8) var(--e-4);text-align:center;color:var(--tinta-3)}
+.lista-msg .pd-btn{margin-top:var(--e-2)}
+.lista-msg.erro{color:var(--sla-estouro-texto)}
+.rodape{display:flex;align-items:center;gap:var(--e-2);font-size:var(--t-12);color:var(--tinta-3);font-variant-numeric:var(--num)}
+.rodape .fim{margin-left:auto;display:flex;gap:var(--e-1);align-items:center}
+.pd-btn:disabled{color:var(--tinta-4);cursor:default;background:var(--superficie)}
+
+/* ---------- Ticket ---------- */
+#t-ticket.ativa{height:100%}
+.tk-cab{display:flex;align-items:flex-start;gap:var(--e-3);padding:var(--e-3) var(--e-5);border-bottom:var(--borda);background:var(--superficie);flex:none}
+.tk-cab-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.trilha{display:flex;gap:var(--e-1);font-size:var(--t-12);color:var(--tinta-3)}
+.trilha a{color:var(--tinta-3)}
+.tk-cab h1{font-size:var(--t-16);line-height:1.3;display:flex;gap:var(--e-2);align-items:baseline;min-width:0}
+.tk-cab h1 .n{color:var(--tinta-3);font-variant-numeric:var(--num);font-weight:var(--peso-normal)}
+.tk-cab h1 .a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-meta{display:flex;flex-wrap:wrap;gap:var(--e-1) var(--e-2);align-items:center;color:var(--tinta-2)}
+.tk-meta .sep{color:var(--tinta-4)}
+.tk-cab-d{display:flex;align-items:center;gap:var(--e-2);padding-top:var(--e-4)}
+.est-btn{display:inline-flex;align-items:center;gap:var(--e-1);border:var(--borda);border-radius:var(--raio);background:var(--superficie);padding:0 var(--e-1) 0 2px;height:28px;color:var(--tinta-3)}
+.est-btn:hover{background:var(--superficie-2)}
+.tk{flex:1;min-height:0;display:flex}
+.tk-c{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+.conversa{flex:1;overflow:auto;padding:var(--e-4) var(--e-5) var(--e-5);display:flex;flex-direction:column;gap:var(--e-3)}
+.hist{border:var(--borda);border-radius:var(--raio);background:var(--superficie)}
+.hist > button{display:flex;align-items:center;gap:var(--e-2);width:100%;height:30px;padding:0 var(--e-3);border:0;background:none;color:var(--tinta-2);font-size:var(--t-12);text-align:left}
+.hist > button svg{transition:transform .15s}
+.hist > button[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.hist ol{list-style:none;margin:0;padding:0 var(--e-3) var(--e-2);font-size:var(--t-12);color:var(--tinta-2)}
+.hist li{display:flex;gap:var(--e-3);padding:3px 0;border-top:1px solid var(--linha-2)}
+.hist li time{color:var(--tinta-3);width:92px;flex:none;font-variant-numeric:var(--num)}
+.resumo{border:var(--borda);border-radius:var(--raio);background:var(--superficie);padding:var(--e-2) var(--e-3);color:var(--tinta-2)}
+.resumo header{display:flex;gap:var(--e-2);font-size:var(--t-12);color:var(--tinta-3);margin-bottom:2px}
+.msg{max-width:min(760px,84%);border:var(--borda);border-radius:var(--raio-max);background:var(--superficie)}
+.msg.eu{margin-right:auto}
+.msg.outro{margin-left:auto}
+.msg.nota{background:var(--nota-fundo);border-color:var(--nota-borda)}
+.msg.forn{border-style:dashed}
+.msg header{display:flex;align-items:center;gap:var(--e-2);padding:var(--e-2) var(--e-3) 0;font-size:var(--t-12);color:var(--tinta-3);min-width:0}
+.msg header b{color:var(--tinta);font-size:var(--t-13)}
+.msg header .q{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.msg header time{margin-left:auto;white-space:nowrap;font-variant-numeric:var(--num)}
+.msg-c{padding:var(--e-1) var(--e-3) var(--e-3);line-height:1.55;overflow-wrap:anywhere;color:var(--tinta)}
+.mencao{color:var(--marca-texto);font-weight:var(--peso-forte)}
+.anexo{display:inline-flex;align-items:center;gap:var(--e-1);margin:0 var(--e-3) var(--e-3);padding:2px var(--e-2);border:var(--borda);border-radius:var(--raio);font-size:var(--t-12);color:var(--tinta-2)}
+.ed-zona{flex:none;padding:var(--e-2) var(--e-5) var(--e-3);border-top:var(--borda);background:var(--superficie)}
+.ed-botoes{display:flex;gap:var(--e-2);align-items:center}
+.ed-botoes .rasc{font-size:var(--t-12);color:var(--tinta-3)}
+.editor{border:var(--borda);border-radius:var(--raio-max);background:var(--superficie)}
+.editor.interna{background:var(--nota-fundo);border-color:var(--nota-borda)}
+.ed-cab{display:flex;align-items:center;gap:var(--e-2);padding:var(--e-1) var(--e-1) 0 var(--e-2)}
+.ed-cab .abas button{height:26px;font-size:var(--t-13)}
+#ed-para{font-size:var(--t-12);color:var(--tinta-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#texto{display:block;width:100%;min-height:96px;max-height:38vh;border:0;resize:vertical;padding:var(--e-2) var(--e-3);background:transparent;outline:none;line-height:1.55;color:var(--tinta)}
+.ed-rod{display:flex;align-items:center;gap:var(--e-1);padding:var(--e-1) var(--e-2) var(--e-2)}
+.previa{margin:var(--e-2) var(--e-3) 0;padding:var(--e-1) var(--e-1) var(--e-1) var(--e-2);border:var(--borda);border-radius:var(--raio);background:var(--superficie-2);display:flex;align-items:center;gap:var(--e-2);flex-wrap:wrap;font-size:var(--t-12)}
+.split{display:inline-flex}
+.split .pd-btn.prim:first-child{border-radius:var(--raio) 0 0 var(--raio)}
+.split .pd-btn.prim + .pd-btn.prim{border-radius:0 var(--raio) var(--raio) 0;width:26px;padding:0;justify-content:center;border-left:1px solid var(--marca-hover)}
+.split.so .pd-btn.prim:first-child{border-radius:var(--raio)}
+.split kbd{background:transparent;color:inherit;border-color:currentColor;opacity:.75}
+.pop-macro{position:absolute;bottom:calc(100% + 4px);left:0;width:340px;background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);box-shadow:var(--sombra-flutuante);padding:var(--e-1);z-index:40}
+.pop-macro input{margin-bottom:var(--e-1)}
+.pop-macro button{display:flex;justify-content:space-between;gap:var(--e-2);width:100%;padding:var(--e-1) var(--e-2);border:0;background:none;border-radius:var(--raio);text-align:left;color:var(--tinta)}
+.pop-macro button:hover,.pop-macro button:focus-visible{background:var(--superficie-2);outline:none}
+.pop-macro small{display:block;color:var(--tinta-3);font-size:var(--t-12)}
+.painel{flex:0 0 312px;width:312px;border-left:var(--borda);overflow:auto;background:var(--superficie)}
+.sec-p{border-bottom:var(--borda)}
+.sec-cab{display:flex;align-items:center;gap:var(--e-1);width:100%;height:36px;padding:0 var(--e-4);border:0;background:none;font-weight:var(--peso-forte);font-size:var(--t-12);color:var(--tinta-2);text-align:left}
+.sec-cab .c{font-weight:var(--peso-normal);color:var(--tinta-3);font-variant-numeric:var(--num)}
+.sec-cab svg{margin-left:auto;color:var(--tinta-3);transition:transform .15s}
+.sec-cab[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.sec-in{padding:0 var(--e-4) var(--e-3)}
+.prop{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;min-height:28px;gap:var(--e-2)}
+.prop > .r{color:var(--tinta-3);font-size:var(--t-12)}
+.prop > .v{min-width:0;display:flex;align-items:center;gap:var(--e-1);flex-wrap:wrap;color:var(--tinta)}
+.val{border:0;background:none;padding:2px var(--e-1);margin-left:calc(-1 * var(--e-1));border-radius:var(--raio);text-align:left;max-width:calc(100% + 4px);display:inline-flex;align-items:center;gap:var(--e-2);color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:24px}
+.val:hover{background:var(--superficie-2)}
+.val.vazio{color:var(--tinta-4)}
+.mini-l{display:flex;flex-direction:column}
+.mini-l button,.mini-l a{display:flex;align-items:center;gap:var(--e-2);min-height:26px;border:0;background:none;padding:0;text-align:left;color:var(--tinta-2);width:100%;font-size:var(--t-12)}
+.mini-l button:hover .t,.mini-l a:hover .t{color:var(--marca-texto);text-decoration:underline}
+.mini-l .n{width:40px;flex:none;color:var(--tinta-3);font-variant-numeric:var(--num)}
+.mini-l .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-l small{color:var(--tinta-3);font-size:var(--t-12);white-space:nowrap}
+.marca-fora{display:inline-flex;align-items:center;height:20px;padding:0 var(--e-2);border:1px solid var(--sla-estouro-borda);border-radius:var(--raio);color:var(--sla-estouro-texto);font-size:var(--t-12);font-weight:var(--peso-forte);white-space:nowrap}
+
+/* ---------- Gaveta e diálogos ---------- */
+.veu{position:fixed;inset:0;background:var(--veu);z-index:80;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.veu.vis{display:flex}
+.dlg{width:440px;max-width:calc(100vw - 32px);background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);box-shadow:var(--sombra-flutuante);overflow:hidden}
+.dlg header,.gaveta header{display:flex;align-items:center;gap:var(--e-2);height:44px;padding:0 var(--e-2) 0 var(--e-4);border-bottom:var(--borda);font-weight:var(--peso-forte)}
+.dlg dl{margin:0;padding:var(--e-2) var(--e-4) var(--e-4);display:grid;grid-template-columns:1fr auto;gap:var(--e-1) var(--e-3);align-items:center}
+.dlg dt{color:var(--tinta-2)}
+.dlg dd{margin:0;text-align:right}
+.dlg dt.g{grid-column:1 / -1;font-size:var(--t-12);color:var(--tinta-3);margin-top:var(--e-2)}
+.gaveta{position:fixed;top:0;right:0;height:100vh;width:480px;max-width:100vw;background:var(--superficie);border-left:var(--borda);box-shadow:var(--sombra-flutuante);z-index:81;display:none;flex-direction:column}
+.gaveta.vis{display:flex}
+.gaveta header small{display:block;font-weight:var(--peso-normal);font-size:var(--t-12);color:var(--tinta-3)}
+.gaveta .corpo-g{flex:1;overflow:auto;padding:var(--e-4);display:flex;flex-direction:column;gap:var(--e-3)}
+.gaveta footer{display:flex;gap:var(--e-2);padding:var(--e-3) var(--e-4);border-top:var(--borda)}
+.campo{display:flex;flex-direction:column;gap:var(--e-1);min-width:0}
+.campo > label,.campo .lbl{font-size:var(--t-13);color:var(--tinta-2)}
+.campo select,.campo input,.campo textarea{height:32px;border:1px solid var(--linha);border-radius:var(--raio);padding:0 var(--e-2);background:var(--superficie);width:100%;min-width:0;color:var(--tinta)}
+.campo textarea{height:auto;min-height:88px;padding:var(--e-2);resize:vertical;line-height:1.5}
+.campo select:focus,.campo input:focus,.campo textarea:focus{outline:2px solid var(--foco);outline-offset:-1px}
+.campo select:disabled{background:var(--superficie-2);color:var(--tinta-2);opacity:1;cursor:not-allowed}
+.grade2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--e-3)}
+.grade3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--e-3)}
+.toast{position:fixed;left:50%;bottom:var(--e-5);transform:translateX(-50%);background:var(--tinta);color:var(--superficie);padding:var(--e-2) var(--e-4);border-radius:var(--raio);box-shadow:var(--sombra-flutuante);display:none;z-index:90;max-width:calc(100vw - 32px)}
+.toast.vis{display:block}
+
+/* ---------- Eventos ---------- */
+#t-eventos.ativa{height:100%}
+.pg-cab{display:flex;align-items:center;gap:var(--e-2);flex-wrap:wrap;padding:var(--e-4) var(--e-5) var(--e-3)}
+.pg-cab h1{font-size:var(--t-20);line-height:1.2;margin-right:var(--e-2)}
+.seg{display:inline-flex;border:var(--borda);border-radius:var(--raio);overflow:hidden}
+.seg button{height:26px;padding:0 var(--e-2);border:0;background:var(--superficie);color:var(--tinta-2);font-size:var(--t-12)}
+.seg button + button{border-left:var(--borda)}
+.seg button[aria-pressed="true"]{background:var(--marca-suave);color:var(--marca-texto);font-weight:var(--peso-forte)}
+.sel-l{display:inline-flex;align-items:center;gap:var(--e-1);font-size:var(--t-12);color:var(--tinta-3)}
+.sel-l select{height:26px;border:var(--borda);border-radius:var(--raio);background:var(--superficie);color:var(--tinta);padding:0 var(--e-1)}
+.ev-grade{flex:1;min-height:0;display:flex;border-top:var(--borda)}
+.cal-wrap{flex:1;min-width:0;overflow:auto;background:var(--superficie)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-width:760px}
+.cal .dow{position:sticky;top:0;z-index:1;font-size:var(--t-12);color:var(--tinta-3);padding:var(--e-1) var(--e-2);background:var(--superficie-2);border-bottom:var(--borda);border-right:1px solid var(--linha-2)}
+.cal .dia{min-height:118px;padding:var(--e-1);border-right:1px solid var(--linha-2);border-bottom:1px solid var(--linha-2);display:flex;flex-direction:column;gap:2px;min-width:0}
+.cal > :nth-child(7n){border-right:0}
+.cal .dia.fds{background:var(--fundo)}
+.cal .dia.fora .n{color:var(--tinta-4)}
+.cal .dia.hoje .n{color:var(--marca-texto);font-weight:var(--peso-forte)}
+.cal .n{font-size:var(--t-12);color:var(--tinta-3);padding:0 2px;font-variant-numeric:var(--num)}
+.ev{display:flex;flex-direction:column;width:100%;border:0;border-left:3px solid var(--campus-entre);background:var(--superficie-2);padding:1px var(--e-1) 2px var(--e-1);border-radius:0 var(--raio) var(--raio) 0;font-size:var(--t-12);line-height:1.35;color:var(--tinta);text-align:left;min-width:0}
+.ev:hover{background:var(--linha-2)}
+.ev[aria-pressed="true"]{outline:2px solid var(--foco);outline-offset:-2px}
+.ev.barra{border-left-color:var(--campus-barra)}
+.ev.gavea{border-left-color:var(--campus-gavea)}
+.ev .l1{display:flex;gap:var(--e-1);align-items:center;color:var(--tinta-3);white-space:nowrap;overflow:hidden}
+.ev .l1 .cp{font-weight:var(--peso-forte)}
+.ev .l1 .cp.barra{color:var(--campus-barra)}
+.ev .l1 .cp.gavea{color:var(--campus-gavea)}
+.ev .l1 .st{margin-left:auto}
+.ev .l1 .st.estouro{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.ev .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.mont{background:none;border-left-style:dashed}
+.ev svg{width:12px;height:12px}
+.ev-mais{border:0;background:none;padding:0 var(--e-1);text-align:left;color:var(--marca-texto);font-size:var(--t-12)}
+.ev-lado{flex:0 0 320px;width:320px;border-left:var(--borda);overflow:auto;background:var(--superficie)}
+.lado-tit{display:flex;align-items:center;gap:var(--e-2);height:40px;padding:0 var(--e-4);border-bottom:var(--borda);font-weight:var(--peso-forte)}
+.prox{display:flex;gap:var(--e-3);width:100%;padding:var(--e-2) var(--e-4);border:0;border-bottom:1px solid var(--linha-2);background:none;text-align:left;align-items:flex-start;color:var(--tinta)}
+.prox:hover{background:var(--superficie-2)}
+.prox-d{flex:0 0 28px;display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.prox-d strong{font-size:var(--t-16);font-variant-numeric:var(--num)}
+.prox-d small{font-size:var(--t-12);color:var(--tinta-3)}
+.prox-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.prox-t .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prox-t .l{display:flex;gap:var(--e-2);flex-wrap:wrap;align-items:center;font-size:var(--t-12);color:var(--tinta-3)}
+.cp-t{font-weight:var(--peso-forte)}
+.cp-t.barra{color:var(--campus-barra)}
+.cp-t.gavea{color:var(--campus-gavea)}
+.cp-t.entre{color:var(--tinta-3)}
+.st-ev{display:inline-flex;align-items:center;gap:3px;color:var(--tinta-2)}
+.st-ev.estouro{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.st-ev.pronto{color:var(--sucesso-texto);font-weight:var(--peso-forte)}
+.st-ev svg{width:12px;height:12px}
+.ev-det{padding:var(--e-3) var(--e-4);display:flex;flex-direction:column;gap:var(--e-2)}
+.ev-det h2{font-size:var(--t-14)}
+.ev-det h3{font-size:var(--t-12);color:var(--tinta-3);margin-top:var(--e-2)}
+
+/* ---------- QR das salas ---------- */
+#t-qr.ativa{height:100%}
+.qr-grade{flex:1;min-height:0;display:flex;border-top:var(--borda)}
+.qr-arvore{flex:1;min-width:0;overflow:auto;background:var(--superficie)}
+.qr-arvore .cps{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:var(--e-2);height:34px;padding:0 var(--e-5);background:var(--superficie-2);border-bottom:var(--borda);font-weight:var(--peso-forte)}
+.qr-arvore .cps small{font-weight:var(--peso-normal);color:var(--tinta-3);font-size:var(--t-12)}
+.qr-andar{display:flex;align-items:center;gap:var(--e-2);height:32px;padding:0 var(--e-5);border-bottom:1px solid var(--linha-2);color:var(--tinta-2);font-size:var(--t-12)}
+.qr-andar b{color:var(--tinta)}
+.qr-sala{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px;align-items:center;width:100%;height:var(--linha-tabela);padding:0 var(--e-5) 0 calc(var(--e-5) + var(--e-4));border:0;border-bottom:1px solid var(--linha-2);background:none;text-align:left;color:var(--tinta)}
+.qr-sala:hover{background:var(--superficie-2)}
+.qr-sala[aria-current="true"]{background:var(--marca-suave)}
+.qr-sala .cod{color:var(--tinta-3);font-variant-numeric:var(--num);font-size:var(--t-12)}
+.qr-sala .ab{text-align:right;font-variant-numeric:var(--num);color:var(--tinta-2)}
+.qr-sala .ab.zero{color:var(--tinta-4)}
+.qr-lado{flex:0 0 360px;width:360px;border-left:var(--borda);overflow:auto;background:var(--superficie)}
+.qr-prev{padding:var(--e-4);display:flex;flex-direction:column;gap:var(--e-3)}
+.qr-prev h2{font-size:var(--t-16)}
+.qr-tk{display:flex;flex-direction:column;gap:2px;padding:var(--e-2) 0;border-top:1px solid var(--linha-2)}
+.qr-tk .l1{display:flex;gap:var(--e-2);align-items:center;font-size:var(--t-12);color:var(--tinta-3)}
+.qr-tk .l1 .pd-sla{margin-left:auto;font-size:var(--t-12)}
+.qr-tk .l3{display:flex;align-items:center;gap:var(--e-2);font-size:var(--t-12);color:var(--tinta-3);min-height:26px}
+.qr-tk .l3 > :last-child{margin-left:auto}
+.qr-folha{display:flex;gap:var(--e-3);align-items:center;padding-top:var(--e-3);border-top:var(--borda)}
+.qr-folha .cod{font-variant-numeric:var(--num);color:var(--tinta-2)}
+
+/* ---------- Relatórios ---------- */
+#t-relatorios.ativa{padding:var(--e-4) var(--e-5) var(--e-8);gap:var(--e-5)}
+.rel-cab{display:flex;align-items:center;gap:var(--e-3);flex-wrap:wrap}
+.rel-cab h1{font-size:var(--t-20)}
+.rel-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:var(--e-5)}
+.rel-sec h2{font-size:var(--t-14);margin-bottom:var(--e-2);display:flex;align-items:baseline;gap:var(--e-2)}
+.rel-sec h2 small{font-weight:var(--peso-normal);font-size:var(--t-12);color:var(--tinta-3)}
+.tab-s{width:100%;border-collapse:collapse;background:var(--superficie);border:var(--borda);font-size:var(--t-13)}
+.tab-s th{height:30px;padding:0 var(--e-2);background:var(--superficie-2);border-bottom:var(--borda);text-align:left;font-weight:var(--peso-normal);font-size:var(--t-12);color:var(--tinta-3);white-space:nowrap}
+.tab-s td{height:30px;padding:0 var(--e-2);border-bottom:1px solid var(--linha-2);white-space:nowrap}
+.tab-s .r{text-align:right;font-variant-numeric:var(--num)}
+.tab-s tr.tot td{font-weight:var(--peso-forte);border-bottom:0}
+.tab-s .ruim{color:var(--sla-estouro-texto);font-weight:var(--peso-forte)}
+.tab-s .ins{color:var(--tinta-3)}
+.barra-s{display:inline-block;width:120px;height:8px;background:var(--linha-2);vertical-align:middle;margin-left:var(--e-2)}
+.barra-s i{display:block;height:100%;background:var(--tinta-3)}
+
+/* ---------- Entrar ---------- */
+#t-entrar.ativa{align-items:center;justify-content:center;min-height:100vh;background:var(--fundo)}
+.entrar-c{width:100%;max-width:360px;margin:var(--e-4);padding:var(--e-6);background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);display:flex;flex-direction:column;gap:var(--e-3)}
+.entrar-c h1{font-size:var(--t-16)}
+.entrar-c .pd-btn{height:34px;justify-content:center;width:100%}
+.entrar-c .rod{display:flex;justify-content:space-between;gap:var(--e-2);font-size:var(--t-12);color:var(--tinta-3);border-top:1px solid var(--linha-2);padding-top:var(--e-3)}
+.logo{display:block;height:36px;width:auto}
+.logo.b{display:none}
+:root[data-theme="dark"] .logo.c{display:none}
+:root[data-theme="dark"] .logo.b{display:block}
+
+/* ---------- Portal ---------- */
+#t-portal.ativa{display:block;background:var(--fundo)}
+.p-topo{height:56px;border-bottom:var(--borda);background:var(--superficie);position:sticky;top:0;z-index:20}
+.p-in{max-width:1040px;margin:0 auto;height:100%;padding:0 var(--e-5);display:flex;align-items:center;gap:var(--e-3)}
+.p-marca{display:flex;align-items:center;gap:var(--e-3);color:var(--tinta);font-weight:var(--peso-forte);white-space:nowrap}
+.p-marca:hover{text-decoration:none}
+.p-marca .logo{height:32px}
+.p-marca span{padding-left:var(--e-3);border-left:var(--borda)}
+.p-nav{display:flex;gap:2px;margin-left:var(--e-3)}
+.p-nav a{height:30px;display:inline-flex;align-items:center;padding:0 var(--e-2);border-radius:var(--raio);color:var(--tinta-2)}
+.p-nav a:hover{background:var(--superficie-2);text-decoration:none}
+.p-nav a[aria-current="page"]{color:var(--marca-texto);font-weight:var(--peso-forte)}
+.p-heroi{background:var(--superficie);border-bottom:var(--borda)}
+.p-heroi-in{max-width:720px;margin:0 auto;padding:var(--e-8) var(--e-5) var(--e-6);display:flex;flex-direction:column;gap:var(--e-3)}
+.p-heroi h1{font-size:26px;line-height:1.25}
+.p-heroi p{color:var(--tinta-2);font-size:var(--t-14)}
+.p-busca{display:flex;align-items:center;gap:var(--e-2);height:42px;padding:0 var(--e-3);border:1px solid var(--linha);border-radius:var(--raio-max);background:var(--superficie);color:var(--tinta-3)}
+.p-busca:focus-within{border-color:var(--foco);outline:1px solid var(--foco)}
+.p-busca input{border:0;outline:0;background:none;width:100%;font-size:var(--t-14);color:var(--tinta)}
+.p-acoes{display:flex;gap:var(--e-2);flex-wrap:wrap}
+.p-acoes .pd-btn{height:34px;padding:0 var(--e-4)}
+.p-sec{max-width:720px;margin:0 auto;padding:var(--e-5) var(--e-5) 0}
+.p-sec h2{font-size:var(--t-14);margin-bottom:var(--e-2)}
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--e-2)}
+.cats a{display:block;padding:var(--e-3);border:var(--borda);border-radius:var(--raio-max);background:var(--superficie);color:var(--tinta)}
+.cats a:hover{border-color:var(--marca);text-decoration:none}
+.cats strong{display:block}
+.cats small{display:block;font-size:var(--t-12);color:var(--tinta-3)}
+.lista-art a{display:flex;align-items:center;justify-content:space-between;gap:var(--e-2);min-height:38px;border-bottom:1px solid var(--linha-2);color:var(--tinta)}
+.lista-art a:hover{color:var(--marca-texto)}
+.p-contato{max-width:720px;margin:0 auto;padding:var(--e-5) var(--e-5) 96px;color:var(--tinta-3);font-size:var(--t-12)}
+.p-form{max-width:680px;margin:0 auto;padding:var(--e-5) var(--e-5) 96px;display:flex;flex-direction:column;gap:var(--e-4)}
+.p-form h1{font-size:var(--t-20)}
+.form{display:flex;flex-direction:column;gap:var(--e-4);background:var(--superficie);border:var(--borda);border-radius:var(--raio-max);padding:var(--e-5)}
+.motivos{display:flex;flex-wrap:wrap;gap:var(--e-2)}
+.motivos button{height:30px;padding:0 var(--e-3);border:var(--borda);border-radius:var(--raio);background:var(--superficie);color:var(--tinta-2)}
+.motivos button:hover{background:var(--superficie-2)}
+.motivos button[aria-checked="true"]{border-color:var(--marca);background:var(--marca-suave);color:var(--marca-texto);font-weight:var(--peso-forte)}
+.local-box{padding:var(--e-3);border:var(--borda);border-radius:var(--raio);display:flex;flex-direction:column;gap:var(--e-2)}
+.local-box.qr{background:var(--superficie-2)}
+.local-cab{display:flex;align-items:center;gap:var(--e-2);flex-wrap:wrap;color:var(--tinta-2)}
+.selo-qr{font-size:var(--t-12);color:var(--tinta-2);border:var(--borda);border-radius:var(--raio);padding:0 var(--e-2);height:20px;display:inline-flex;align-items:center}
+.local-cab .lnk{margin-left:auto}
+.sugest{border:var(--borda);border-radius:var(--raio);padding:var(--e-2) var(--e-3)}
+.sugest .s-tit{font-size:var(--t-12);color:var(--tinta-3)}
+.sugest a{display:flex;align-items:center;justify-content:space-between;min-height:28px}
+.aviso{padding:var(--e-2) var(--e-3);border-radius:var(--raio);background:var(--sla-atencao-fundo);color:var(--sla-atencao-texto)}
+fieldset.equip{border:0;padding:0;margin:0;min-width:0}
+fieldset.equip legend{font-size:var(--t-13);color:var(--tinta-2);padding:0;margin-bottom:var(--e-1)}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px var(--e-3)}
+.checks label{display:flex;align-items:center;gap:var(--e-2);min-height:28px;color:var(--tinta-2);cursor:pointer}
+.form-rod{display:flex;align-items:center;gap:var(--e-2)}
+.form-rod .pd-btn.prim{height:34px;padding:0 var(--e-4)}
+.p-larga{max-width:880px;margin:0 auto;padding:var(--e-5) var(--e-5) 96px;display:flex;flex-direction:column;gap:var(--e-3)}
+.p-larga h1{font-size:var(--t-20)}
+.p-est{display:inline-flex;align-items:center;height:22px;padding:0 var(--e-2);border-radius:var(--raio);font-size:var(--t-12);background:var(--superficie-2);color:var(--tinta-2);white-space:nowrap}
+.p-est.voce{background:var(--est-pendente-fundo);color:var(--est-pendente-texto);font-weight:var(--peso-forte)}
+.p-est.ok{background:var(--sucesso-fundo);color:var(--sucesso-texto);font-weight:var(--peso-forte)}
+.p-est.fim{background:var(--est-fechado-fundo);color:var(--est-fechado-texto)}
+.fab{position:fixed;right:var(--e-5);bottom:var(--e-5);height:38px;border-radius:var(--raio-max);border:1px solid var(--marca);background:var(--superficie);color:var(--marca-texto);padding:0 var(--e-4);box-shadow:var(--sombra-flutuante);z-index:35;display:flex;align-items:center;gap:var(--e-2);font-weight:var(--peso-forte)}
+.fab:hover{background:var(--marca-suave)}
+.chat{position:fixed;right:var(--e-5);bottom:68px;width:370px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100vh - 96px);background:var(--superficie);border-radius:var(--raio-max);overflow:hidden;border:var(--borda);box-shadow:var(--sombra-flutuante);display:none;flex-direction:column;z-index:36}
+.chat.vis{display:flex}
+.chat header{padding:var(--e-2) var(--e-2) var(--e-2) var(--e-3);display:flex;align-items:center;gap:var(--e-2);border-bottom:var(--borda);background:var(--marca);color:var(--marca-tinta)}
+.chat header small{display:block;font-size:var(--t-12);opacity:.85}
+.chat header .pd-btn{color:var(--marca-tinta)}
+.chat header .pd-btn:hover{background:var(--marca-hover)}
+.chat .corpo{flex:1;padding:var(--e-3);display:flex;flex-direction:column;gap:var(--e-2);overflow:auto}
+.bal{max-width:82%;padding:var(--e-2) var(--e-3);line-height:1.45;border-radius:var(--raio-max)}
+.bal.eu{align-self:flex-end;background:var(--marca);color:var(--marca-tinta)}
+.bal.eles{align-self:flex-start;background:var(--superficie-2);color:var(--tinta)}
+.dia-chat{align-self:center;font-size:var(--t-12);color:var(--tinta-3)}
+.aval{border:var(--borda);border-radius:var(--raio);padding:var(--e-3);display:flex;flex-direction:column;gap:var(--e-2)}
+.notas{display:flex;gap:var(--e-1)}
+.notas button{flex:1;height:32px;border-radius:var(--raio);border:var(--borda);background:var(--superficie);font-weight:var(--peso-forte)}
+.notas button:hover{background:var(--superficie-2)}
+.notas button[aria-checked="true"]{border-color:var(--marca);background:var(--marca-suave);color:var(--marca-texto)}
+#digitando{padding:var(--e-1) var(--e-3);font-size:var(--t-12);color:var(--tinta-3)}
+#form-chat{display:flex;gap:var(--e-2);padding:var(--e-2);border-top:var(--borda)}
+
+/* ---------- Telas médias e celular ---------- */
+.so-m{display:none!important}
+@media (max-width:1100px){
+  .painel{flex-basis:280px;width:280px}
+  .ev-lado,.qr-lado{flex-basis:280px;width:280px}
+}
+@media (max-width:820px){
+  .app,.app.recolhida{grid-template-columns:minmax(0,1fr)}
+  .lateral{position:fixed;left:0;top:0;bottom:0;width:248px;z-index:75;transform:translateX(-100%);transition:transform .2s ease}
+  .app.recolhida .lateral{display:flex}
+  .app.nav-aberta .lateral{transform:none;box-shadow:var(--sombra-flutuante)}
+  .so-m{display:inline-flex!important}
+  .esconde-m{display:none!important}
+  .busca{width:auto;flex:1}
+  #t-tickets.ativa,.pg-cab,#t-relatorios.ativa{padding-left:var(--e-4);padding-right:var(--e-4)}
+  .tk-cab{flex-direction:column;padding:var(--e-3) var(--e-4)}
+  .tk-cab-d{padding-top:0}
+  .tk{flex-direction:column;overflow:auto}
+  .tk-c{min-height:70vh}
+  .painel{flex:none;width:auto;border-left:0;border-top:var(--borda)}
+  .conversa,.ed-zona{padding-left:var(--e-4);padding-right:var(--e-4)}
+  .msg{max-width:94%}
+  .ev-grade,.qr-grade{flex-direction:column;overflow:auto}
+  .ev-lado,.qr-lado{flex:none;width:auto;border-left:0;border-top:var(--borda)}
+  .grade2,.grade3,.cats{grid-template-columns:minmax(0,1fr)}
+  .rel-grade{grid-template-columns:minmax(0,1fr)}
+  .p-marca span{display:none}
+  .notif{right:var(--e-2)}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <nav class="lateral" id="lateral" aria-label="Navegação">
+    <div class="marca-l"><svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="5" fill="var(--marca)"/><path d="M6 10 L10 6 L14 9 L18 6 L22 10 L22 17 C22 21 18 23 14 23 C10 23 6 21 6 17 Z" fill="#fff"/><circle cx="11" cy="15" r="1.5" fill="#E4051F"/><circle cx="17" cy="15" r="1.5" fill="#E4051F"/></svg><span>PantherDesk <small>TI · EARJ</small></span></div>
+    <div class="pd-visoes" id="visoes"></div>
+    <div class="pd-visoes nav-telas">
+      <a class="pd-visao" href="#eventos" data-nav="eventos"><span>Eventos</span></a>
+      <a class="pd-visao" href="#qr" data-nav="qr"><span>QR das salas</span></a>
+      <a class="pd-visao" href="#relatorios" data-nav="relatorios"><span>Relatórios</span></a>
+      <a class="pd-visao" href="#portal" data-nav="portal"><span>Portal do solicitante</span></a>
+    </div>
+    <div class="pd-visoes lat-rod"><button class="pd-visao" type="button" id="recolher"><span>Recolher barra</span></button></div>
+  </nav>
+
+  <div class="principal">
+    <header class="topo" id="topo">
+      <button class="pd-btn fant ic" type="button" id="b-lateral" aria-label="Mostrar ou recolher a barra lateral" data-dica="Barra lateral"></button>
+      <div class="busca" id="busca">
+        <label><span id="ic-busca"></span><span class="sr">Buscar</span><input id="q" type="search" placeholder="Buscar nº, assunto, solicitante ou sala" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="busca-res"><kbd class="esconde-m">Ctrl K</kbd></label>
+        <div class="busca-res" id="busca-res" role="listbox" aria-label="Resultados da busca"></div>
+      </div>
+      <span class="esp"></span>
+      <button class="pd-btn prim" type="button" id="novo-ticket" data-dica="Novo ticket (N)">Novo ticket</button>
+      <button class="pd-btn fant sino" type="button" id="b-notif" aria-haspopup="true" aria-expanded="false" aria-label="Notificações"><span id="ic-sino"></span><span class="c" id="notif-c"></span></button>
+      <button class="av-btn" type="button" id="b-usuario" aria-haspopup="true" aria-label="Menu do usuário: Renata Vidal"><i>RV</i></button>
+      <section class="notif" id="notif" aria-label="Notificações">
+        <header><strong>Notificações</strong><div class="abas" role="tablist" id="notif-abas"><button role="tab" aria-selected="true" data-f="tudo">Tudo</button><button role="tab" aria-selected="false" data-f="mencao">Menções</button><button role="tab" aria-selected="false" data-f="atrib">Atribuições</button><button role="tab" aria-selected="false" data-f="prazo">Prazos</button></div><span class="esp"></span><button class="pd-btn fant" type="button" id="notif-lidas">Marcar como lidas</button></header>
+        <div class="notif-l" id="notif-l"></div>
+      </section>
+    </header>
+
+    <main class="conteudo" id="conteudo">
+
+      <!-- ================= ENTRAR ================= -->
+      <section class="tela" id="t-entrar" aria-label="Entrar">
+        <div class="entrar-c">
+          <img class="logo c" src="assets/earj-logo-cor.png" alt="EARJ"><img class="logo b" src="assets/earj-logo-branco.png" alt="EARJ">
+          <h1>Entrar no PantherDesk</h1>
+          <button class="pd-btn prim" type="button" id="entrar-google">Entrar com Google</button>
+          <button class="pd-btn" type="button" id="entrar-link" aria-expanded="false" aria-controls="form-link">Receber link por e-mail</button>
+          <form class="campo oculto" id="form-link">
+            <label for="e-link">E-mail</label>
+            <div style="display:flex;gap:var(--e-2)"><input class="campo-t" id="e-link" type="email" placeholder="nome@earj.com.br" style="height:32px"><button type="submit" class="pd-btn" style="height:32px;width:auto">Enviar</button></div>
+          </form>
+          <div class="rod"><span>Equipe: conta Google @earj.com.br</span><span>help.earj.com.br</span></div>
+        </div>
+      </section>
+
+      <!-- ================= LISTA DE TICKETS ================= -->
+      <section class="tela" id="t-tickets" aria-labelledby="visao-tit">
+        <div class="lista-cab">
+          <h1 id="visao-tit">Geral</h1>
+          <span class="esp"></span>
+          <button class="pd-btn fant oculto" type="button" id="salvar-visao">Salvar visão</button>
+          <button class="pd-btn fant" type="button" id="atualizar" data-dica="Atualizar a lista">Atualizar</button>
+        </div>
+        <div class="pd-chips" id="chips"></div>
+        <div class="pd-massa" id="massa" role="region" aria-label="Ações em massa">
+          <strong id="qtd">0 selecionados</strong>
+          <button class="pd-btn" type="button" id="m-atribuir" aria-haspopup="true">Atribuir</button>
+          <button class="pd-btn" type="button" id="m-estado" aria-haspopup="true">Estado</button>
+          <button class="pd-btn" type="button" id="m-prioridade" aria-haspopup="true">Prioridade</button>
+          <button class="pd-btn" type="button" id="m-mesclar">Mesclar</button>
+          <button class="pd-btn" type="button" id="m-macro" aria-haspopup="true">Macro</button>
+          <button class="pd-btn" type="button" id="m-csv">Exportar CSV</button>
+          <button class="pd-btn fant fim" type="button" id="m-cancelar">Cancelar <kbd>Esc</kbd></button>
+        </div>
+        <div class="tab-area">
+          <div class="pd-tabela-wrap" id="wrap">
+            <table class="pd-tabela" aria-labelledby="visao-tit" id="tabela">
+              <thead><tr>
+                <th class="sel"><input type="checkbox" id="todos" aria-label="Selecionar todos desta página"></th>
+                <th class="est">Estado</th>
+                <th class="num" data-ord="num"><button type="button">Nº</button></th>
+                <th class="local">Local</th>
+                <th class="sla" data-ord="sla"><button type="button">SLA</button></th>
+                <th>Assunto</th>
+                <th class="sol">Solicitante</th>
+                <th class="resp">Responsável</th>
+                <th class="atu" data-ord="atu"><button type="button">Atualizado</button></th>
+                <th class="acoes"><span class="sr">Ações</span></th>
+              </tr></thead>
+              <tbody id="corpo"></tbody>
+            </table>
+            <div id="lista-msg"></div>
+          </div>
+        </div>
+        <div class="rodape"><span id="pag-info"></span><span class="esconde-m">· <kbd>j</kbd> <kbd>k</kbd> navegar · <kbd>x</kbd> selecionar · <kbd>Enter</kbd> abrir · <kbd>a</kbd> assumir · <kbd>?</kbd> atalhos</span><span class="fim"><button class="pd-btn" type="button" id="pag-ant">Anterior</button><button class="pd-btn" type="button" id="pag-prox">Próxima</button></span></div>
+      </section>
+
+      <!-- ================= TICKET ================= -->
+      <section class="tela" id="t-ticket" aria-labelledby="tk-tit">
+        <header class="tk-cab">
+          <div class="tk-cab-l">
+            <nav class="trilha" aria-label="Trilha"><a href="#tickets" id="tk-voltar">Geral</a><span>/</span><span id="tk-trilha-n"></span></nav>
+            <h1 id="tk-tit"><span class="n" id="tk-n"></span><span class="a" id="tk-ass"></span></h1>
+            <div class="tk-meta" id="tk-meta"></div>
+          </div>
+          <div class="tk-cab-d">
+            <span id="tk-presenca"></span>
+            <button class="est-btn" type="button" id="tk-est" aria-haspopup="true" data-dica="Estado (S)"></button>
+            <button class="pd-btn fant ic" type="button" id="tk-mais" aria-haspopup="true" aria-label="Mais ações">⋯</button>
+          </div>
+        </header>
+        <div class="tk">
+          <div class="tk-c">
+            <div class="conversa" id="conversa" tabindex="-1"></div>
+            <div class="ed-zona">
+              <div class="ed-botoes" id="ed-botoes"><button type="button" class="pd-btn" id="abrir-resp">Responder <kbd>R</kbd></button><button type="button" class="pd-btn" id="abrir-nota">Nota interna <kbd>I</kbd></button><span class="rasc oculto" id="tem-rasc">rascunho salvo</span></div>
+              <form class="editor oculto" id="editor" aria-label="Escrever">
+                <div class="ed-cab">
+                  <div class="abas" role="tablist"><button type="button" role="tab" id="ed-pub" aria-selected="true">Responder</button><button type="button" role="tab" id="ed-int" aria-selected="false">Nota interna</button></div>
+                  <span id="ed-para"></span><span class="esp"></span>
+                  <button type="button" class="pd-btn fant ic" id="fechar-ed" aria-label="Fechar editor (Esc)" data-dica="Fechar (Esc)">×</button>
+                </div>
+                <div class="previa oculto" id="previa"></div>
+                <label for="texto" class="sr">Mensagem</label>
+                <textarea id="texto"></textarea>
+                <div class="ed-rod">
+                  <span style="position:relative;display:inline-flex"><button type="button" class="pd-btn fant" id="b-macro" aria-haspopup="true" aria-expanded="false">Macros</button>
+                    <div class="pop-macro oculto" id="pop-macro"><input class="campo-t" id="busca-macro" placeholder="Buscar macro (PT ou EN)" aria-label="Buscar macro"><div id="lista-macro"></div></div></span>
+                  <button type="button" class="pd-btn fant" id="anexar">Anexar</button>
+                  <span class="esp"></span>
+                  <div class="split" id="split">
+                    <button type="submit" class="pd-btn prim" id="enviar"><span id="enviar-rot">Enviar como Pendente</span><kbd class="esconde-m">Ctrl ↵</kbd></button>
+                    <button type="button" class="pd-btn prim" id="b-envio" aria-haspopup="true" aria-label="Escolher o estado após o envio"></button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <aside class="painel" id="painel" aria-label="Propriedades do ticket"></aside>
+        </div>
+      </section>
+
+      <!-- ================= EVENTOS ================= -->
+      <section class="tela" id="t-eventos" aria-labelledby="ev-tit">
+        <div class="pg-cab">
+          <h1 id="ev-tit">Eventos</h1>
+          <button class="pd-btn fant ic" type="button" id="cal-ant" aria-label="Mês anterior">‹</button>
+          <strong>Novembro de 2026</strong>
+          <button class="pd-btn fant ic" type="button" id="cal-prox" aria-label="Próximo mês">›</button>
+          <button class="pd-btn fant ic" type="button" id="ev-regra" aria-label="Regra do prazo" data-dica="Prazo da equipe: início da montagem. Pedido com menos de 5 dias úteis de antecedência fica marcado como fora do prazo.">?</button>
+          <span class="esp"></span>
+          <div class="seg" id="f-campus" role="group" aria-label="Campus"><button type="button" aria-pressed="true" data-c="">Todos</button><button type="button" aria-pressed="false" data-c="barra">Barra</button><button type="button" aria-pressed="false" data-c="gavea">Gávea</button><button type="button" aria-pressed="false" data-c="entre">Entre campi</button></div>
+          <label class="sel-l">Tipo <select id="f-tipo"><option value="">todos</option></select></label>
+          <button class="pd-btn" type="button" id="novo-evento">Novo evento</button>
+        </div>
+        <div class="ev-grade">
+          <section class="cal-wrap" aria-label="Calendário de novembro de 2026"><div class="cal" id="cal"></div></section>
+          <aside class="ev-lado" id="ev-lado" aria-label="Próximos eventos"></aside>
+        </div>
+      </section>
+
+      <!-- ================= QR DAS SALAS ================= -->
+      <section class="tela" id="t-qr" aria-labelledby="qr-tit">
+        <div class="pg-cab"><h1 id="qr-tit">QR das salas</h1><span class="mut" id="qr-resumo"></span></div>
+        <div class="qr-grade">
+          <div class="qr-arvore" id="qr-arvore"></div>
+          <aside class="qr-lado" id="qr-lado" aria-label="Ao escanear"></aside>
+        </div>
+      </section>
+
+      <!-- ================= RELATÓRIOS ================= -->
+      <section class="tela" id="t-relatorios" aria-labelledby="rel-tit">
+        <div class="rel-cab"><h1 id="rel-tit">Relatórios</h1><label class="sel-l">Período <select id="rel-per"><option>Últimos 30 dias</option><option>Últimos 7 dias</option><option>Semestre</option></select></label><span class="esp"></span><button class="pd-btn" type="button" id="rel-csv">Exportar CSV</button></div>
+        <div class="rel-grade" id="rel"></div>
+      </section>
+
+      <!-- ================= PORTAL ================= -->
+      <section class="tela" id="t-portal" aria-label="Central de ajuda">
+        <header class="p-topo"><div class="p-in">
+          <a class="p-marca" href="#portal" data-pv="inicio"><img class="logo c" src="assets/earj-logo-cor.png" alt="EARJ"><img class="logo b" src="assets/earj-logo-branco.png" alt="EARJ"><span data-i18n="marca">Central de ajuda da TI</span></a>
+          <nav class="p-nav esconde-m" aria-label="Portal"><a href="#portal/novo" data-pv="novo" data-i18n="abrir">Abrir pedido</a><a href="#portal/pedidos" data-pv="pedidos" data-i18n="pedidos">Meus pedidos</a></nav>
+          <span class="esp"></span>
+          <div class="seg" id="seg-idioma" role="group" aria-label="Idioma / Language"><button type="button" data-l="pt" aria-pressed="true" lang="pt-BR">PT</button><button type="button" data-l="en" aria-pressed="false" lang="en">EN</button></div>
+          <button class="av-btn" type="button" id="b-conta" aria-haspopup="true" data-i18n-al="conta"><span class="av-o">MC</span></button>
+        </div></header>
+
+        <div class="pv" id="pv-inicio">
+          <div class="p-heroi"><div class="p-heroi-in">
+            <h1 data-i18n="h1">Como podemos ajudar?</h1>
+            <p data-i18n="h1-sub">Equipe de TI da EARJ, nos campi Barra e Gávea.</p>
+            <label class="p-busca"><span id="ic-pbusca"></span><span class="sr" data-i18n="buscar">Buscar</span><input id="p-busca" type="search" data-i18n-ph="busca-ph" placeholder="Wi-Fi, impressora, projetor, senha…" autocomplete="off"></label>
+            <div class="lista-art oculto" id="p-res"></div>
+            <div class="p-acoes"><button class="pd-btn prim" type="button" data-pv="novo" data-i18n="abrir">Abrir pedido</button><button class="pd-btn" type="button" data-pv="pedidos" data-i18n="pedidos">Meus pedidos</button></div>
+          </div></div>
+          <div class="p-sec"><h2 data-i18n="temas">Temas</h2><div class="cats" id="p-cats"></div></div>
+          <div class="p-sec"><h2 data-i18n="mais-lidos">Mais lidos</h2><div class="lista-art" id="p-populares"></div></div>
+          <p class="p-contato" data-i18n="contato">Atendimento de segunda a sexta, das 7h às 18h. Ramal 2100 na Barra e 3100 na Gávea.</p>
+        </div>
+
+        <div class="pv oculto" id="pv-novo">
+          <div class="p-form">
+            <div class="seg" role="tablist" id="abas-portal" style="align-self:flex-start"><button type="button" role="tab" aria-pressed="true" data-p="sup" data-i18n="tab-sup">Suporte</button><button type="button" role="tab" aria-pressed="false" data-p="ev" data-i18n="tab-ev">Evento de AV</button></div>
+
+            <form class="form" id="form-sup" aria-labelledby="f-tit">
+              <h1 id="f-tit" data-i18n="f-tit">Abrir um pedido</h1>
+              <button type="button" class="pd-btn fant oculto" id="sim-qr" style="align-self:flex-start" data-i18n="sim-qr">Simular QR da Sala 214 (dev)</button>
+              <div class="campo"><label for="p-tipo" data-i18n="l-tipo">Você é</label><select id="p-tipo"></select></div>
+              <div class="local-box" id="local-sup">
+                <div class="local-cab"><span data-i18n="l-onde">Onde é o problema?</span><span class="selo-qr oculto" id="selo-qr"></span><button type="button" class="lnk oculto" id="nao-estou" data-i18n="nao-estou">Não estou nesta sala</button></div>
+                <div class="grade3">
+                  <div class="campo"><label for="p-campus" data-i18n="l-campus">Campus</label><select id="p-campus"></select></div>
+                  <div class="campo" id="w-p-andar"><label for="p-andar" data-i18n="l-andar">Andar</label><select id="p-andar"></select></div>
+                  <div class="campo" id="w-p-sala"><label for="p-sala" data-i18n="l-sala">Sala</label><select id="p-sala"></select></div>
+                </div>
+              </div>
+              <div class="campo"><span class="lbl" id="l-motivo" data-i18n="l-motivo">Motivo do contato</span><div class="motivos" role="radiogroup" aria-labelledby="l-motivo" id="motivos"></div></div>
+              <div class="grade2" id="w-equip">
+                <div class="campo"><label for="p-equip" data-i18n="l-equip">Equipamento</label><select id="p-equip"></select></div>
+                <div class="campo" id="w-sint"><label for="p-sint" data-i18n="l-sint">O que está acontecendo?</label><select id="p-sint"></select></div>
+              </div>
+              <div class="campo"><label for="p-ass" data-i18n="l-ass">Assunto</label><input id="p-ass" data-i18n-ph="ass-ph" placeholder="Ex.: Projetor da sala 204 não liga" autocomplete="off"></div>
+              <section class="sugest oculto" id="sugest" aria-live="polite"></section>
+              <div class="campo"><label for="p-desc" data-i18n="l-desc">Descrição</label><textarea id="p-desc" data-i18n-ph="desc-ph" placeholder="O que aconteceu e quando você precisa que funcione."></textarea></div>
+              <div class="form-rod"><button type="button" class="pd-btn fant" id="p-anexar" data-i18n="anexar">Anexar foto ou arquivo</button><span class="esp"></span><button type="submit" class="pd-btn prim" data-i18n="enviar">Enviar pedido</button></div>
+            </form>
+
+            <form class="form oculto" id="form-ev" aria-labelledby="ev-f-tit">
+              <h1 id="ev-f-tit" data-i18n="ev-tit">Suporte de AV para um evento</h1>
+              <div class="grade2">
+                <div class="campo"><label for="e-nome" data-i18n="e-nome">Nome do evento</label><input id="e-nome" data-i18n-ph="e-nome-ph" placeholder="Ex.: Assembly do Ensino Fundamental"></div>
+                <div class="campo"><label for="e-tipo" data-i18n="e-tipo">Tipo</label><select id="e-tipo"></select></div>
+              </div>
+              <div class="grade3">
+                <div class="campo"><label for="e-data" data-i18n="e-data">Data</label><input id="e-data" type="date" value="2026-11-03"></div>
+                <div class="campo"><label for="e-ini" data-i18n="e-ini">Início</label><input id="e-ini" type="time" value="08:00"></div>
+                <div class="campo"><label for="e-fim" data-i18n="e-fim">Fim</label><input id="e-fim" type="time" value="09:30"></div>
+              </div>
+              <div class="aviso oculto" id="e-aviso" role="status"></div>
+              <div class="grade2">
+                <div class="campo"><label for="e-mont" data-i18n="e-mont">Início da montagem</label><input id="e-mont" type="datetime-local" value="2026-11-03T07:00"></div>
+                <div class="campo"><label for="e-pub" data-i18n="e-pub">Público estimado</label><input id="e-pub" type="number" min="1" value="120"></div>
+              </div>
+              <div class="local-box">
+                <div class="local-cab"><span data-i18n="e-local">Local do evento</span></div>
+                <div class="grade3">
+                  <div class="campo"><label for="e-campus" data-i18n="l-campus">Campus</label><select id="e-campus"></select></div>
+                  <div class="campo" id="w-e-andar"><label for="e-andar" data-i18n="l-andar">Andar</label><select id="e-andar"></select></div>
+                  <div class="campo" id="w-e-sala"><label for="e-sala" data-i18n="l-sala">Sala</label><select id="e-sala"></select></div>
+                </div>
+              </div>
+              <fieldset class="equip"><legend data-i18n="e-equip">Equipamentos</legend><div class="checks" id="e-equip"></div></fieldset>
+              <div class="campo"><label for="e-obs" data-i18n="e-obs">Observações</label><textarea id="e-obs" data-i18n-ph="e-obs-ph" placeholder="Roteiro, quem fala, se precisa de gravação."></textarea></div>
+              <div class="form-rod"><span class="esp"></span><button type="submit" class="pd-btn prim" data-i18n="e-enviar">Enviar pedido de evento</button></div>
+            </form>
+          </div>
+        </div>
+
+        <div class="pv oculto" id="pv-pedidos">
+          <div class="p-larga">
+            <div style="display:flex;align-items:center;gap:var(--e-3)"><h1 data-i18n="pedidos">Meus pedidos</h1><div class="seg" id="f-pedidos"><button type="button" aria-pressed="true" data-f="abertos" data-i18n="f-abertos">Em aberto</button><button type="button" aria-pressed="false" data-f="todos" data-i18n="f-todos">Todos</button></div></div>
+            <table class="tab-s"><thead><tr><th style="width:72px" data-i18n="th-n">Nº</th><th data-i18n="th-ass">Assunto</th><th style="width:170px" data-i18n="th-est">Situação</th><th style="width:120px" data-i18n="th-at">Atualizado</th></tr></thead><tbody id="corpo-pedidos"></tbody></table>
+          </div>
+        </div>
+
+        <button class="fab" type="button" id="fab" aria-expanded="false" aria-controls="chat" data-i18n="fab">Fale com a TI</button>
+        <div class="chat" id="chat" role="dialog" aria-labelledby="chat-tit">
+          <header><div style="flex:1"><strong id="chat-tit">TI · EARJ</strong><small data-i18n="chat-sub">Online · costuma responder em minutos</small></div><button class="pd-btn fant ic" type="button" id="fechar-chat" data-i18n-al="fechar">×</button></header>
+          <div class="corpo" id="corpo-chat"></div>
+          <div id="digitando" class="oculto"></div>
+          <form id="form-chat"><label for="m-chat" class="sr" data-i18n="msg">Mensagem</label><input id="m-chat" class="campo-t" data-i18n-ph="msg-ph" placeholder="Escreva sua mensagem" style="height:32px"><button type="submit" class="pd-btn" style="height:32px" data-i18n="enviar-c">Enviar</button></form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="menu" id="menu" role="menu"></div>
+<div class="dica" id="dica" role="tooltip"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="veu" id="veu-gaveta"></div>
+<aside class="gaveta" id="gaveta" role="dialog" aria-labelledby="art-cab">
+  <header><div style="flex:1"><span id="art-cab">Rascunho de artigo</span><small id="art-origem"></small></div><button class="pd-btn fant ic" type="button" id="fechar-gaveta" aria-label="Fechar">×</button></header>
+  <div class="corpo-g">
+    <div class="grade2">
+      <div class="campo"><label for="art-cat">Categoria</label><select id="art-cat"><option>Impressoras</option><option>Wi-Fi e rede</option><option>Sala de aula</option><option>Contas e senhas</option></select></div>
+      <div class="campo"><label for="art-lang">Idioma</label><select id="art-lang"><option>Português</option><option>Inglês</option></select></div>
+    </div>
+    <div class="campo"><label for="art-tit">Título</label><input id="art-tit"></div>
+    <div class="campo"><label for="art-txt">Texto</label><textarea id="art-txt" style="min-height:260px;line-height:1.55"></textarea></div>
+  </div>
+  <footer><button class="pd-btn" type="button" id="art-variante">Pedir variante EN</button><span class="esp"></span><button class="pd-btn prim" type="button" id="art-salvar" data-dica="Só administradores publicam">Salvar rascunho</button></footer>
+</aside>
+
+<div class="veu" id="atalhos-veu"><div class="dlg" role="dialog" aria-labelledby="atalhos-tit"><header><span id="atalhos-tit">Atalhos</span><span class="esp"></span><button class="pd-btn fant ic" type="button" id="fechar-atalhos" aria-label="Fechar">×</button></header>
+  <dl>
+    <dt class="g">Geral</dt>
+    <dt>Buscar</dt><dd><kbd>Ctrl K</kbd> <kbd>/</kbd></dd>
+    <dt>Novo ticket</dt><dd><kbd>N</kbd></dd>
+    <dt>Esta lista</dt><dd><kbd>?</kbd></dd>
+    <dt>Fechar</dt><dd><kbd>Esc</kbd></dd>
+    <dt class="g">Lista</dt>
+    <dt>Próximo / anterior</dt><dd><kbd>j</kbd> <kbd>k</kbd></dd>
+    <dt>Abrir</dt><dd><kbd>Enter</kbd></dd>
+    <dt>Selecionar</dt><dd><kbd>x</kbd></dd>
+    <dt>Assumir</dt><dd><kbd>a</kbd></dd>
+    <dt>Estado</dt><dd><kbd>s</kbd></dd>
+    <dt class="g">Ticket</dt>
+    <dt>Responder</dt><dd><kbd>r</kbd></dd>
+    <dt>Nota interna</dt><dd><kbd>i</kbd></dd>
+    <dt>Estado</dt><dd><kbd>s</kbd></dd>
+    <dt>Assumir</dt><dd><kbd>a</kbd></dd>
+    <dt>Ticket seguinte / anterior</dt><dd><kbd>j</kbd> <kbd>k</kbd></dd>
+    <dt>Enviar</dt><dd><kbd>Ctrl ↵</kbd></dd>
+  </dl></div></div>
+
+<script>
+const $ = (s, e = document) => e.querySelector(s);
+const $$ = (s, e = document) => [...e.querySelectorAll(s)];
+const ls = {get(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[c]));
+const semTags = s => String(s).replace(/<[^>]+>/g, '').trim();
+const semAcento = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const iniciais = nome => nome ? nome.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() : '?';
+const emailDe = nome => semAcento(nome).replace(/ /g, '.') + '@earj.example';
+const primeiro = nome => (nome || '').split(' ')[0];
+const PARAMS = new URLSearchParams(location.search);
+const DEV = PARAMS.get('dev') === '1';
+
+// ---------- Ícones (traço, 16px; 12px nas células) ----------
+const P = {
+  busca:'<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 13.5 13.5"/>',
+  sino:'<path d="M4 11.5V7.5a4 4 0 0 1 8 0v4l1 1H3z"/><path d="M6.5 14h3"/>',
+  lateral:'<rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M6 2.5v11"/>',
+  chevb:'<path d="M4.5 6.5 8 10l3.5-3.5"/>',
+  setad:'<path d="M3 8h10M9 4l4 4-4 4"/>'
+};
+const ic = (n, s = 16) => `<svg class="i" width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
+const IC12 = {
+  pausa:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5 V9.5 M8 2.5 V9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  urgente:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5 L11 10.5 H1 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 5 V7.2 M6 8.8 V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  alta:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10 V2.5 M2.8 5.5 L6 2.3 L9.2 5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  mont:'<svg viewBox="0 0 12 12" class="mt" aria-hidden="true"><path d="M7.6 1.6a2.3 2.3 0 0 0-2.2 3L1.9 8.1a1.1 1.1 0 0 0 1.6 1.6L7 6.2a2.3 2.3 0 0 0 3-2.2L8.5 4.4 7.4 3.3z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+  x:'<svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+};
+
+// ---------- Relógio de referência: quinta, 29/10/2026, 10:38 ----------
+const AGORA = new Date(2026, 9, 29, 10, 38);
+const p2 = n => String(n).padStart(2, '0');
+const antes = min => new Date(AGORA.getTime() - min * 60000);
+const depois = min => new Date(AGORA.getTime() + min * 60000);
+const dataHora = d => `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+const hhmm = d => `${p2(d.getHours())}:${p2(d.getMinutes())}`;
+const diaZero = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const difDias = (a, b) => Math.round((diaZero(a) - diaZero(b)) / 864e5);
+function relativo(min){
+  const d = antes(min); const dd = difDias(AGORA, d);
+  if (min < 1) return 'agora';
+  if (dd === 0) return min < 60 ? `há ${min} min` : `há ${Math.floor(min / 60)} h`;
+  return dd === 1 ? 'ontem' : `há ${dd} d`;
+}
+function dur(m){ m = Math.round(Math.abs(m)); if (m < 60) return `${m} min`; if (m < 1440) { const h = Math.floor(m / 60), r = m % 60; return r ? `${h} h ${p2(r)}` : `${h} h`; } return `${Math.floor(m / 1440)} d`; }
+function durGrossa(m){ m = Math.round(Math.abs(m)); if (m < 60) return `${m} min`; if (m < 1440) return `${Math.floor(m / 60)} h`; return `${Math.floor(m / 1440)} d`; }
+const pIso = (iso, hm = '00:00') => { const [y, mo, d] = iso.split('-').map(Number); const [h, mi] = hm.split(':').map(Number); return new Date(y, mo - 1, d, h, mi); };
+const ddmm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
+function diasUteis(iso){ const alvo = pIso(iso); const c = diaZero(AGORA); let n = 0; while (c < alvo) { c.setDate(c.getDate() + 1); const w = c.getDay(); if (w && w < 6) n++; } return n; }
+
+// ---------- Cadastro de locais: campus → prédio → andar → sala ----------
+const LOCAIS = {
+  barra:{nome:'Barra', sigla:'BAR', predios:[{id:'p', nome:'Prédio principal', andares:[
+    {id:'sub', nome:'Subsolo', cod:'S', salas:['Sala de servidores', 'Depósito de AV', 'Garagem']},
+    {id:'ter', nome:'Térreo', cod:'T', salas:['Recepção', 'Secretaria', 'Enfermaria', 'Ginásio', 'Refeitório']},
+    {id:'1', nome:'1º andar', cod:'1', salas:['Sala 101', 'Sala 104', 'Sala 110', 'Laboratório de informática']},
+    {id:'2', nome:'2º andar', cod:'2', salas:['Sala 201', 'Sala 204', 'Sala 210', 'Sala 214', 'Sala dos professores']},
+    {id:'cob', nome:'Cobertura', cod:'C', salas:['Auditório', 'Terraço', 'Estúdio de música']}]}]},
+  gavea:{nome:'Gávea', sigla:'GAV', predios:[
+    {id:'a', nome:'Prédio A', andares:[
+      {id:'a-t', nome:'Térreo', cod:'AT', salas:['Recepção', 'Biblioteca', 'Sala A-02']},
+      {id:'a-1', nome:'1º andar', cod:'A1', salas:['Sala A-11', 'Sala A-12', 'Laboratório de ciências']}]},
+    {id:'b', nome:'Prédio B', andares:[
+      {id:'b-t', nome:'Térreo', cod:'BT', salas:['RH', 'Financeiro', 'Refeitório']},
+      {id:'b-2', nome:'2º andar', cod:'B2', salas:['Teatro', 'Sala B-21', 'Sala B-22']}]}]}
+};
+const SALAS = [];
+Object.entries(LOCAIS).forEach(([c, cp]) => cp.predios.forEach(pr => pr.andares.forEach(an => an.salas.forEach((s, i) => {
+  const m = s.match(/(\d{2,3})$/);
+  SALAS.push({chave:c + '|' + s, campus:c, predio:pr, andar:an, sala:s, cod:`${cp.sigla}-${an.cod}-${m ? m[1] : p2(i + 1)}`});
+}))));
+const salaDe = (c, s) => SALAS.find(x => x.chave === c + '|' + s);
+const andarNome = (sx) => sx.campus === 'gavea' ? `${sx.predio.nome} · ${sx.andar.nome}` : sx.andar.nome;
+
+// ---------- Pessoas ----------
+const EU = 'Renata Vidal';
+const TECNICOS = [EU, 'Rafael Torres', 'Ana Lima', 'André Souza'];
+const GRUPOS = ['Suporte Barra', 'Suporte Gávea', 'Eventos', 'Sistemas'];
+const PESSOAS = ['Lucas Andrade', 'Carla Nunes', 'Bruno Faria', 'Helena Ribas', 'Diana Prado', 'Otávio Reis', 'Ana Ribeiro', 'Pedro Alves', 'Lívia Prates', 'Paula Mendes', 'Marcos Teixeira', 'João Lemos', 'Beatriz Rocha', 'Fernanda Lopes', 'Gustavo Pires', 'Isabela Cunha', 'Rodrigo Sales', 'Tatiana Moura'];
+const PESSOAS_EN = ['Daniel Brooks', 'Sarah Collins', 'James Whitaker', 'Emily Carter', 'Michael Grant'];
+const SEM_NOME = ['sala204.barra@earj.example', 'recepcao.gavea@earj.example', 'lab.ciencias@earj.example', 'portaria.barra@earj.example'];
+
+// ---------- Eventos de AV ----------
+const TIPOS_EV = {assembly:['Assembly', 'Assembly'], homecoming:['Homecoming', 'Homecoming'], traducao:['Tradução simultânea', 'Simultaneous interpretation'], entre:['Evento entre campi', 'Event across both campuses'], pequeno:['Pequeno evento', 'Small event'], outro:['Outro', 'Other']};
+const EVENTOS = [
+  {n:8437, nome:'Palestra de segurança digital', tipo:'pequeno', campus:'gavea', sala:'Teatro', data:'2026-10-27', ini:'19:00', fim:'20:30', mont:'2026-10-27', montH:'17:00', pub:150, equip:['Projetor', 'Microfone sem fio'], sol:'Lívia Prates', pronto:true},
+  {n:8434, nome:'Ensaio do coral', tipo:'pequeno', campus:'barra', sala:'Auditório', data:'2026-10-29', ini:'09:00', fim:'11:30', mont:'2026-10-29', montH:'07:30', pub:60, equip:['Mesa de som', 'Microfone sem fio'], sol:'Paula Mendes', pronto:true},
+  {n:8447, nome:'Mostra de artes do 3º ano', tipo:'outro', campus:'gavea', sala:'Biblioteca', data:'2026-10-30', ini:'09:00', fim:'12:00', mont:'2026-10-29', montH:'08:00', pub:120, equip:['Projetor', 'Caixas de som'], sol:'Isabela Cunha'},
+  {n:8444, nome:'Workshop de professores', tipo:'pequeno', campus:'gavea', sala:'Sala A-11', data:'2026-11-03', ini:'14:00', fim:'17:00', mont:'2026-11-03', montH:'13:00', pub:35, equip:['Projetor'], sol:'Fernanda Lopes', foraPrazo:true},
+  {n:8426, nome:'Palestra para pais com tradução simultânea', tipo:'traducao', campus:'gavea', sala:'Teatro', data:'2026-11-04', ini:'18:30', fim:'20:00', mont:'2026-11-04', montH:'14:00', pub:180, equip:['Cabines de tradução', 'Fones de tradução', 'Microfone sem fio', 'Projetor'], sol:'Lívia Prates', foraPrazo:true},
+  {n:8425, nome:'Assembly do Ensino Médio', tipo:'assembly', campus:'barra', sala:'Auditório', data:'2026-11-06', ini:'08:00', fim:'09:30', mont:'2026-11-05', montH:'15:00', pub:420, equip:['Mesa de som', 'Microfone sem fio', 'Projetor', 'Telão'], sol:'Paula Mendes'},
+  {n:8428, nome:'Apresentação de música do 5º ano', tipo:'pequeno', campus:'gavea', sala:'Biblioteca', data:'2026-11-10', ini:'10:00', fim:'11:00', mont:'2026-11-10', montH:'08:00', pub:60, equip:['Caixas de som', 'Microfone sem fio'], sol:'Helena Ribas'},
+  {n:8441, nome:'Aula aberta de robótica', tipo:'pequeno', campus:'barra', sala:'Laboratório de informática', data:'2026-11-10', ini:'14:00', fim:'16:00', mont:'2026-11-10', montH:'12:00', pub:40, equip:['Projetor', 'Caixas de som'], sol:'Gustavo Pires'},
+  {n:8442, nome:'Reunião de pais do 1º ano', tipo:'traducao', campus:'gavea', sala:'Teatro', data:'2026-11-10', ini:'18:30', fim:'20:00', mont:'2026-11-10', montH:'16:00', pub:200, equip:['Cabines de tradução', 'Fones de tradução', 'Mesa de som'], sol:'Fernanda Lopes'},
+  {n:8443, nome:'Gravação do vídeo institucional', tipo:'outro', campus:'barra', sala:'Estúdio de música', data:'2026-11-10', ini:'08:00', fim:'12:00', mont:'2026-11-09', montH:'16:00', pub:10, equip:['Gravação', 'Microfone sem fio'], sol:'Tatiana Moura'},
+  {n:8439, nome:'Orientação do 9º ano', tipo:'pequeno', campus:'barra', sala:'Sala 110', data:'2026-11-11', ini:'13:30', fim:'14:30', mont:'2026-11-11', montH:'12:30', pub:45, equip:['Projetor'], sol:'Bruno Faria'},
+  {n:8430, nome:'Homecoming Panthers', tipo:'homecoming', campus:'barra', sala:'Ginásio', data:'2026-11-14', ini:'10:00', fim:'16:00', mont:'2026-11-13', montH:'13:00', pub:900, equip:['Mesa de som', 'Caixas de som', 'Microfone sem fio', 'Telão', 'Transmissão ao vivo'], sol:'Carla Nunes', espera:true},
+  {n:8431, nome:'Conselho de classe entre campi', tipo:'entre', campus:'entre', localTxt:'Auditório (Barra) + Teatro (Gávea)', data:'2026-11-18', ini:'14:00', fim:'16:30', mont:'2026-11-18', montH:'12:00', pub:120, equip:['Transmissão ao vivo', 'Projetor', 'Microfone sem fio'], sol:'Diana Prado'},
+  {n:8448, nome:'Visita de escola parceira', tipo:'pequeno', campus:'barra', sala:'Sala 201', data:'2026-11-18', ini:'09:00', fim:'11:00', mont:'2026-11-18', montH:'08:00', pub:25, equip:['Projetor'], sol:'Beatriz Rocha'},
+  {n:8433, nome:'Feira de ciências', tipo:'outro', campus:'gavea', sala:'Laboratório de ciências', data:'2026-11-20', ini:'09:00', fim:'15:00', mont:'2026-11-19', montH:'14:00', pub:300, equip:['Projetor', 'Caixas de som'], sol:'Otávio Reis'},
+  {n:8436, nome:'Reunião de pais com tradução', tipo:'traducao', campus:'barra', sala:'Auditório', data:'2026-11-24', ini:'19:00', fim:'20:30', mont:'2026-11-24', montH:'16:00', pub:250, equip:['Cabines de tradução', 'Fones de tradução', 'Mesa de som'], sol:'Paula Mendes'},
+  {n:8435, nome:'Thanksgiving Assembly', tipo:'assembly', campus:'barra', sala:'Auditório', data:'2026-11-26', ini:'08:00', fim:'09:00', mont:'2026-11-25', montH:'15:00', pub:450, equip:['Mesa de som', 'Microfone sem fio', 'Projetor'], sol:'Daniel Brooks'},
+  {n:8445, nome:'Feira do livro', tipo:'outro', campus:'gavea', sala:'Biblioteca', data:'2026-11-26', ini:'08:00', fim:'17:00', mont:'2026-11-25', montH:'14:00', pub:400, equip:['Caixas de som', 'Microfone sem fio'], sol:'Isabela Cunha'},
+  {n:8446, nome:'Coral de Thanksgiving', tipo:'pequeno', campus:'barra', sala:'Ginásio', data:'2026-11-26', ini:'12:00', fim:'13:00', mont:'2026-11-26', montH:'10:00', pub:300, equip:['Mesa de som', 'Microfone sem fio'], sol:'Paula Mendes'},
+  {n:8438, nome:'Recital de fim de semestre', tipo:'entre', campus:'entre', localTxt:'Teatro (Gávea) + transmissão para a Barra', data:'2026-11-28', ini:'17:00', fim:'19:00', mont:'2026-11-28', montH:'13:00', pub:350, equip:['Transmissão ao vivo', 'Gravação', 'Mesa de som'], sol:'Lívia Prates'}
+];
+function estadoEvento(e){
+  const fim = pIso(e.data, e.fim), mont = pIso(e.mont, e.montH);
+  if (AGORA > fim) return {k:'encerrado', txt:'evento encerrado', curto:'encerrado', c:''};
+  if (e.pronto) return {k:'pronto', txt:'pronto', curto:'pronto', c:'pronto'};
+  if (AGORA >= mont) return {k:'sem', txt:'montagem sem pronto', curto:'sem pronto', c:'estouro'};
+  const d = difDias(mont, AGORA);
+  return {k:'faltam', txt:d === 0 ? 'montagem hoje' : d === 1 ? 'falta 1 dia' : `faltam ${d} dias`, curto:d === 0 ? 'hoje' : d === 1 ? 'falta 1 d' : `faltam ${d} d`, c:''};
+}
+
+// ---------- Tickets feitos à mão (os que têm conversa e fluxos) ----------
+const T = [];
+const add = o => T.push(Object.assign({lang:'PT', pri:'normal', r1:true, lido:true, canal:'Portal', sla:null, campus:null, sala:null, andar:null, resp:null, grupo:'Suporte Barra', equip:''}, o));
+add({n:8420, est:'aberto', campus:'barra', andar:'2', ass:'Wi-Fi fora no 2º andar da Barra', pri:'urgente', sol:'Lucas Andrade', resp:EU, criado:58, atu:9, sla:{tipo:'res', vence:30, total:240}, equip:'Wi-Fi', inc:true, lido:false});
+add({n:8412, est:'aberto', campus:'barra', sala:'Sala 204', ass:'Projetor da sala 204 não liga', en:'Projector in room 204 won’t turn on', pri:'alta', sol:'Mariana Costa', resp:EU, criado:146, atu:17, sla:{tipo:'res', vence:80, total:480}, equip:'Projetor', seg:'Paula Mendes'});
+add({n:8411, est:'aberto', r1:false, campus:'barra', sala:'Sala 214', lang:'EN', ass:'Smartboard in room 214 not responding to touch', sol:'Daniel Brooks', resp:EU, criado:163, atu:163, sla:{tipo:'r1', vence:180, total:240}, canal:'E-mail', equip:'Lousa digital', lido:false});
+add({n:8409, est:'aberto', r1:false, campus:'barra', sala:'Laboratório de informática', ass:'Site bloqueado no laboratório', sol:'Marcos Teixeira', resp:EU, criado:178, atu:178, sla:{tipo:'r1', vence:52, total:240}, canal:'E-mail', equip:'Filtro web'});
+add({n:8401, est:'resolvido', campus:'barra', sala:'Sala dos professores', ass:'Impressora da sala dos professores não imprime frente e verso', sol:'Carla Nunes', resp:EU, criado:1208, atu:1158, equip:'Impressora'});
+add({n:8398, est:'espera', campus:'barra', sala:'Secretaria', ass:'Troca de notebook autorizada pela coordenação', sol:'Bruno Faria', resp:EU, criado:1113, atu:330, equip:'Notebook'});
+add({n:8390, est:'aberto', campus:'barra', sala:'Sala 104', ass:'Document camera sem imagem no projetor', sol:'Helena Ribas', resp:EU, criado:1286, atu:600, sla:{tipo:'res', vence:2900, total:4320}, canal:'Chat', equip:'Document camera'});
+add({n:8417, est:'aberto', r1:false, campus:'gavea', sala:'RH', ass:'Impressora do RH sem toner', pri:'alta', sol:'Diana Prado', grupo:'Suporte Gávea', criado:40, atu:40, sla:{tipo:'r1', vence:25, total:120}, equip:'Impressora', lido:false});
+add({n:8423, est:'aberto', r1:false, campus:'barra', sala:'Sala 214', ass:'Projetor da Sala 214 sem imagem', pri:'alta', sol:'Ana Ribeiro', criado:140, atu:140, sla:{tipo:'r1', vence:-20, total:120}, canal:'QR da sala', equip:'Projetor', lido:false});
+add({n:8424, est:'aberto', r1:false, campus:'barra', sala:'Sala 214', lang:'EN', ass:'Speaker crackling at the back of room 214', sol:'Daniel Brooks', criado:62, atu:62, sla:{tipo:'r1', vence:178, total:240}, canal:'QR da sala', equip:'Som', lido:false});
+add({n:8415, est:'aberto', r1:false, campus:'barra', sala:'Ginásio', ass:'Wi-Fi fraco no ginásio', sol:'Otávio Reis', criado:75, atu:75, sla:{tipo:'r1', vence:165, total:240}, equip:'Wi-Fi'});
+add({n:8414, est:'aberto', campus:'gavea', sala:'Biblioteca', ass:'Microfone da biblioteca sem som', sol:'Lívia Prates', resp:'Rafael Torres', grupo:'Eventos', criado:130, atu:44, sla:{tipo:'res', vence:1250, total:1440}, canal:'Chat', equip:'Microfone'});
+add({n:8413, est:'aberto', r1:false, campus:'barra', sala:'Sala 101', ass:'Teclado sem funcionar', pri:'baixa', sol:'Pedro Alves', criado:190, atu:190, sla:{tipo:'r1', vence:290, total:480}, equip:'Computador'});
+add({n:8355, est:'espera', campus:'entre', ass:'Licença do sistema administrativo expirou e a secretaria não consegue emitir os boletos de novembro', pri:'alta', sol:'Diana Prado', resp:'André Souza', grupo:'Sistemas', criado:2800, atu:240, canal:'E-mail', equip:'Sistema administrativo'});
+add({n:8402, est:'pendente', campus:'gavea', ass:'Acesso à VPN negado após atualização', sol:'João Lemos', resp:'André Souza', grupo:'Sistemas', criado:1180, atu:200, canal:'E-mail', equip:'VPN'});
+add({n:8366, est:'aberto', campus:'entre', ass:'Integração do diário de classe parada desde a madrugada', pri:'alta', sol:'Otávio Reis', grupo:'Sistemas', criado:2400, atu:95, sla:{tipo:'res', vence:-180, total:480}, canal:'E-mail', equip:'Sistema acadêmico'});
+add({n:8380, est:'espera', campus:'barra', sala:'Auditório', ass:'Soundbar do auditório com chiado', sol:'Carla Nunes', resp:'Rafael Torres', grupo:'Eventos', criado:1900, atu:65, equip:'Som'});
+add({n:8429, est:'aberto', campus:'gavea', sala:'Recepção', ass:'Catraca da portaria fora do ar', pri:'urgente', sol:'Beatriz Rocha', resp:'Ana Lima', grupo:'Suporte Gávea', criado:190, atu:12, sla:{tipo:'res', vence:-120, total:240}, canal:'E-mail', equip:'Catraca', lido:false});
+add({n:8427, est:'aberto', r1:false, campus:'barra', sala:'Recepção', ass:'Notebook da recepção não liga', sol:'', email:'recepcao.barra@earj.example', criado:35, atu:35, sla:{tipo:'r1', vence:205, total:240}, canal:'E-mail', equip:'Notebook', lido:false});
+add({n:8418, est:'aberto', campus:'barra', sala:'Auditório', ass:'Microfone do auditório falhando no ensaio do coral', pri:'alta', sol:'Paula Mendes', resp:'Rafael Torres', grupo:'Eventos', criado:88, atu:30, sla:{tipo:'res', vence:300, total:480}, canal:'Chat', equip:'Microfone'});
+add({n:8419, est:'aberto', r1:false, campus:'gavea', sala:'Biblioteca', ass:'Tomadas da biblioteca sem energia para a mostra de artes', sol:'Isabela Cunha', grupo:'Suporte Gávea', criado:50, atu:50, sla:{tipo:'r1', vence:190, total:240}, equip:'Elétrica'});
+add({n:8370, est:'resolvido', campus:'gavea', sala:'Teatro', ass:'Projetor do teatro desligou durante a palestra', pri:'alta', sol:'Lívia Prates', resp:'Rafael Torres', grupo:'Eventos', criado:2368, atu:2300, canal:'Chat', equip:'Projetor'});
+// Pedidos da Mariana Costa (aparecem no portal dela)
+add({n:8410, est:'aberto', r1:false, campus:'barra', sala:'Sala 204', ass:'Pedido de cabo HDMI extra para a sala 204', en:'Extra HDMI cable for room 204', pri:'baixa', sol:'Mariana Costa', criado:170, atu:170, sla:{tipo:'r1', vence:310, total:480}, equip:'Projetor'});
+add({n:8233, est:'pendente', campus:'barra', sala:'Sala 204', ass:'Som da sala 204 muito baixo', en:'Sound in room 204 too low', sol:'Mariana Costa', resp:'Rafael Torres', criado:4300, atu:4100, equip:'Som'});
+add({n:8301, est:'resolvido', campus:'barra', sala:'Sala 204', ass:'Senha do Wi-Fi para visitantes da reunião', en:'Guest Wi-Fi password for the meeting', sol:'Mariana Costa', resp:EU, criado:3100, atu:2950, equip:'Wi-Fi'});
+add({n:7980, est:'fechado', campus:'barra', sala:'Sala 204', ass:'Projetor da sala 204 com imagem amarelada', en:'Projector in room 204 shows a yellow tint', sol:'Mariana Costa', resp:'Ana Lima', criado:20200, atu:18000, equip:'Projetor'});
+// Incidente #8420: 20 vinculados (16 PT, 4 EN), todos do 2º andar da Barra
+const SALAS_2 = ['Sala 201', 'Sala 204', 'Sala 210', 'Sala 214', 'Sala dos professores'];
+const NUM_FILHOS = [8422, ...Array.from({length:19}, (_, i) => 8461 + i)];
+NUM_FILHOS.forEach((n, k) => {
+  const en = [3, 8, 12, 17].includes(k);
+  add({n, est:'aberto', campus:'barra', sala:SALAS_2[k % 5], lang:en ? 'EN' : 'PT', ass:en ? 'No Wi-Fi in my classroom' : ['Sem Wi-Fi na sala', 'Wi-Fi não conecta', 'Internet caiu na sala', 'Chromebooks sem rede'][k % 4], sol:en ? PESSOAS_EN[k % 5] : PESSOAS[(k * 5) % PESSOAS.length], resp:EU, criado:56 - k * 2, atu:48 - k, equip:'Wi-Fi', pai:8420, canal:k % 3 ? 'Portal' : 'QR da sala'});
+});
+// Tickets de evento
+EVENTOS.forEach(e => add({n:e.n, est:e.espera ? 'espera' : 'aberto', campus:e.campus, sala:e.sala || null, ass:e.nome, sol:e.sol, lang:e.sol === 'Daniel Brooks' ? 'EN' : 'PT', resp:e.n === 8426 || e.n === 8447 ? null : 'Rafael Torres', grupo:'Eventos', criado:Math.max(60, (8450 - e.n) * 55), atu:Math.max(30, (8450 - e.n) * 23), canal:'Formulário de evento', equip:'Evento', evento:e}));
+
+// ---------- Tickets gerados (determinísticos, sem Math.random) ----------
+const ASS_PT = [['Projetor não liga', 'Projetor'], ['Projetor liga mas fica sem imagem', 'Projetor'], ['Wi-Fi caindo durante a aula', 'Wi-Fi'], ['Impressora não imprime frente e verso', 'Impressora'], ['Impressora sem toner', 'Impressora'], ['Papel enroscado na impressora do corredor', 'Impressora'], ['Teclado sem funcionar', 'Computador'], ['Caixa de som com chiado no fundo da sala', 'Som'], ['Acesso ao Google Classroom negado após troca de senha', 'Conta Google'], ['Troca de notebook autorizada pela coordenação', 'Notebook'], ['Document camera sem imagem no projetor', 'Document camera'], ['Site bloqueado no laboratório', 'Filtro web'], ['Sistema administrativo não abre os relatórios de frequência e a secretaria precisa entregar o fechamento do bimestre hoje', 'Sistema administrativo'], ['Microfone sem fio descarregando rápido', 'Microfone'], ['Chromebook não carrega', 'Chromebook'], ['Senha do Google bloqueada', 'Conta Google'], ['Lousa digital desalinhada ao tocar', 'Lousa digital'], ['Instalar o software de geometria em todos os computadores do laboratório antes da prova de sexta-feira', 'Computador'], ['Telefone do ramal sem linha', 'Telefonia'], ['Câmera da sala sem imagem na videochamada com a outra unidade', 'Câmera'], ['Monitor piscando', 'Computador'], ['Pedido de cabo HDMI extra', 'Projetor'], ['E-mail da escola não sincroniza no celular', 'Conta Google']];
+const ASS_EN = [['Smartboard not responding to touch', 'Lousa digital'], ['Printer jammed in the teachers room', 'Impressora'], ['Need a new HDMI adapter for my classroom', 'Projetor'], ['Cannot log in to Google Classroom after password reset', 'Conta Google'], ['Projector shows no signal when I connect my MacBook through the USB-C adapter the school gave me last year', 'Projetor'], ['Wi-Fi keeps dropping during class', 'Wi-Fi'], ['Speaker crackling at the back of the room', 'Som']];
+const TOT = {r1:{urgente:60, alta:120, normal:240, baixa:480}, res:{urgente:240, alta:480, normal:1440, baixa:2880}};
+const FRACAO = [-0.6, -0.15, 0.08, 0.18, 0.3, 0.45, 0.6, 0.8, 0.95, null, null];
+const SALAS_C = {barra:SALAS.filter(s => s.campus === 'barra'), gavea:SALAS.filter(s => s.campus === 'gavea')};
+(function gerar(){
+  const usados = new Set(T.map(t => t.n));
+  let n = 8389, i = 0;
+  while (i < 300) {
+    if (usados.has(n)) { n--; continue; }
+    const h = (a, b) => ((n * a + b * 7 + i * 3) % 97 + 97) % 97;
+    const criado = (8420 - n) * 41 + (n % 7) * 13;
+    const atu = Math.max(3, Math.floor(criado * ((n % 5) / 10 + 0.08)));
+    const r = h(37, 11);
+    let est;
+    if (criado > 7 * 1440) est = r < 53 ? 'fechado' : r < 83 ? 'resolvido' : r < 91 ? 'espera' : 'pendente';
+    else est = r < 46 ? 'aberto' : r < 60 ? 'pendente' : r < 70 ? 'espera' : r < 94 ? 'resolvido' : 'fechado';
+    const rc = h(53, 7) % 20;
+    const campus = rc < 11 ? 'barra' : rc < 18 ? 'gavea' : rc === 18 ? 'entre' : null;
+    const sx = campus === 'barra' || campus === 'gavea' ? SALAS_C[campus][h(17, 3) % SALAS_C[campus].length] : null;
+    const en = h(29, 5) % 7 === 0;
+    const [ass, equip] = en ? ASS_EN[h(13, 1) % ASS_EN.length] : ASS_PT[h(19, 2) % ASS_PT.length];
+    const semNome = !en && h(23, 9) % 22 === 0;
+    const sol = en ? PESSOAS_EN[h(31, 4) % PESSOAS_EN.length] : semNome ? '' : PESSOAS[h(43, 6) % PESSOAS.length];
+    const rp = h(41, 3) % 25;
+    const pri = rp === 0 ? 'urgente' : rp < 4 ? 'alta' : rp < 21 ? 'normal' : 'baixa';
+    const grupo = equip === 'Som' || equip === 'Microfone' ? 'Eventos' : campus === 'barra' ? 'Suporte Barra' : campus === 'gavea' ? 'Suporte Gávea' : 'Sistemas';
+    const rr = h(61, 4) % 8;
+    let resp = [null, null, EU, EU, 'Rafael Torres', 'Ana Lima', 'André Souza', 'Rafael Torres'][rr];
+    if (est !== 'aberto' && !resp) resp = TECNICOS[n % 4];
+    const r1 = est === 'aberto' ? h(71, 2) % 5 !== 0 : true;
+    let sla = null;
+    if (est === 'aberto') {
+      let f = FRACAO[h(47, 8) % FRACAO.length];
+      if (!r1 && f === null) f = 0.5;
+      const tipo = r1 ? 'res' : 'r1';
+      if (f !== null) sla = {tipo, vence:Math.round(f * TOT[tipo][pri]), total:TOT[tipo][pri]};
+    }
+    add({n, est, r1, campus, sala:sx ? sx.sala : null, lang:en ? 'EN' : 'PT', ass, equip, sol, email:semNome ? SEM_NOME[n % SEM_NOME.length] : '', pri, grupo, resp, sla, criado, atu, canal:sx && n % 6 === 0 ? 'QR da sala' : ['Portal', 'E-mail', 'Portal', 'Chat'][n % 4], lido:!(est === 'aberto' && h(7, 1) % 5 === 0)});
+    i++; n--;
+  }
+})();
+T.forEach(t => { if (t.sala && !t.andar) { const sx = salaDe(t.campus, t.sala); if (sx) t.andar = sx.andar.id; } if (!t.email) t.email = t.sol ? emailDe(t.sol) : ''; });
+const porN = new Map(T.map(t => [t.n, t]));
+const FILHOS = T.filter(t => t.pai === 8420);
+
+// ---------- Conversas, histórico, macros ----------
+const conversas = {
+  8420: [
+    {t:'pub', quem:'Lucas Andrade', sub:'lucas.andrade@earj.example', min:58, txt:'Desde as 9h30 nenhuma sala do 2º andar conecta no Wi-Fi. Os alunos estão sem acesso ao Classroom.'},
+    {t:'int', quem:EU, min:50, txt:'Marquei como <b>incidente</b> e vinculei os pedidos das outras salas do 2º andar. Suspeita: switch do rack do 2º andar.'},
+    {t:'int', quem:'Rafael Torres', min:9, txt:'Switch reiniciando em loop. <span class="mencao">@Renata</span> vou trocar pelo reserva do subsolo.'}
+  ],
+  8412: [
+    {t:'pub', quem:'Mariana Costa', sub:'mariana.costa@earj.example', min:146, txt:'Bom dia! O projetor da sala 204 não liga. Tenho aula às 10:30 e preciso dele para a apresentação dos alunos.', anexo:'foto-projetor.png'},
+    {t:'pub', quem:EU, sub:'para Mariana Costa', min:138, txt:'Olá, Mariana! Recebemos o seu pedido e um técnico vai até a sala 204 nos próximos minutos.'},
+    {t:'int', quem:'Rafael Torres', min:117, txt:'Lâmpada queimada. <span class="mencao">@Paula Mendes</span> temos lâmpada reserva no almoxarifado da Barra?'},
+    {t:'forn', quem:'Projetores Rio (fornecedor)', min:103, txt:'Temos a lâmpada do modelo XG-300 em estoque. Entrega na Barra amanhã até 12h.'}
+  ],
+  8411: [
+    {t:'pub', quem:'Daniel Brooks', sub:'daniel.brooks@earj.example', min:163, txt:'Good morning! The smartboard in room 214 turns on but does not respond to touch since this morning. I have a class at 11:00.'}
+  ],
+  8401: [
+    {t:'pub', quem:'Carla Nunes', sub:'carla.nunes@earj.example', min:1208, txt:'A impressora da sala dos professores só imprime de um lado. Preciso das provas em frente e verso.'},
+    {t:'pub', quem:EU, sub:'para Carla Nunes', min:1158, txt:'Olá, Carla! Ajustamos o driver: em Imprimir › Propriedades › Acabamento, marque “Imprimir nos dois lados” e escolha “Virar na borda longa”. Deixamos essa opção como padrão em todos os computadores da sala dos professores.'},
+    {t:'pub', quem:'Carla Nunes', sub:'carla.nunes@earj.example', min:1100, txt:'Funcionou, obrigada!'}
+  ]
+};
+const historico = {
+  8420: [{min:58, txt:'Criado pelo portal'}, {min:50, txt:'Renata Vidal marcou como incidente'}, {min:50, txt:'Renata Vidal vinculou 13 tickets do 2º andar'}, {min:49, txt:'Prioridade: Normal → Urgente'}, {min:47, txt:'Rafael Torres passou a seguir'}, {min:30, txt:'Mais 7 tickets vinculados (total 20)'}],
+  8412: [{min:146, txt:'Criado pelo portal'}, {min:140, txt:'Rafael Torres atribuiu a Renata Vidal'}, {min:138, txt:'Estado: Novo → Aberto (1ª resposta)'}, {min:120, txt:'Paula Mendes passou a seguir'}, {min:103, txt:'Encaminhado ao fornecedor Projetores Rio'}],
+  8401: [{min:1208, txt:'Criado pelo portal'}, {min:1158, txt:'Estado: Aberto → Resolvido'}]
+};
+const resumos = {};
+const rascunhos = {8412:'Mariana, a lâmpada queimou. Deixamos um projetor portátil na sala 204 para a sua aula das 10:30 e a lâmpada nova chega amanhã.'};
+const MACROS = [
+  {id:'local', pt:'Atendimento no local', en:'On-site visit', pt_:'Olá, {nome}! Um técnico vai até o local em alguns minutos.', en_:'Hi {nome}! A technician is on the way and will be there in a few minutes.'},
+  {id:'analise', pt:'Em análise', en:'Investigating', pt_:'Olá, {nome}! Estamos analisando a causa e damos retorno em breve.', en_:'Hi {nome}! We are looking into the cause and will get back to you shortly.'},
+  {id:'fornecedor', pt:'Aguardando fornecedor', en:'Waiting for vendor', pt_:'Olá, {nome}! Já contatamos a empresa responsável e estamos acompanhando o prazo.', en_:'Hi {nome}! We have contacted the vendor and are tracking the timeline.'},
+  {id:'outra', pt:'Encaminhado a outra equipe', en:'Forwarded to another team', pt_:'Olá, {nome}! Encaminhamos o seu pedido para a equipe responsável, que vai continuar o atendimento.', en_:'Hi {nome}! We have forwarded your request to the responsible team, who will follow up.'},
+  {id:'incidente', pt:'Incidente: atualização geral', en:'Incident: general update', pt_:'Olá, {nome}! Identificamos uma falha no Wi-Fi do 2º andar da Barra e a equipe já está trabalhando nela. Avisaremos assim que normalizar.', en_:'Hi {nome}! We have identified a Wi-Fi outage on the 2nd floor at Barra and the team is already working on it. We will let you know as soon as it is back.'},
+  {id:'resolvido', pt:'Resolvido: encerramento', en:'Resolved: closing', pt_:'Olá, {nome}! Problema resolvido. Se precisar, é só responder este e-mail.', en_:'Hi {nome}! The issue is resolved. If you need anything else, just reply to this email.'}
+];
+const NOTIFS = [
+  {f:'mencao', n:8420, txt:'Rafael Torres mencionou você em #8420', cit:'“Switch reiniciando em loop. Vou trocar pelo reserva do subsolo.”', min:9, nova:true},
+  {f:'prazo', n:8423, txt:'#8423 estourou o prazo de 1ª resposta', min:20, nova:true},
+  {f:'prazo', n:8429, txt:'#8429 estourou o prazo de resolução', min:120, nova:true},
+  {f:'atrib', n:8420, txt:'#8420 virou incidente com 20 vinculados', min:30},
+  {f:'atrib', n:8380, txt:'Eventos devolveu #8380 para você', min:65},
+  {f:'atrib', n:8412, txt:'Rafael Torres atribuiu #8412 a você', min:140},
+  {f:'prazo', n:8447, txt:'#8447 Mostra de artes: montagem sem pronto', min:158},
+  {f:'tudo', n:8401, txt:'Carla Nunes avaliou #8401 com nota 5', cit:'“Rápido e gentil, obrigada!”', min:1080}
+];
+
+// ---------- Regras de exibição ----------
+const EST = {aberto:'Aberto', pendente:'Pendente', espera:'Em espera', resolvido:'Resolvido', fechado:'Fechado'};
+const novo = t => t.est === 'aberto' && !t.r1;
+const estCls = t => novo(t) ? 'novo' : t.est;
+const estRot = t => novo(t) ? 'Novo' : EST[t.est];
+const estHTML = t => `<span class="pd-est ${estCls(t)}"${novo(t) ? ' data-dica="Aberto, sem 1ª resposta"' : ''}>${estRot(t)}</span>`;
+const naoRes = t => t.est !== 'resolvido' && t.est !== 'fechado';
+const PRI = {urgente:'Urgente', alta:'Alta', normal:'Normal', baixa:'Baixa'};
+const priHTML = t => t.pri === 'urgente' || t.pri === 'alta' ? `<span class="pd-pri ${t.pri}">${IC12[t.pri]}${PRI[t.pri]}</span>` : '';
+function localTxt(t){
+  if (t.campus === 'entre') return 'Entre campi';
+  if (!t.campus) return '—';
+  if (t.sala) return `${LOCAIS[t.campus].nome} · ${t.sala}`;
+  if (t.andar) { const an = LOCAIS[t.campus].predios.flatMap(p => p.andares).find(a => a.id === t.andar); return `${LOCAIS[t.campus].nome} · ${an ? an.nome : ''}`; }
+  return LOCAIS[t.campus].nome;
+}
+function localLongo(t){
+  if (t.evento && t.evento.localTxt) return t.evento.localTxt;
+  if (!t.campus || t.campus === 'entre') return localTxt(t);
+  const sx = t.sala && salaDe(t.campus, t.sala);
+  if (sx) return `${LOCAIS[t.campus].nome} · ${andarNome(sx)} · ${t.sala}`;
+  return localTxt(t);
+}
+function slaDe(t){
+  if (t.evento) { const s = estadoEvento(t.evento); return {c:s.c === 'estouro' ? 'estouro' : '', txt:s.curto, ev:true, dica:`Montagem ${ddmm(t.evento.mont)} às ${t.evento.montH} · ${s.txt}`}; }
+  if (!naoRes(t)) return null;
+  if (t.est === 'pendente' || t.est === 'espera') return {c:'pausa', txt:'pausado', dica:`Prazo parado enquanto o ticket está ${EST[t.est].toLowerCase()}`};
+  if (!t.sla) return null;
+  const v = t.sla.vence, tipo = t.sla.tipo === 'r1' ? '1ª resposta' : 'Resolução';
+  if (v < 0) return {c:'estouro', txt:`estourado há ${durGrossa(-v)}`, dica:`${tipo} venceu ${dataHora(depois(v))} · prazo ${dur(t.sla.total)}`};
+  return {c:v < t.sla.total * 0.25 ? 'atencao' : '', txt:`em ${dur(v)}`, dica:`${tipo} vence ${dataHora(depois(v))} · prazo ${dur(t.sla.total)}`};
+}
+function slaHTML(t){
+  const s = slaDe(t); if (!s) return '';
+  return `<span class="pd-sla ${s.c}" data-dica="${esc(s.dica)}">${s.ev ? IC12.mont : s.c === 'pausa' ? IC12.pausa : ''}${s.txt}</span>`;
+}
+const avHTML = nome => nome ? `<span class="pd-av ${nome === EU ? 'eu' : ''}"><i>${iniciais(nome)}</i><span>${esc(nome)}</span></span>` : '<span class="pd-vazio-cel">—</span>';
+const solHTML = t => t.sol ? esc(t.sol) : `<span class="em" data-dica="Solicitante sem nome no cadastro">${esc(t.email)}</span>`;
+const atuHTML = t => `<span data-dica="${dataHora(antes(t.atu))}">${relativo(t.atu)}</span>`;
+
+// ---------- Utilidades de interface ----------
+const reduz = matchMedia('(prefers-reduced-motion: reduce)');
+function transicao(fn){ if (!document.startViewTransition || reduz.matches || document.hidden) { fn(); return; } const t = document.startViewTransition(fn); [t.ready, t.finished, t.updateCallbackDone].forEach(p => p.catch(() => {})); }
+function toast(txt){ const t = $('#toast'); t.textContent = txt; t.classList.add('vis'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('vis'), 2800); }
+const digitando = () => { const a = document.activeElement; return !!a && (a.isContentEditable || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit'].includes(a.type))); };
+
+// Dica flutuante
+const dica = $('#dica');
+function mostrarDica(el){
+  const t = el.getAttribute('data-dica'); if (!t) return;
+  dica.textContent = t; dica.classList.add('vis');
+  const r = el.getBoundingClientRect(), w = dica.offsetWidth, h = dica.offsetHeight;
+  let y = r.bottom + 6; if (y + h > innerHeight - 8) y = r.top - h - 6;
+  dica.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px'; dica.style.top = y + 'px';
+}
+const esconderDica = () => dica.classList.remove('vis');
+document.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('[data-dica]'); el ? mostrarDica(el) : esconderDica(); });
+document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('[data-dica]'); el && el.matches(':focus-visible') ? mostrarDica(el) : esconderDica(); });
+document.addEventListener('scroll', esconderDica, true);
+document.addEventListener('mousedown', esconderDica);
+
+// Menu único, posicionado junto ao botão que o abriu
+const menu = $('#menu'); let menuAncora = null, menuCb = null;
+function posicionar(el, ancora, alinhar){
+  const r = ancora.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+  let x = alinhar === 'dir' ? r.right - w : r.left; x = Math.max(8, Math.min(x, innerWidth - w - 8));
+  let y = r.bottom + 4; if (y + h > innerHeight - 8) y = Math.max(8, r.top - h - 4);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+function abrirMenu(ancora, itens, cb, opts = {}){
+  menu.innerHTML = (opts.html || '') + itens.map((it, i) => it.sep ? '<hr>' : it.tit ? `<div class="menu-tit">${it.tit}</div>` :
+    `<button type="button" role="menuitem" data-i="${i}"${it.on ? ' class="on" aria-checked="true"' : ''}${it.dis ? ' aria-disabled="true"' : ''}${it.dica ? ` data-dica="${esc(it.dica)}"` : ''}>${it.r}${it.k ? `<kbd>${it.k}</kbd>` : ''}</button>`).join('');
+  menu._itens = itens; menuCb = cb; menuAncora = ancora;
+  menu.classList.add('vis'); ancora.setAttribute('aria-expanded', 'true');
+  posicionar(menu, ancora, opts.alinhar);
+  const f = menu.querySelector('input, button[data-i]:not([aria-disabled])'); if (f) f.focus();
+}
+function fecharMenu(devolver){
+  if (!menu.classList.contains('vis')) return;
+  menu.classList.remove('vis'); esconderDica();
+  if (menuAncora) { menuAncora.setAttribute('aria-expanded', 'false'); if (devolver && document.contains(menuAncora)) menuAncora.focus(); }
+  menuAncora = null;
+}
+function alternarMenu(ancora, ...args){ if (menu.classList.contains('vis') && menuAncora === ancora) { fecharMenu(); return; } fecharMenu(); abrirMenu(ancora, ...args); }
+menu.addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  const it = menu._itens[+b.dataset.i];
+  if (it.dis) { if (it.dica) toast(it.dica); return; }
+  const cb = menuCb, anc = menuAncora; fecharMenu(true); if (cb) cb(it.v, it, anc);
+});
+menu.addEventListener('keydown', e => {
+  const bs = $$('button[data-i]:not([aria-disabled])', menu); const i = bs.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const k = i < 0 ? 0 : (i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs[k] && bs[k].focus(); }
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecharMenu(true); }
+  if (e.key === 'Tab') fecharMenu();
+});
+document.addEventListener('click', e => { if (!menu.contains(e.target) && document.contains(e.target) && !(menuAncora && menuAncora.contains(e.target))) fecharMenu(); });
+
+// ---------- Moldura: tema, barra lateral, menu do usuário ----------
+const raiz = document.documentElement;
+function trocarTema(){ transicao(() => { raiz.dataset.theme = raiz.dataset.theme === 'dark' ? 'light' : 'dark'; ls.set('pd-tema', raiz.dataset.theme); }); }
+$('#b-lateral').innerHTML = ic('lateral');
+$('#ic-busca').outerHTML = ic('busca', 14);
+$('#ic-sino').outerHTML = ic('sino');
+$('#ic-pbusca').outerHTML = ic('busca');
+$('#b-envio').innerHTML = ic('chevb', 14);
+const mobile = matchMedia('(max-width: 820px)');
+function alternarLateral(){
+  if (mobile.matches) { $('#app').classList.toggle('nav-aberta'); return; }
+  const r = $('#app').classList.toggle('recolhida'); ls.set('pd-lateral', r ? 'recolhida' : '');
+}
+if (ls.get('pd-lateral') === 'recolhida') $('#app').classList.add('recolhida');
+$('#b-lateral').addEventListener('click', alternarLateral);
+$('#recolher').addEventListener('click', alternarLateral);
+let ausente = false;
+$('#b-usuario').addEventListener('click', e => alternarMenu(e.currentTarget, [
+  {v:'status', r:ausente ? 'Ficar disponível' : 'Ficar ausente'},
+  {v:'tema', r:raiz.dataset.theme === 'dark' ? 'Tema claro' : 'Tema escuro'},
+  {v:'atalhos', r:'Atalhos', k:'?'},
+  {sep:true}, {v:'sair', r:'Sair'}
+], v => {
+  if (v === 'status') { ausente = !ausente; toast(ausente ? 'Você está ausente' : 'Você está disponível'); }
+  if (v === 'tema') trocarTema();
+  if (v === 'atalhos') abrirAtalhos();
+  if (v === 'sair') { location.hash = '#entrar'; }
+}, {alinhar:'dir', html:`<div class="menu-cab"><span class="av-g">RV</span><span><strong>${EU}</strong><small>${ausente ? 'Ausente' : 'Disponível'} · Suporte Barra</small></span></div><hr>`}));
+$('#novo-ticket').addEventListener('click', novoTicket);
+function novoTicket(){ location.hash = '#portal/novo'; toast('Abrindo em nome de um solicitante'); }
+
+// ---------- Notificações ----------
+let filtroNotif = 'tudo';
+function desenharNotif(){
+  const novas = NOTIFS.filter(x => x.nova).length;
+  $('#notif-c').textContent = novas || '';
+  $('#b-notif').setAttribute('aria-label', novas ? `Notificações: ${novas} novas` : 'Notificações');
+  const l = NOTIFS.filter(x => filtroNotif === 'tudo' || x.f === filtroNotif);
+  $('#notif-l').innerHTML = l.length ? l.map(x => `<button type="button" class="notif-i ${x.nova ? 'nova' : ''}" data-n="${x.n}"><span class="tx"><span>${esc(x.txt)}</span>${x.cit ? `<span class="cit">${esc(x.cit)}</span>` : ''}<small data-dica="${dataHora(antes(x.min))}">${relativo(x.min)}</small></span>${x.nova ? '<i class="pt" aria-label="não lida"></i>' : ''}</button>`).join('') : '<p class="lista-msg">Nada aqui.</p>';
+}
+function fecharNotif(){ $('#notif').classList.remove('vis'); $('#b-notif').setAttribute('aria-expanded', 'false'); }
+$('#b-notif').addEventListener('click', e => { e.stopPropagation(); fecharMenu(); const ab = !$('#notif').classList.contains('vis'); $('#notif').classList.toggle('vis', ab); $('#b-notif').setAttribute('aria-expanded', ab); if (ab) desenharNotif(); });
+$('#notif-abas').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filtroNotif = b.dataset.f; $$('#notif-abas button').forEach(x => x.setAttribute('aria-selected', x === b)); desenharNotif(); });
+$('#notif-lidas').addEventListener('click', () => { NOTIFS.forEach(x => x.nova = false); desenharNotif(); });
+$('#notif-l').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (!b) return; const x = NOTIFS.find(y => String(y.n) === b.dataset.n && y.nova); if (x) x.nova = false; fecharNotif(); desenharNotif(); abrirTicket(+b.dataset.n); });
+document.addEventListener('click', e => { if (!e.target.closest('#notif') && !e.target.closest('#b-notif')) fecharNotif(); });
+desenharNotif();
+
+// ---------- Busca global (nº, assunto, solicitante, sala) + ir para visões e telas ----------
+let buscaSel = 0, buscaItens = [];
+const TELAS_BUSCA = [['eventos', 'Eventos'], ['qr', 'QR das salas'], ['relatorios', 'Relatórios'], ['portal', 'Portal do solicitante']];
+function itensBusca(q){
+  const n = semAcento(q.trim()).replace(/^#/, '');
+  if (!n) return [{g:'Visões'}, ...visoesTodas().slice(0, 4).map(v => ({r:v.nome, s:`${contar(v)}`, go:() => irVisao(v.id)})), {g:'Recentes'}, ...[8420, 8412, 8411, 8401].map(k => itemTk(porN.get(k)))];
+  const tks = T.filter(t => (String(t.n).startsWith(n)) || semAcento(`${t.ass} ${t.sol} ${t.email} ${localLongo(t)}`).includes(n)).sort((a, b) => a.atu - b.atu).slice(0, 8).map(itemTk);
+  const vs = visoesTodas().filter(v => semAcento(v.nome).includes(n)).map(v => ({r:v.nome, s:`${contar(v)}`, go:() => irVisao(v.id)}));
+  const tl = TELAS_BUSCA.filter(([, r]) => semAcento(r).includes(n)).map(([id, r]) => ({r, s:'tela', go:() => { location.hash = '#' + id; }}));
+  const out = [];
+  if (tks.length) out.push({g:'Tickets'}, ...tks);
+  if (vs.length) out.push({g:'Visões'}, ...vs);
+  if (tl.length) out.push({g:'Telas'}, ...tl);
+  return out;
+}
+const itemTk = t => ({n:t.n, r:t.ass, s:`${t.sol || t.email} · ${localTxt(t)}`, go:() => abrirTicket(t.n)});
+function desenharBusca(){
+  buscaItens = itensBusca($('#q').value); const sel = buscaItens.filter(i => !i.g);
+  buscaSel = Math.min(buscaSel, Math.max(0, sel.length - 1)); let k = -1;
+  $('#busca-res').innerHTML = sel.length ? buscaItens.map(i => { if (i.g) return `<div class="g">${i.g}</div>`; k++; return `<button type="button" role="option" id="br-${k}" data-k="${k}" class="${k === buscaSel ? 'on' : ''}" aria-selected="${k === buscaSel}">${i.n ? `<span class="n">#${i.n}</span>` : ''}<span class="t">${esc(i.r)}</span><small>${esc(i.s)}</small></button>`; }).join('') : '<div class="vazio-b">Nada encontrado.</div>';
+  $('#busca-res').classList.add('vis'); $('#q').setAttribute('aria-expanded', 'true');
+  $('#q').setAttribute('aria-activedescendant', sel.length ? 'br-' + buscaSel : '');
+}
+function fecharBusca(){ $('#busca-res').classList.remove('vis'); $('#q').setAttribute('aria-expanded', 'false'); }
+function escolherBusca(k){ const i = buscaItens.filter(x => !x.g)[k]; if (!i) return; fecharBusca(); $('#q').value = ''; $('#q').blur(); i.go(); }
+function focarBusca(){ if ($('#app').classList.contains('externa')) return; $('#q').focus(); $('#q').select(); desenharBusca(); }
+$('#q').addEventListener('focus', desenharBusca);
+$('#q').addEventListener('input', () => { buscaSel = 0; desenharBusca(); });
+$('#q').addEventListener('keydown', e => {
+  const n = buscaItens.filter(i => !i.g).length;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (n) { buscaSel = (buscaSel + (e.key === 'ArrowDown' ? 1 : -1) + n) % n; desenharBusca(); } }
+  if (e.key === 'Enter') { e.preventDefault(); escolherBusca(buscaSel); }
+  if (e.key === 'Escape') { e.preventDefault(); fecharBusca(); $('#q').blur(); }
+});
+$('#busca-res').addEventListener('mousedown', e => e.preventDefault());
+$('#busca-res').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) escolherBusca(+b.dataset.k); });
+$('#q').addEventListener('blur', () => setTimeout(fecharBusca, 120));
+
+// ---------- Visões ----------
+const VISOES = [
+  {id:'geral', nome:'Geral', f:naoRes},
+  {id:'meus', nome:'Meus tickets', f:t => naoRes(t) && t.resp === EU},
+  {id:'nao-atribuidos', nome:'Não atribuídos', f:t => naoRes(t) && !t.resp},
+  {id:'abertos', nome:'Abertos', f:t => t.est === 'aberto'},
+  {id:'pendentes', nome:'Pendentes', f:t => t.est === 'pendente'},
+  {id:'espera', nome:'Em espera', f:t => t.est === 'espera'},
+  {id:'estourando', nome:'Estourando SLA', f:t => (slaDe(t) || {}).c === 'estouro', alerta:true},
+  {id:'resolvidos', nome:'Resolvidos recentes', f:t => t.est === 'resolvido'},
+  {id:'barra', nome:'Barra', f:t => naoRes(t) && t.campus === 'barra'},
+  {id:'gavea', nome:'Gávea', f:t => naoRes(t) && t.campus === 'gavea'}
+];
+const OCULTAS = [{id:'todos', nome:'Todos os tickets', f:() => true}];
+let MINHAS = [
+  {id:'projetores-barra', nome:'Projetores da Barra', base:'geral', filtros:[{k:'campus', v:'barra'}, {k:'equip', v:'Projetor'}]},
+  {id:'garantia', nome:'Aguardando garantia', base:'espera', filtros:[{k:'texto', v:'garantia'}]}
+];
+try { const m = JSON.parse(ls.get('pd-minhas') || 'null'); if (Array.isArray(m)) MINHAS = m; } catch (e) {}
+const visoesTodas = () => [...VISOES, ...MINHAS.map(m => ({id:m.id, nome:m.nome, minha:true, base:m.base, filtros:m.filtros}))];
+const acharVisao = id => VISOES.find(v => v.id === id) || OCULTAS.find(v => v.id === id) || (() => { const m = MINHAS.find(x => x.id === id); return m && {id:m.id, nome:m.nome, minha:true, base:m.base, filtros:m.filtros}; })();
+const FILTROS = {
+  campus:{r:'Campus', vals:[['barra', 'Barra'], ['gavea', 'Gávea'], ['entre', 'Entre campi'], ['sem', 'Sem local']], f:(t, v) => v === 'sem' ? !t.campus : t.campus === v},
+  est:{r:'Estado', vals:[['novo', 'Novo'], ['aberto', 'Aberto'], ['pendente', 'Pendente'], ['espera', 'Em espera'], ['resolvido', 'Resolvido'], ['fechado', 'Fechado']], f:(t, v) => v === 'novo' ? novo(t) : t.est === v},
+  pri:{r:'Prioridade', vals:[['urgente', 'Urgente'], ['alta', 'Alta'], ['normal', 'Normal'], ['baixa', 'Baixa']], f:(t, v) => t.pri === v},
+  resp:{r:'Responsável', vals:[...TECNICOS.map(x => [x, x]), ['', 'Ninguém']], f:(t, v) => (t.resp || '') === v},
+  grupo:{r:'Grupo', vals:GRUPOS.map(g => [g, g]), f:(t, v) => t.grupo === v},
+  lang:{r:'Idioma', vals:[['PT', 'Português'], ['EN', 'Inglês']], f:(t, v) => t.lang === v},
+  equip:{r:'Equipamento', f:(t, v) => t.equip === v},
+  sol:{r:'Solicitante', f:(t, v) => (t.sol || t.email) === v},
+  texto:{r:'Contém', f:(t, v) => semAcento(t.ass).includes(semAcento(v))}
+};
+const rotFiltro = ({k, v}) => { const d = FILTROS[k]; const par = d.vals && d.vals.find(x => x[0] === v); return par ? par[1] : v; };
+const aplicaFiltros = (l, fs) => l.filter(t => fs.every(x => FILTROS[x.k].f(t, x.v)));
+function baseDe(v){ return v.minha ? acharVisao(v.base) : v; }
+function ticketsDa(v){ const b = baseDe(v); let l = T.filter(b.f); if (v.minha) l = aplicaFiltros(l, v.filtros); return l; }
+const contar = v => ticketsDa(v).length;
+function desenharVisoes(){
+  const it = v => { const n = contar(v); return `<a href="#tickets/${v.id}" class="pd-visao" data-v="${v.id}" ${telaAtual === 'tickets' && L.visao === v.id ? 'aria-current="page"' : ''}><span>${esc(v.nome)}</span><span class="c ${n === 0 ? 'zero' : v.alerta ? 'alerta' : ''}">${n}</span></a>`; };
+  $('#visoes').innerHTML = `<h3>Visões</h3>${VISOES.map(it).join('')}<h3>Minhas visões</h3>${visoesTodas().filter(v => v.minha).map(it).join('')}`;
+}
+function marcarNav(tela){ $$('.nav-telas [data-nav]').forEach(a => a.dataset.nav === tela ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')); desenharVisoes(); }
+function irVisao(id){ location.hash = '#tickets/' + id; }
+
+// ---------- Lista de tickets ----------
+const POR_PAG = 50;
+const L = {visao:'geral', filtros:[], pag:0, sel:new Set(), foco:0, ord:'atu', dir:1, atualizado:Date.now(), carregando:false, erro:PARAMS.get('erro') === '1'};
+const SLA_RANK = t => { const s = slaDe(t); if (!s) return 1e7; if (s.ev) return 5e6; if (s.c === 'pausa') return 2e6; return t.sla.vence; };
+function linhas(){
+  const v = acharVisao(L.visao) || VISOES[0];
+  let l = aplicaFiltros(ticketsDa(v), L.filtros);
+  const k = {num:t => -t.n, sla:SLA_RANK, atu:t => t.atu}[L.ord];
+  return l.sort((a, b) => (k(a) - k(b)) * L.dir || a.atu - b.atu);
+}
+function linhaHTML(t, i){
+  const s = slaDe(t);
+  const marc = (t.inc ? `<span class="pd-marc" data-dica="Incidente: a resposta vai aos ${FILHOS.length} vinculados">· incidente · ${FILHOS.length} vinculados</span>` : '') +
+    (t.pai ? `<span class="pd-marc" data-dica="Vinculado ao incidente #${t.pai}">· #${t.pai}</span>` : '') +
+    (t.lang === 'EN' ? '<span class="pd-marc" data-dica="Ticket em inglês: respostas e macros saem em inglês">· EN</span>' : '');
+  const cls = [s && s.c === 'estouro' ? 'estouro' : '', t.lido ? '' : 'nao-lido', t.resp === EU ? 'meu' : '', i === L.foco ? 'foco' : '', L.sel.has(t.n) ? 'marcada' : ''].join(' ');
+  return `<tr class="${cls}" data-n="${t.n}" data-i="${i}"><td class="sel"><input type="checkbox" class="mk" aria-label="Selecionar #${t.n}" ${L.sel.has(t.n) ? 'checked' : ''}></td><td class="est">${estHTML(t)}</td><td class="num">${t.n}</td><td class="local" title="${esc(localLongo(t))}">${esc(localTxt(t))}</td><td class="sla">${slaHTML(t)}</td><td><span class="ass">${priHTML(t)}<a href="#ticket/${t.n}" class="txt" tabindex="-1">${esc(t.ass)}</a>${marc}</span></td><td class="sol">${solHTML(t)}</td><td class="resp">${avHTML(t.resp)}</td><td class="atu">${atuHTML(t)}</td><td class="acoes"><span class="pd-rapidas">${t.resp === EU ? '' : `<button class="pd-btn" type="button" data-rap="assumir">Assumir</button>`}<button class="pd-btn" type="button" data-rap="estado" aria-haspopup="true">Estado</button></span></td></tr>`;
+}
+function desenharChips(total){
+  const min = Math.floor((Date.now() - L.atualizado) / 60000);
+  $('#chips').innerHTML = L.filtros.map((f, i) => `<span class="pd-chip">${FILTROS[f.k].r}: <b>${esc(rotFiltro(f))}</b><button type="button" data-tirar="${i}" aria-label="Remover filtro ${FILTROS[f.k].r}">${IC12.x}</button></span>`).join('') +
+    `<button class="pd-chip add" type="button" id="add-filtro" aria-haspopup="true">+ Filtro</button>` +
+    (L.filtros.length ? '<button class="pd-limpar" type="button" id="limpar-filtros">Limpar filtros</button>' : '') +
+    `<span class="pd-contador" aria-live="polite">${L.carregando ? 'carregando…' : `${total} ${total === 1 ? 'ticket' : 'tickets'} · atualizado ${min < 1 ? 'agora' : `há ${min} min`}`}</span>`;
+  $('#salvar-visao').classList.toggle('oculto', !L.filtros.length);
+}
+function desenharLista(){
+  const v = acharVisao(L.visao) || VISOES[0];
+  $('#visao-tit').textContent = v.nome;
+  $$('#tabela th[data-ord]').forEach(th => { if (th.dataset.ord === L.ord) th.setAttribute('aria-sort', L.dir === 1 ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort'); });
+  if (L.erro) { $('#corpo').innerHTML = ''; $('#lista-msg').innerHTML = '<div class="lista-msg erro" role="alert">Não foi possível carregar a lista.<br><button class="pd-btn" type="button" id="tentar">Tentar de novo</button></div>'; desenharChips(0); $('#pag-info').textContent = ''; $('#pag-ant').disabled = $('#pag-prox').disabled = true; return; }
+  const todas = linhas(); const pags = Math.max(1, Math.ceil(todas.length / POR_PAG));
+  L.pag = Math.min(L.pag, pags - 1);
+  const l = todas.slice(L.pag * POR_PAG, (L.pag + 1) * POR_PAG);
+  L.foco = Math.min(L.foco, Math.max(0, l.length - 1));
+  $('#corpo').innerHTML = l.map(linhaHTML).join('');
+  $('#lista-msg').innerHTML = l.length ? '' : L.filtros.length ? '<div class="lista-msg">Nenhum ticket com esses filtros.<br><button class="pd-btn" type="button" id="limpar-filtros-2">Limpar filtros</button></div>' : '<div class="lista-msg">Nenhum ticket nesta visão.</div>';
+  $('#pag-info').textContent = l.length ? `${L.pag * POR_PAG + 1}–${L.pag * POR_PAG + l.length} de ${todas.length}` : '';
+  $('#pag-ant').disabled = L.pag === 0; $('#pag-prox').disabled = L.pag >= pags - 1;
+  desenharChips(todas.length); atualizarMassa(); desenharVisoes();
+}
+function carregarLista(){
+  L.carregando = true; L.foco = 0;
+  $('#corpo').innerHTML = Array.from({length:16}, (_, i) => `<tr class="pd-esq" aria-hidden="true">${[14, 64, 36, 110, 70, 0, 100, 100, 50, 0].map((w, k) => `<td><span style="width:${w || 140 + (i * 37) % 200}px;max-width:100%"></span></td>`).join('')}</tr>`).join('');
+  $('#lista-msg').innerHTML = ''; desenharChips(0);
+  clearTimeout(carregarLista._h); carregarLista._h = setTimeout(() => { L.carregando = false; L.atualizado = Date.now(); desenharLista(); }, 450);
+}
+function atualizarMassa(){
+  const n = L.sel.size;
+  $('#massa').classList.toggle('vis', n > 0);
+  $('#qtd').textContent = n === 1 ? '1 selecionado' : `${n} selecionados`;
+  const vis = $$('#corpo .mk'); const marc = vis.filter(c => c.checked).length;
+  $('#todos').checked = vis.length > 0 && marc === vis.length; $('#todos').indeterminate = marc > 0 && marc < vis.length;
+}
+function marcar(n, on){ on ? L.sel.add(n) : L.sel.delete(n); const tr = $(`#corpo tr[data-n="${n}"]`); if (tr) { tr.classList.toggle('marcada', on); $('.mk', tr).checked = on; } atualizarMassa(); }
+function limparSel(){ L.sel.clear(); $$('#corpo tr').forEach(tr => { tr.classList.remove('marcada'); const c = $('.mk', tr); if (c) c.checked = false; }); atualizarMassa(); }
+function focar(i){ const rows = $$('#corpo tr[data-n]'); if (!rows.length) return; L.foco = Math.max(0, Math.min(rows.length - 1, i)); rows.forEach((r, k) => r.classList.toggle('foco', k === L.foco)); rows[L.foco].scrollIntoView({block:'nearest'}); }
+const linhaFoco = () => $$('#corpo tr[data-n]')[L.foco];
+function registrar(t, txt){ (historico[t.n] = historico[t.n] || [{min:t.criado, txt:`Criado por ${t.canal.toLowerCase()}`}]).push({min:0, txt}); t.atu = 0; }
+function assumir(t){ if (t.resp === EU) return; registrar(t, `${EU} assumiu`); t.resp = EU; toast(`#${t.n} atribuído a você`); }
+function mudarEstado(t, e){ if (t.est === e) return; registrar(t, `Estado: ${estRot(t)} → ${EST[e]}`); t.est = e; if (e !== 'aberto') t.r1 = true; }
+const itensEstado = atual => ['aberto', 'pendente', 'espera', 'resolvido', 'fechado'].map(e => ({v:e, r:`<span class="pd-est ${e}">${EST[e]}</span>`, on:e === atual}));
+function menuEstadoLinha(t, anc){ alternarMenu(anc, itensEstado(t.est), v => { mudarEstado(t, v); desenharLista(); toast(`#${t.n}: ${EST[v]}`); }, {alinhar:'dir'}); }
+
+$('#corpo').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-n]'); if (!tr) return;
+  const t = porN.get(+tr.dataset.n);
+  if (e.target.classList.contains('mk')) { marcar(t.n, e.target.checked); return; }
+  if (e.target.closest('td.sel')) { marcar(t.n, !L.sel.has(t.n)); return; }
+  const r = e.target.closest('[data-rap]');
+  if (r) { e.preventDefault(); if (r.dataset.rap === 'assumir') { assumir(t); desenharLista(); } else menuEstadoLinha(t, r); return; }
+  e.preventDefault(); abrirTicket(t.n);
+});
+$('#todos').addEventListener('change', e => { $$('#corpo tr[data-n]').forEach(tr => marcar(+tr.dataset.n, e.target.checked)); });
+$('#chips').addEventListener('click', e => {
+  const b = e.target.closest('[data-tirar]'); if (b) { L.filtros.splice(+b.dataset.tirar, 1); L.pag = 0; desenharLista(); return; }
+  if (e.target.id === 'limpar-filtros') { L.filtros = []; L.pag = 0; desenharLista(); return; }
+  if (e.target.id === 'add-filtro') {
+    const anc = e.target;
+    alternarMenu(anc, Object.entries(FILTROS).filter(([, d]) => d.vals).map(([k, d]) => ({v:k, r:d.r})), k => {
+      const d = FILTROS[k]; const atual = (L.filtros.find(f => f.k === k) || {}).v;
+      setTimeout(() => abrirMenu($('#add-filtro'), [{tit:d.r}, ...d.vals.map(([v, r]) => ({v, r:esc(r), on:v === atual}))], v => { L.filtros = L.filtros.filter(f => f.k !== k).concat({k, v}); L.pag = 0; desenharLista(); }), 0);
+    });
+  }
+});
+$('#lista-msg').addEventListener('click', e => { if (e.target.id === 'limpar-filtros-2') { L.filtros = []; desenharLista(); } if (e.target.id === 'tentar') { L.erro = false; carregarLista(); } });
+$('#pag-ant').addEventListener('click', () => { L.pag--; L.foco = 0; desenharLista(); $('#wrap').scrollTop = 0; });
+$('#pag-prox').addEventListener('click', () => { L.pag++; L.foco = 0; desenharLista(); $('#wrap').scrollTop = 0; });
+$('#atualizar').addEventListener('click', carregarLista);
+$$('#tabela th[data-ord] button').forEach(b => b.addEventListener('click', () => { const o = b.parentElement.dataset.ord; if (L.ord === o) L.dir = -L.dir; else { L.ord = o; L.dir = 1; } desenharLista(); }));
+$('#salvar-visao').addEventListener('click', e => {
+  abrirMenu(e.currentTarget, [], null, {html:'<form id="f-salvar"><label for="nome-visao">Nome da visão</label><input class="campo-t" id="nome-visao" required maxlength="40"><button class="pd-btn" type="submit">Salvar</button></form>'});
+});
+menu.addEventListener('submit', e => {
+  if (e.target.id !== 'f-salvar') return; e.preventDefault();
+  const nome = $('#nome-visao').value.trim(); if (!nome) return;
+  const v = acharVisao(L.visao); const base = v.minha ? v.base : v.id;
+  const id = 'v-' + semAcento(nome).replace(/[^a-z0-9]+/g, '-') + '-' + MINHAS.length;
+  MINHAS.push({id, nome, base, filtros:(v.minha ? v.filtros : []).concat(L.filtros)});
+  ls.set('pd-minhas', JSON.stringify(MINHAS)); fecharMenu(); L.filtros = []; irVisao(id); toast(`Visão “${nome}” salva`);
+});
+// Ações em massa
+const selecionados = () => [...L.sel].map(n => porN.get(n));
+function emMassa(msg, fn){ const l = selecionados(); l.forEach(fn); toast(`${msg} · ${l.length} ${l.length === 1 ? 'ticket' : 'tickets'}`); L.sel.clear(); desenharLista(); }
+$('#m-atribuir').addEventListener('click', e => alternarMenu(e.currentTarget, [...TECNICOS, ''].map(r => ({v:r, r:r ? avHTML(r) : 'Ninguém'})), v => emMassa(v ? `Atribuído a ${v}` : 'Sem responsável', t => { if (t.resp !== (v || null)) registrar(t, `Responsável: ${v || 'ninguém'}`); t.resp = v || null; })));
+$('#m-estado').addEventListener('click', e => alternarMenu(e.currentTarget, itensEstado(), v => emMassa(`Estado: ${EST[v]}`, t => mudarEstado(t, v))));
+$('#m-prioridade').addEventListener('click', e => alternarMenu(e.currentTarget, Object.entries(PRI).map(([v, r]) => ({v, r})), v => emMassa(`Prioridade: ${PRI[v]}`, t => { t.pri = v; })));
+$('#m-mesclar').addEventListener('click', () => { const l = selecionados().sort((a, b) => a.n - b.n); if (l.length < 2) { toast('Selecione 2 ou mais tickets para mesclar'); return; } emMassa(`Mesclados em #${l[0].n}`, t => { if (t !== l[0]) mudarEstado(t, 'fechado'); }); });
+$('#m-macro').addEventListener('click', e => alternarMenu(e.currentTarget, MACROS.map(m => ({v:m.id, r:m.pt})), v => { const m = MACROS.find(x => x.id === v); const l = selecionados(); const en = l.filter(t => t.lang === 'EN').length; emMassa(`Macro “${m.pt}” enviada: ${l.length - en} PT · ${en} EN`, () => {}); }));
+$('#m-csv').addEventListener('click', () => toast(`CSV com ${L.sel.size} tickets exportado`));
+$('#m-cancelar').addEventListener('click', limparSel);
+// Atualização automática simulada: o contador anda a cada 30 s e a lista recarrega a cada 3 min
+setInterval(() => {
+  if (telaAtual !== 'tickets' || L.carregando || L.erro) return;
+  if (Date.now() - L.atualizado > 180000 && !L.sel.size && !menu.classList.contains('vis')) { L.atualizado = Date.now(); desenharLista(); return; }
+  desenharChips(linhas().length);
+}, 30000);
+
+// ---------- Ticket ----------
+let ticketAtual = 8412, envioEstado = 'pendente', macroAtual = null, histAberto = false, modoInterna = false;
+const secFechadas = new Set();
+const tA = () => porN.get(ticketAtual);
+function abrirTicket(n){ if (porN.has(n)) location.hash = '#ticket/' + n; }
+const outrosDe = t => T.filter(x => x.n !== t.n && (x.sol || x.email) === (t.sol || t.email)).sort((a, b) => a.atu - b.atu);
+function msgsDe(t){
+  if (conversas[t.n]) return conversas[t.n];
+  const e = t.evento;
+  const txt = e ? `Pedido de evento: ${TIPOS_EV[e.tipo][0]} em ${ddmm(e.data)}, ${e.ini}–${e.fim}. Público estimado: ${e.pub}. Equipamentos: ${e.equip.join(', ')}.`
+    : t.pai ? (t.lang === 'EN' ? 'The Wi-Fi is down in my classroom since 9:30.' : 'Sem Wi-Fi na sala desde as 9h30.')
+    : t.lang === 'EN' ? `${t.ass}. Could someone from IT take a look? Thanks.` : `${t.ass}. Podem verificar, por favor?`;
+  return [{t:'pub', quem:t.sol || t.email, sub:t.sol ? t.email : '', min:t.criado, txt:esc(txt)}];
+}
+function msgHTML(m){
+  const eu = m.quem === EU;
+  const q = m.t === 'int' ? 'nota interna' : m.t === 'forn' ? 'fornecedor · só a equipe vê' : (m.sub || '');
+  return `<article class="msg ${eu ? 'eu' : 'outro'} ${m.t === 'int' ? 'nota' : ''} ${m.t === 'forn' ? 'forn' : ''}"><header><span class="av-o ${eu ? 'eu' : ''}" aria-hidden="true">${iniciais(m.quem)}</span><b>${esc(m.quem)}</b><span class="q">${esc(q)}</span><time data-dica="${dataHora(antes(m.min))}">${relativo(m.min)}</time></header><div class="msg-c">${m.txt}</div>${m.anexo ? `<span class="anexo">${esc(m.anexo)} · 1,2 MB</span>` : ''}</article>`;
+}
+function desenharConversa(){
+  const t = tA();
+  const h = historico[t.n] || (historico[t.n] = [{min:t.criado, txt:`Criado por ${t.canal.toLowerCase()}`}]);
+  let html = `<section class="hist"><button type="button" id="b-hist" aria-expanded="${histAberto}">${ic('chevb', 14)}Histórico de alterações · ${h.length}</button>${histAberto ? `<ol>${[...h].sort((a, b) => b.min - a.min).map(x => `<li><time>${dataHora(antes(x.min))}</time><span>${esc(x.txt)}</span></li>`).join('')}</ol>` : ''}</section>`;
+  if (resumos[t.n]) html += `<section class="resumo"><header><span>Resumo</span><span class="esp"></span><button type="button" class="lnk" id="tirar-resumo">Remover</button></header>${esc(resumos[t.n])}</section>`;
+  html += msgsDe(t).map(msgHTML).join('');
+  $('#conversa').innerHTML = html;
+}
+$('#conversa').addEventListener('click', e => {
+  if (e.target.closest('#b-hist')) { histAberto = !histAberto; desenharConversa(); $('#b-hist').focus(); }
+  if (e.target.closest('#tirar-resumo')) { delete resumos[ticketAtual]; desenharConversa(); }
+});
+const prop = (r, v) => `<div class="prop"><span class="r">${r}</span><span class="v">${v}</span></div>`;
+const val = (campo, html, vazio) => `<button type="button" class="val ${vazio ? 'vazio' : ''}" data-campo="${campo}" aria-haspopup="true">${html}</button>`;
+function secao(id, tit, corpo, c){ const ab = !secFechadas.has(id); return `<section class="sec-p"><button type="button" class="sec-cab" data-sec="${id}" aria-expanded="${ab}">${tit}${c != null ? ` <span class="c">· ${c}</span>` : ''}${ic('chevb', 14)}</button>${ab ? `<div class="sec-in">${corpo}</div>` : ''}</section>`; }
+function slaPainel(t){
+  const s = slaDe(t);
+  let r1, res;
+  if (t.r1) r1 = '<span class="mut">respondida</span>';
+  else r1 = s ? `<span class="pd-sla ${s.c}" data-dica="${esc(s.dica)}">${s.c === 'pausa' ? IC12.pausa : ''}${s.txt}</span>` : '—';
+  if (!naoRes(t)) res = `<span class="mut">${EST[t.est].toLowerCase()} ${relativo(t.atu)}</span>`;
+  else if (t.est !== 'aberto') res = `<span class="pd-sla pausa">${IC12.pausa}pausado</span>`;
+  else if (t.sla && t.sla.tipo === 'res') res = `<span class="pd-sla ${s.c}" data-dica="${esc(s.dica)}">${s.txt}</span>`;
+  else res = t.pai ? `<span class="mut">segue o #${t.pai}</span>` : '—';
+  return prop('1ª resposta', r1) + prop('Resolução', res);
+}
+function ligadosAoEvento(e){ return T.filter(t => !t.evento && e.sala && t.campus === e.campus && t.sala === e.sala && [e.data, e.mont].some(d => difDias(antes(t.criado), pIso(d)) === 0)); }
+function desenharPainel(){
+  const t = tA(); let h = '';
+  h += secao('tk', 'Ticket', prop('Estado', val('est', estHTML(t))) + prop('Prioridade', val('pri', priHTML(t) || PRI[t.pri])) + prop('Responsável', val('resp', t.resp ? avHTML(t.resp) : 'Atribuir', !t.resp)) + prop('Grupo', val('grupo', esc(t.grupo))) + (t.seg ? prop('Seguindo', esc(t.seg)) : '') + prop('Canal', esc(t.canal)));
+  const sx = t.sala && salaDe(t.campus, t.sala);
+  const andar = sx ? esc(andarNome(sx)) : t.andar ? esc(localTxt(t).split(' · ')[1] || '—') : '—';
+  h += secao('loc', 'Local', prop('Campus', t.campus ? (t.campus === 'entre' ? 'Entre campi' : LOCAIS[t.campus].nome) : '—') + prop('Andar', andar) + prop('Sala', sx ? `<a href="#qr/${encodeURIComponent(sx.chave)}">${esc(t.sala)}</a><span class="mut">${sx.cod}</span>` : t.evento && t.evento.localTxt ? esc(t.evento.localTxt) : '—') + prop('Equipamento', esc(t.equip || '—')));
+  if (t.evento) {
+    const e = t.evento, s = estadoEvento(e); const lig = ligadosAoEvento(e);
+    h += secao('ev', 'Evento', prop('Data', `${ddmm(e.data)} · ${e.ini}–${e.fim}`) + prop('Montagem', `${ddmm(e.mont)} às ${e.montH}`) + prop('Prazo', `<span class="st-ev ${s.c}">${s.txt}</span>${e.foraPrazo ? '<span class="marca-fora" data-dica="Pedido feito com menos de 5 dias úteis de antecedência" tabindex="0">fora do prazo</span>' : ''}`) + prop('Tipo', TIPOS_EV[e.tipo][0]) + prop('Público', `${e.pub} pessoas`) + prop('Equipamentos', esc(e.equip.join(', '))) +
+      (s.k === 'faltam' || s.k === 'sem' ? `<button type="button" class="pd-btn" id="marcar-pronto" style="margin-top:var(--e-2)">Marcar como pronto</button>` : ''));
+    h += secao('lig', 'Tickets no local e data', lig.length ? `<div class="mini-l">${lig.map(x => `<a href="#ticket/${x.n}"><span class="n">${x.n}</span><span class="t">${esc(x.ass)}</span>${estHTML(x)}</a>`).join('')}</div>` : '<span class="mut">Nenhum.</span>', lig.length);
+  } else h += secao('sla', 'SLA', slaPainel(t));
+  if (t.inc) h += secao('vinc', 'Vinculados', `<div class="mini-l">${FILHOS.map(f => `<a href="#ticket/${f.n}"><span class="n">${f.n}</span><span class="t">${esc(f.sala)} · ${esc(f.sol)}</span><small>${f.lang}</small></a>`).join('')}</div>`, FILHOS.length);
+  if (t.pai) h += secao('vinc', 'Incidente', `<div class="mini-l"><a href="#ticket/${t.pai}"><span class="n">${t.pai}</span><span class="t">${esc(porN.get(t.pai).ass)}</span></a></div>`);
+  const outros = outrosDe(t);
+  h += secao('outros', 'Outros tickets do solicitante', outros.length ? `<div class="mini-l">${outros.slice(0, 5).map(x => `<a href="#ticket/${x.n}"><span class="n">${x.n}</span><span class="t">${esc(x.ass)}</span><small>${relativo(x.atu)}</small></a>`).join('')}</div>` : '<span class="mut">Nenhum.</span>', outros.length);
+  $('#painel').innerHTML = h;
+}
+$('#painel').addEventListener('click', e => {
+  const s = e.target.closest('[data-sec]'); if (s) { const id = s.dataset.sec; secFechadas.has(id) ? secFechadas.delete(id) : secFechadas.add(id); desenharPainel(); $(`#painel [data-sec="${id}"]`).focus(); return; }
+  const v = e.target.closest('[data-campo]'); if (v) { abrirCampo(v.dataset.campo, v); return; }
+  if (e.target.id === 'marcar-pronto') { const t = tA(); t.evento.pronto = true; registrar(t, `${EU} marcou o evento como pronto`); desenharTicket(); toast('Evento marcado como pronto'); }
+});
+function abrirCampo(campo, anc){
+  const t = tA();
+  const ops = campo === 'est' ? itensEstado(t.est) : campo === 'pri' ? Object.entries(PRI).map(([v, r]) => ({v, r, on:t.pri === v})) : campo === 'resp' ? [...TECNICOS, ''].map(r => ({v:r, r:r ? avHTML(r) : 'Ninguém', on:(t.resp || '') === r})) : GRUPOS.map(g => ({v:g, r:g, on:t.grupo === g}));
+  alternarMenu(anc, ops, v => {
+    if (campo === 'est') mudarEstado(t, v);
+    else if (campo === 'pri') { if (t.pri !== v) registrar(t, `Prioridade: ${PRI[t.pri]} → ${PRI[v]}`); t.pri = v; }
+    else if (campo === 'resp') { const r = v || null; if (t.resp !== r) registrar(t, `Responsável: ${r || 'ninguém'}`); t.resp = r; }
+    else if (t.grupo !== v) { registrar(t, `Grupo: ${t.grupo} → ${v}`); t.grupo = v; }
+    desenharTicket(); toast('Salvo');
+  }, {alinhar:campo === 'est' && anc.id === 'tk-est' ? 'dir' : undefined});
+}
+function desenharTicket(){
+  const t = tA(); t.lido = true;
+  const v = acharVisao(L.visao) || VISOES[0];
+  $('#tk-voltar').textContent = v.nome; $('#tk-voltar').href = '#tickets/' + v.id;
+  $('#tk-trilha-n').textContent = '#' + t.n;
+  $('#tk-n').textContent = '#' + t.n; $('#tk-ass').textContent = t.ass; $('#tk-ass').title = t.ass;
+  const outros = outrosDe(t); const sx = t.sala && salaDe(t.campus, t.sala);
+  $('#tk-meta').innerHTML = [
+    priHTML(t),
+    t.sol ? `<span>${esc(t.sol)}</span>` : `<span data-dica="Solicitante sem nome no cadastro">${esc(t.email)}</span>`,
+    outros.length ? `<button type="button" class="lnk" id="tk-outros" data-dica="Tickets de ${esc(t.sol || t.email)}">outros tickets (${outros.length})</button>` : '',
+    sx ? `<a href="#qr/${encodeURIComponent(sx.chave)}" data-dica="Ver a sala ${sx.cod}">${esc(localLongo(t))}</a>` : `<span>${esc(localLongo(t))}</span>`,
+    t.lang === 'EN' ? '<span class="pd-marc" data-dica="Ticket em inglês: respostas e macros saem em inglês" tabindex="0">EN</span>' : '',
+    t.inc ? `<span class="pd-marc">incidente · ${FILHOS.length} vinculados</span>` : '',
+    t.pai ? `<a href="#ticket/${t.pai}">vinculado ao incidente #${t.pai}</a>` : ''
+  ].filter(Boolean).join('<span class="sep">·</span>');
+  $('#tk-presenca').innerHTML = [8412, 8420].includes(t.n) ? '<span class="av-o" tabindex="0" data-dica="Rafael Torres está vendo este ticket" aria-label="Rafael Torres está vendo este ticket">RT</span>' : '';
+  $('#tk-est').innerHTML = estHTML(t) + ic('chevb', 14);
+  desenharConversa(); desenharPainel();
+  if ($('#editor').classList.contains('oculto')) { $('#texto').value = rascunhos[t.n] || ''; $('#tem-rasc').classList.toggle('oculto', !rascunhos[t.n]); }
+  modo(modoInterna);
+  document.title = `#${t.n} ${t.ass} · PantherDesk`;
+}
+$('#tk-meta').addEventListener('click', e => { if (e.target.id === 'tk-outros') { const t = tA(); filtrosPendentes = [{k:'sol', v:t.sol || t.email}]; irVisao('todos'); } });
+$('#tk-est').addEventListener('click', e => abrirCampo('est', e.currentTarget));
+$('#tk-mais').addEventListener('click', e => {
+  const t = tA();
+  alternarMenu(e.currentTarget, [
+    {v:'resumir', r:'Resumir com IA'}, {v:'revisar', r:'Revisar texto com IA'}, {sep:true},
+    {v:'encaminhar', r:'Encaminhar com retorno'}, {v:'vincular', r:'Vincular a outro ticket'}, {v:'mesclar', r:'Mesclar'},
+    ...(t.est === 'resolvido' || t.est === 'fechado' ? [{sep:true}, {v:'artigo', r:'Criar artigo'}] : [])
+  ], (v, it, anc) => {
+    if (v === 'resumir') { resumos[t.n] = RESUMOS[t.n] || `${semTags(msgsDe(t)[0].txt).slice(0, 160)} ${msgsDe(t).length > 1 ? `${msgsDe(t).length - 1} mensagens depois.` : ''}`; desenharConversa(); $('#conversa').scrollTop = 0; }
+    if (v === 'revisar') revisar();
+    if (v === 'encaminhar') setTimeout(() => abrirMenu(anc, [{tit:'Encaminhar com retorno para'}, ...GRUPOS.filter(g => g !== t.grupo).map(g => ({v:g, r:g}))], g => { registrar(t, `${EU} encaminhou a ${g} com retorno`); desenharConversa(); toast(`Encaminhado a ${g} · volta para você quando concluírem`); }, {alinhar:'dir'}), 0);
+    if (v === 'vincular') toast('Vincular: escolha o ticket na busca (protótipo)');
+    if (v === 'mesclar') toast('Mesclar: escolha o ticket na busca (protótipo)');
+    if (v === 'artigo') criarArtigo(t);
+  }, {alinhar:'dir'});
+});
+const RESUMOS = {
+  8412:'Projetor da sala 204 não liga desde a manhã; aula às 10:30. Lâmpada queimada. Projetor portátil deixado na sala; lâmpada nova chega amanhã pelo fornecedor.',
+  8420:'Wi-Fi fora em todas as salas do 2º andar da Barra desde 9h30. Switch do rack reiniciando em loop; troca pelo reserva do subsolo em andamento. 20 tickets vinculados (16 PT, 4 EN).'
+};
+function revisar(){
+  if ($('#editor').classList.contains('oculto') || !$('#texto').value.trim()) { toast('Escreva a resposta primeiro'); if ($('#editor').classList.contains('oculto')) abrirEditor(false); return; }
+  if (ticketAtual === 8412) $('#texto').value = 'Olá, Mariana! A lâmpada do projetor queimou. Para não atrapalhar a sua aula das 10:30, deixamos um projetor portátil na sala 204, e a lâmpada nova chega amanhã. Avisamos assim que o projetor da sala voltar a funcionar.';
+  rascunhos[ticketAtual] = $('#texto').value; toast('Texto revisado · confira antes de enviar');
+}
+
+// Editor
+function modo(interna){
+  modoInterna = interna; const t = tA();
+  $('#editor').classList.toggle('interna', interna);
+  $('#ed-pub').setAttribute('aria-selected', !interna); $('#ed-int').setAttribute('aria-selected', interna);
+  const en = FILHOS.filter(f => f.lang === 'EN').length + (t.lang === 'EN' ? 1 : 0);
+  $('#ed-para').textContent = interna ? 'só a equipe vê · @ menciona' : t.inc ? `para ${t.sol} e ${FILHOS.length} vinculados · ${FILHOS.length + 1 - en} PT · ${en} EN` : `para ${t.sol || t.email}${t.lang === 'EN' ? ' · em inglês' : ''}`;
+  $('#texto').placeholder = interna ? 'Nota para a equipe' : `Resposta para ${primeiro(t.sol) || t.email}${t.lang === 'EN' ? ' (em inglês)' : ''}`;
+  $('#b-envio').classList.toggle('oculto', interna); $('#split').classList.toggle('so', interna);
+  $('#enviar-rot').textContent = interna ? 'Adicionar nota' : `Enviar como ${EST[envioEstado]}`;
+  $('#editor').setAttribute('aria-label', interna ? 'Nota interna' : 'Responder');
+}
+function abrirEditor(interna){
+  $('#ed-botoes').classList.add('oculto'); $('#editor').classList.remove('oculto');
+  if (!$('#texto').value) $('#texto').value = rascunhos[ticketAtual] || '';
+  modo(interna); $('#texto').focus();
+}
+function fecharEditor(){ $('#editor').classList.add('oculto'); $('#ed-botoes').classList.remove('oculto'); $('#previa').classList.add('oculto'); fecharMacro(); macroAtual = null; $('#tem-rasc').classList.toggle('oculto', !(rascunhos[ticketAtual] || '').trim()); $('#abrir-resp').focus(); }
+$('#abrir-resp').addEventListener('click', () => abrirEditor(false));
+$('#abrir-nota').addEventListener('click', () => abrirEditor(true));
+$('#fechar-ed').addEventListener('click', fecharEditor);
+$('#ed-pub').addEventListener('click', () => modo(false));
+$('#ed-int').addEventListener('click', () => modo(true));
+$('#texto').addEventListener('input', e => { rascunhos[ticketAtual] = e.target.value; });
+$('#texto').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); enviar(); } });
+$('#editor').addEventListener('submit', e => { e.preventDefault(); enviar(); });
+$('#b-envio').addEventListener('click', e => alternarMenu(e.currentTarget, [{tit:'Estado após o envio'}, ...['aberto', 'pendente', 'espera', 'resolvido'].map(s => ({v:s, r:`Enviar como ${EST[s]}`, on:s === envioEstado}))], v => { envioEstado = v; modo(false); }, {alinhar:'dir'}));
+$('#anexar').addEventListener('click', () => toast('Anexar arquivo (protótipo)'));
+function enviar(){
+  const txt = $('#texto').value.trim(); if (!txt) { $('#texto').focus(); return; }
+  const t = tA(); const msgs = conversas[t.n] = msgsDe(t).slice();
+  const corpo = esc(txt).replace(/\n/g, '<br>');
+  if (modoInterna) msgs.push({t:'int', quem:EU, min:0, txt:corpo});
+  else {
+    const varia = macroAtual ? ` · variante ${($('#previa [aria-pressed="true"]') || {}).textContent || t.lang}` : '';
+    msgs.push({t:'pub', quem:EU, sub:t.inc ? `para ${t.sol} e ${FILHOS.length} vinculados, cada um no seu idioma` : `para ${t.sol || t.email}${varia}`, min:0, txt:corpo});
+    if (!t.r1) { t.r1 = true; t.sla = {tipo:'res', vence:TOT.res[t.pri], total:TOT.res[t.pri]}; }
+    mudarEstado(t, envioEstado);
+    if (t.inc) { FILHOS.forEach(f => mudarEstado(f, envioEstado)); registrar(t, `Resposta enviada aos ${FILHOS.length} vinculados`); }
+  }
+  t.atu = 0; rascunhos[t.n] = ''; $('#texto').value = '';
+  const interna = modoInterna; fecharEditor(); modoInterna = false; desenharTicket();
+  const c = $('#conversa'); c.scrollTo({top:c.scrollHeight, behavior:reduz.matches ? 'auto' : 'smooth'});
+  const en = FILHOS.filter(f => f.lang === 'EN').length;
+  toast(interna ? 'Nota interna adicionada' : t.inc ? `Enviado a ${FILHOS.length + 1} solicitantes (${FILHOS.length + 1 - en} PT · ${en} EN) · ${EST[t.est]}` : `Enviado · ${EST[t.est]}`);
+}
+// Macros PT/EN com prévia
+function fecharMacro(){ $('#pop-macro').classList.add('oculto'); $('#b-macro').setAttribute('aria-expanded', 'false'); }
+function desenharMacros(q){
+  q = semAcento(q);
+  const l = MACROS.filter(m => !q || semAcento(m.pt + ' ' + m.en).includes(q));
+  $('#lista-macro').innerHTML = l.length ? l.map(m => `<button type="button" data-macro="${m.id}"><span>${m.pt}<small>${m.en}</small></span><small>PT · EN</small></button>`).join('') : '<p class="mut" style="padding:var(--e-2)">Nenhuma macro.</p>';
+}
+$('#b-macro').addEventListener('click', () => { const p = $('#pop-macro'); const abre = p.classList.contains('oculto'); if (!abre) { fecharMacro(); return; } p.classList.remove('oculto'); $('#b-macro').setAttribute('aria-expanded', 'true'); $('#busca-macro').value = ''; desenharMacros(''); $('#busca-macro').focus(); });
+$('#busca-macro').addEventListener('input', e => desenharMacros(e.target.value));
+$('#busca-macro').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); fecharMacro(); $('#b-macro').focus(); } if (e.key === 'ArrowDown') { e.preventDefault(); const b = $('#lista-macro button'); if (b) b.focus(); } });
+$('#lista-macro').addEventListener('keydown', e => { const bs = $$('#lista-macro button'); const i = bs.indexOf(document.activeElement); if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const k = i + (e.key === 'ArrowDown' ? 1 : -1); if (k < 0) $('#busca-macro').focus(); else if (bs[k]) bs[k].focus(); } if (e.key === 'Escape') { e.stopPropagation(); fecharMacro(); $('#b-macro').focus(); } });
+document.addEventListener('click', e => { if (!e.target.closest('#pop-macro') && !e.target.closest('#b-macro')) fecharMacro(); });
+function aplicarMacro(id, lang){
+  const t = tA(); const m = MACROS.find(x => x.id === id); macroAtual = m;
+  const nome = t.inc ? (lang === 'EN' ? 'everyone' : 'pessoal') : primeiro(t.sol) || '';
+  const texto = m[lang === 'EN' ? 'en_' : 'pt_'].replace('{nome}', nome).replace(', !', '!');
+  $('#texto').value = texto; rascunhos[t.n] = texto;
+  const nota = t.inc ? 'cada solicitante recebe a variante do seu idioma' : `variante de ${primeiro(t.sol) || t.email}: ${t.lang}`;
+  $('#previa').innerHTML = `<b>${m.pt}</b><span class="mut">${nota}</span><div class="seg" role="group" aria-label="Variante da macro"><button type="button" data-l="PT" aria-pressed="${lang === 'PT'}">PT</button><button type="button" data-l="EN" aria-pressed="${lang === 'EN'}">EN</button></div><span class="esp"></span><button type="button" class="pd-btn fant ic" id="fechar-previa" aria-label="Tirar a macro">×</button>`;
+  $('#previa').classList.remove('oculto');
+}
+$('#lista-macro').addEventListener('click', e => { const b = e.target.closest('[data-macro]'); if (!b) return; modo(false); aplicarMacro(b.dataset.macro, tA().lang); fecharMacro(); $('#texto').focus(); });
+$('#previa').addEventListener('click', e => {
+  if (e.target.closest('#fechar-previa')) { $('#previa').classList.add('oculto'); macroAtual = null; return; }
+  const b = e.target.closest('[data-l]'); if (b && macroAtual) aplicarMacro(macroAtual.id, b.dataset.l);
+});
+// Criar artigo a partir de ticket resolvido
+function criarArtigo(t){
+  $('#art-origem').textContent = `a partir do #${t.n} · sem dados do solicitante`;
+  if (t.n === 8401) { $('#art-tit').value = 'Impressora não imprime frente e verso: como ativar'; $('#art-txt').value = 'Se a impressora imprime só de um lado, ative a impressão nos dois lados no seu computador:\n\n1. Em Imprimir, abra Propriedades.\n2. Na aba Acabamento, marque “Imprimir nos dois lados”.\n3. Escolha “Virar na borda longa”.\n\nNos computadores da sala dos professores essa opção já vem marcada. Se continuar imprimindo de um lado só, abra um pedido na Central de ajuda.'; }
+  else { $('#art-tit').value = t.ass + ': o que fazer'; $('#art-txt').value = msgsDe(t).filter(m => m.t === 'pub').map(m => semTags(m.txt)).join('\n\n'); }
+  $('#veu-gaveta').classList.add('vis'); $('#gaveta').classList.add('vis'); setTimeout(() => $('#art-tit').focus(), 30);
+}
+function fecharGaveta(){ if (!$('#gaveta').classList.contains('vis')) return; $('#gaveta').classList.remove('vis'); $('#veu-gaveta').classList.remove('vis'); }
+$('#fechar-gaveta').addEventListener('click', fecharGaveta); $('#veu-gaveta').addEventListener('click', fecharGaveta);
+$('#art-salvar').addEventListener('click', () => { fecharGaveta(); registrar(tA(), `${EU} criou um rascunho de artigo`); desenharConversa(); toast('Rascunho salvo na base de conhecimento'); });
+$('#art-variante').addEventListener('click', () => toast('Variante EN pedida como rascunho vinculado'));
+
+// ---------- Eventos ----------
+let evCampus = '', evSel = null; const diasAbertos = new Set();
+$('#f-tipo').innerHTML += Object.entries(TIPOS_EV).map(([v, r]) => `<option value="${v}">${r[0]}</option>`).join('');
+const evVis = () => EVENTOS.filter(e => (!evCampus || e.campus === evCampus) && (!$('#f-tipo').value || e.tipo === $('#f-tipo').value));
+const cpNome = c => c === 'entre' ? 'Entre campi' : LOCAIS[c].nome;
+const localEv = e => e.localTxt || `${cpNome(e.campus)} · ${e.sala}`;
+const isoDe = d => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+function evItem({e, mont}){
+  const s = estadoEvento(e); const h = mont ? e.montH : e.ini;
+  const dicaM = !mont && e.mont === e.data ? ` · montagem às ${e.montH}` : '';
+  return `<button type="button" class="ev ${e.campus} ${mont ? 'mont' : ''}" data-ev="${e.n}" aria-pressed="${evSel === e.n}" data-dica="${esc(`${mont ? 'Montagem: ' : ''}${e.nome} · ${h} · ${localEv(e)}${dicaM} · ${s.txt}`)}"><span class="l1"><span class="cp ${e.campus}">${cpNome(e.campus)}</span>${mont || e.mont === e.data ? IC12.mont : ''}<span>${h}</span>${mont ? '' : `<span class="st ${s.c}">${s.curto}</span>`}</span><span class="nm">${mont ? 'Montagem · ' : ''}${esc(e.nome)}</span></button>`;
+}
+function desenharCal(){
+  const vis = evVis(); const ini = new Date(2026, 9, 26);
+  let h = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(ini); d.setDate(ini.getDate() + i); const iso = isoDe(d);
+    const itens = [...vis.filter(e => e.mont === iso && e.mont !== e.data).map(e => ({e, mont:true, h:e.montH})), ...vis.filter(e => e.data === iso).map(e => ({e, mont:false, h:e.ini}))].sort((a, b) => a.h.localeCompare(b.h));
+    const todos = diasAbertos.has(iso); const mostra = todos ? itens : itens.slice(0, 3);
+    const fora = d.getMonth() !== 10;
+    h += `<div class="dia ${fora ? 'fora' : ''} ${d.getDay() === 0 || d.getDay() === 6 ? 'fds' : ''} ${difDias(d, AGORA) === 0 ? 'hoje' : ''}"><span class="n">${d.getDate()}${fora ? '/' + p2(d.getMonth() + 1) : ''}${difDias(d, AGORA) === 0 ? ' · hoje' : ''}</span>${mostra.map(evItem).join('')}${itens.length > 3 && !todos ? `<button type="button" class="ev-mais" data-dia="${iso}">mais ${itens.length - 3}</button>` : ''}</div>`;
+  }
+  $('#cal').innerHTML = h; desenharLadoEv();
+}
+function desenharLadoEv(){
+  const e = evSel && EVENTOS.find(x => x.n === evSel);
+  if (e) {
+    const s = estadoEvento(e), t = porN.get(e.n), lig = ligadosAoEvento(e);
+    $('#ev-lado').innerHTML = `<div class="lado-tit"><button type="button" class="lnk" id="ev-voltar">Próximos</button><span class="mut">/ #${e.n}</span></div><div class="ev-det"><h2>${esc(e.nome)}</h2>` +
+      prop('Campus', `<span class="cp-t ${e.campus}">${cpNome(e.campus)}</span>`) + prop('Local', esc(e.localTxt || e.sala)) + prop('Data', `${ddmm(e.data)} · ${e.ini}–${e.fim}`) + prop('Montagem', `${ddmm(e.mont)} às ${e.montH}`) +
+      prop('Prazo', `<span class="st-ev ${s.c}">${s.txt}</span>${e.foraPrazo ? '<span class="marca-fora" tabindex="0" data-dica="Pedido feito com menos de 5 dias úteis de antecedência">fora do prazo</span>' : ''}`) +
+      prop('Tipo', TIPOS_EV[e.tipo][0]) + prop('Público', `${e.pub} pessoas`) + prop('Responsável', avHTML(t.resp)) + prop('Pedido', `<a href="#ticket/${e.n}">#${e.n} · ${esc(e.sol)}</a>`) +
+      `<h3>Tickets no mesmo local e data · ${lig.length}</h3>` + (lig.length ? `<div class="mini-l">${lig.map(x => `<a href="#ticket/${x.n}"><span class="n">${x.n}</span><span class="t">${esc(x.ass)}</span>${estHTML(x)}</a>`).join('')}</div>` : '<span class="mut">Nenhum.</span>') + '</div>';
+    return;
+  }
+  const prox = evVis().filter(x => estadoEvento(x).k !== 'encerrado').sort((a, b) => (a.mont + a.montH).localeCompare(b.mont + b.montH));
+  const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  $('#ev-lado').innerHTML = `<div class="lado-tit">Próximos <span class="mut" style="font-weight:400">pela montagem</span></div>` + (prox.length ? prox.map(x => { const s = estadoEvento(x); return `<button type="button" class="prox" data-ev="${x.n}"><span class="prox-d"><strong>${x.data.slice(8)}</strong><small>${MES[+x.data.slice(5, 7) - 1]}</small></span><span class="prox-t"><span class="nm">${esc(x.nome)}</span><span class="l"><span class="cp-t ${x.campus}">${cpNome(x.campus)}</span><span>${esc(x.localTxt || x.sala)}</span></span><span class="l"><span class="st-ev ${s.c}">${IC12.mont}${s.txt}</span>${x.foraPrazo ? '<span class="marca-fora">fora do prazo</span>' : ''}</span></span></button>`; }).join('') : '<p class="lista-msg">Nenhum evento com esses filtros.</p>');
+}
+$('#cal').addEventListener('click', e => {
+  const m = e.target.closest('[data-dia]'); if (m) { diasAbertos.add(m.dataset.dia); desenharCal(); return; }
+  const b = e.target.closest('[data-ev]'); if (b) { evSel = +b.dataset.ev; desenharCal(); }
+});
+$('#ev-lado').addEventListener('click', e => {
+  if (e.target.id === 'ev-voltar') { evSel = null; desenharCal(); return; }
+  const b = e.target.closest('[data-ev]'); if (b) { evSel = +b.dataset.ev; desenharCal(); $('#ev-voltar') && $('#ev-voltar').focus(); }
+});
+$('#f-campus').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; evCampus = b.dataset.c; $$('#f-campus button').forEach(x => x.setAttribute('aria-pressed', x === b)); desenharCal(); });
+$('#f-tipo').addEventListener('change', desenharCal);
+$('#cal-ant').addEventListener('click', () => toast('Protótipo: só novembro de 2026'));
+$('#cal-prox').addEventListener('click', () => toast('Protótipo: só novembro de 2026'));
+$('#novo-evento').addEventListener('click', () => { location.hash = '#portal/evento'; });
+
+// ---------- QR das salas ----------
+let qrSel = 'barra|Sala 214';
+const abertosNa = chave => T.filter(t => naoRes(t) && t.campus + '|' + t.sala === chave);
+function qrSvg(code, px){
+  let h = 7; for (const ch of code) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  let r = '';
+  for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) { const f = (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12); if (!f && rnd() < .48) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }
+  const fin = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7" fill="currentColor"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="var(--superficie)"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="currentColor"/>`;
+  return `<svg viewBox="-1 -1 23 23" width="${px}" height="${px}" role="img" aria-label="QR da sala ${code}" style="color:var(--tinta);display:block;flex:none"><rect x="-1" y="-1" width="23" height="23" fill="var(--superficie)"/><g fill="currentColor">${r}</g>${fin(0, 0)}${fin(14, 0)}${fin(0, 14)}</svg>`;
+}
+function desenharQr(){
+  let h = '';
+  Object.entries(LOCAIS).forEach(([c, cp]) => {
+    const n = T.filter(t => naoRes(t) && t.campus === c && t.sala).length;
+    h += `<div class="cps">${cp.nome}<small>${SALAS.filter(s => s.campus === c).length} salas · ${n} tickets abertos</small></div>`;
+    cp.predios.forEach(pr => pr.andares.forEach(an => {
+      h += `<div class="qr-andar"><b>${pr.nome}</b><span>· ${an.nome}</span><span class="esp"></span><button class="pd-btn" type="button" aria-disabled="true" data-dica="Só administradores" data-imp="${an.nome}">Imprimir QR do andar</button></div>`;
+      an.salas.forEach(s => { const sx = salaDe(c, s); const k = abertosNa(sx.chave).length; h += `<button type="button" class="qr-sala" data-sala="${esc(sx.chave)}" aria-current="${qrSel === sx.chave}"><span>${esc(s)}</span><span class="cod">${sx.cod}</span><span class="ab ${k ? '' : 'zero'}">${k ? `${k} ${k === 1 ? 'aberto' : 'abertos'}` : '—'}</span></button>`; });
+    }));
+  });
+  $('#qr-arvore').innerHTML = h;
+  $('#qr-resumo').textContent = `${SALAS.length} salas`;
+  desenharQrLado();
+}
+function desenharQrLado(){
+  const sx = SALAS.find(s => s.chave === qrSel) || SALAS[0]; const l = abertosNa(sx.chave).sort((a, b) => SLA_RANK(a) - SLA_RANK(b));
+  $('#qr-lado').innerHTML = `<div class="lado-tit">Ao escanear <span class="mut" style="font-weight:400">${sx.cod}</span></div><div class="qr-prev"><div><h2>${esc(sx.sala)}</h2><span class="mut">${LOCAIS[sx.campus].nome} · ${esc(andarNome(sx))} · ${l.length} ${l.length === 1 ? 'ticket aberto' : 'tickets abertos'}</span></div>` +
+    (l.length ? `<div>${l.map(t => `<div class="qr-tk"><div class="l1">${estHTML(t)}<span>#${t.n}</span>${slaHTML(t)}</div><a href="#ticket/${t.n}">${esc(t.ass)}</a><div class="l3"><span>${esc(t.sol || t.email)} · ${relativo(t.criado)}</span>${t.resp ? avHTML(t.resp) : `<button class="pd-btn" type="button" data-assumir="${t.n}">Assumir</button>`}</div></div>`).join('')}</div>` : '<span class="mut">Nenhum ticket aberto.</span>') +
+    `<div style="display:flex;gap:var(--e-2)"><button class="pd-btn" type="button" id="qr-novo">Abrir ticket aqui</button><button class="pd-btn fant" type="button" id="qr-sol">Ver como solicitante</button></div>` +
+    `<div class="qr-folha">${qrSvg(sx.cod, 96)}<div><b>${esc(sx.sala)}</b><div class="cod">${sx.cod}</div><div class="mut">help.earj.com.br/s/${sx.cod}</div></div></div></div>`;
+}
+$('#qr-arvore').addEventListener('click', e => {
+  const imp = e.target.closest('[data-imp]'); if (imp) { toast('Só administradores imprimem os QR'); return; }
+  const b = e.target.closest('[data-sala]'); if (!b) return;
+  qrSel = b.dataset.sala; history.replaceState(null, '', '#qr/' + encodeURIComponent(qrSel));
+  $$('#qr-arvore [data-sala]').forEach(x => x.setAttribute('aria-current', x === b)); desenharQrLado();
+});
+$('#qr-lado').addEventListener('click', e => {
+  const a = e.target.closest('[data-assumir]'); if (a) { assumir(porN.get(+a.dataset.assumir)); desenharQrLado(); return; }
+  if (e.target.id === 'qr-novo' || e.target.id === 'qr-sol') { location.hash = '#portal/qr/' + encodeURIComponent(qrSel); }
+});
+
+// ---------- Relatórios: números secos, tabelas simples ----------
+function desenharRel(){
+  const ab = T.filter(naoRes);
+  const est = l => ({a:l.filter(t => t.est === 'aberto').length, p:l.filter(t => t.est === 'pendente').length, e:l.filter(t => t.est === 'espera').length, x:l.filter(t => (slaDe(t) || {}).c === 'estouro').length, t:l.length});
+  const lin = (r, l, tot) => { const s = est(l); return `<tr class="${tot ? 'tot' : ''}"><td>${r}</td><td class="r">${s.a}</td><td class="r">${s.p}</td><td class="r">${s.e}</td><td class="r ${s.x ? 'ruim' : ''}">${s.x}</td><td class="r">${s.t}</td></tr>`; };
+  const cabBk = '<thead><tr><th></th><th class="r">Abertos</th><th class="r">Pendentes</th><th class="r">Em espera</th><th class="r">Estourados</th><th class="r">Total</th></tr></thead>';
+  const porCampus = cabBk + '<tbody>' + [['Barra', 'barra'], ['Gávea', 'gavea'], ['Entre campi', 'entre']].map(([r, c]) => lin(r, ab.filter(t => t.campus === c))).join('') + lin('Sem local', ab.filter(t => !t.campus)) + lin('Total', ab, true) + '</tbody>';
+  const porGrupo = cabBk + '<tbody>' + GRUPOS.map(g => lin(g, ab.filter(t => t.grupo === g))).join('') + lin('Total', ab, true) + '</tbody>';
+  const SEM = [['07/09', 41, 38], ['14/09', 47, 45], ['21/09', 52, 47], ['28/09', 44, 42], ['05/10', 50, 48], ['12/10', 39, 36], ['19/10', 55, 51], ['26/10', 48, 43]];
+  const slaSem = '<thead><tr><th>Semana de</th><th class="r">Com prazo</th><th class="r">No prazo</th><th class="r">Estourados</th><th>%</th></tr></thead><tbody>' + SEM.map(([s, n, ok]) => { const pc = Math.round(ok / n * 100); return `<tr><td>${s}</td><td class="r">${n}</td><td class="r">${ok}</td><td class="r">${n - ok}</td><td class="num-t">${pc}%<span class="barra-s" aria-hidden="true"><i style="width:${pc}%"></i></span></td></tr>`; }).join('') + '</tbody>';
+  const R1 = [['Suporte Barra', '14 min', '52 min', 212], ['Suporte Gávea', '21 min', '1 h 35', 138], ['Eventos', '35 min', '3 h 10', 41], ['Sistemas', '48 min', '6 h 20', 57]];
+  const r1 = '<thead><tr><th>Grupo</th><th class="r">Mediana</th><th class="r">Percentil 90</th><th class="r">n</th></tr></thead><tbody>' + R1.map(([g, m, p, n]) => `<tr><td>${g}</td><td class="r">${m}</td><td class="r">${p}</td><td class="r">${n}</td></tr>`).join('') + '<tr class="tot"><td>Todos</td><td class="r">19 min</td><td class="r">1 h 48</td><td class="r">448</td></tr></tbody>';
+  const contaPor = fn => { const m = new Map(); T.forEach(t => { const k = fn(t); if (k) m.set(k, (m.get(k) || 0) + 1); }); return [...m].sort((a, b) => b[1] - a[1]).slice(0, 8); };
+  const salas = '<thead><tr><th>Sala</th><th class="r">Tickets</th></tr></thead><tbody>' + contaPor(t => t.sala && !t.evento ? `${LOCAIS[t.campus].nome} · ${t.sala}` : '').map(([s, n]) => `<tr><td>${esc(s)}</td><td class="r">${n}</td></tr>`).join('') + '</tbody>';
+  const equips = '<thead><tr><th>Equipamento</th><th class="r">Tickets</th></tr></thead><tbody>' + contaPor(t => t.evento ? '' : t.equip).map(([s, n]) => `<tr><td>${esc(s)}</td><td class="r">${n}</td></tr>`).join('') + '</tbody>';
+  const SAT = [['Todos os grupos', 41, '4,6', '88%'], ['Suporte Barra', 33, '4,7', '91%'], ['Suporte Gávea', 9], ['Eventos', 4], ['Sistemas', 2]];
+  const sat = '<thead><tr><th>Grupo</th><th class="r">Nota média</th><th class="r">Notas 4 e 5</th><th class="r">n</th></tr></thead><tbody>' + SAT.map(([g, n, m, p]) => n >= 30 ? `<tr><td>${g}</td><td class="r">${m}</td><td class="r">${p}</td><td class="r">${n}</td></tr>` : `<tr><td>${g}</td><td class="ins" colspan="2">amostra insuficiente (n = ${n})</td><td class="r">${n}</td></tr>`).join('') + '</tbody>';
+  const CR = [['07/09', 44, 41], ['14/09', 48, 47], ['21/09', 41, 44], ['28/09', 53, 49], ['05/10', 50, 51], ['12/10', 46, 42], ['19/10', 57, 52], ['26/10', 51, 46]];
+  const cr = '<thead><tr><th>Semana de</th><th class="r">Criados</th><th class="r">Resolvidos</th><th class="r">Saldo</th></tr></thead><tbody>' + CR.map(([s, c, r]) => `<tr><td>${s}</td><td class="r">${c}</td><td class="r">${r}</td><td class="r">${r - c > 0 ? '+' : ''}${r - c}</td></tr>`).join('') + '</tbody>';
+  const sec = (t, sub, tab) => `<section class="rel-sec"><h2>${t}${sub ? ` <small>${sub}</small>` : ''}</h2><table class="tab-s">${tab}</table></section>`;
+  $('#rel').innerHTML = sec('Backlog por campus', 'agora', porCampus) + sec('Backlog por grupo', 'agora', porGrupo) + sec('SLA no prazo por semana', 'todos os grupos', slaSem) + sec('1ª resposta', 'horário útil', r1) + sec('Salas com mais chamados', '', salas) + sec('Equipamentos com mais chamados', '', equips) + sec('Satisfação', '60 dias', sat) + sec('Criados e resolvidos por semana', '', cr);
+}
+$('#rel-csv').addEventListener('click', () => toast('CSV dos relatórios exportado'));
+$('#rel-per').addEventListener('change', () => toast('Protótipo: números de exemplo'));
+
+// ---------- Portal: um idioma por vez, lembrado ----------
+let idioma = ls.get('pd-idioma') === 'en' ? 'en' : 'pt';
+const en = () => idioma === 'en';
+const TX = {
+  pt:{conta:'Conta', fechar:'Fechar'},
+  en:{marca:'IT help center', abrir:'Open a request', pedidos:'My requests', conta:'Account', fechar:'Close', h1:'How can we help?', 'h1-sub':'EARJ IT team, at the Barra and Gávea campuses.', buscar:'Search', 'busca-ph':'Wi-Fi, printer, projector, password…', temas:'Topics', 'mais-lidos':'Most read', contato:'Support Monday to Friday, 7 am to 6 pm. Extension 2100 at Barra and 3100 at Gávea.', 'tab-sup':'Support', 'tab-ev':'AV event', 'f-tit':'Open a request', 'sim-qr':'Simulate QR for Room 214 (dev)', 'l-tipo':'You are', 'l-onde':'Where is the problem?', 'nao-estou':'I’m not in this room', 'l-campus':'Campus', 'l-andar':'Floor', 'l-sala':'Room', 'l-motivo':'Reason', 'l-equip':'Equipment', 'l-sint':'What is happening?', 'l-ass':'Subject', 'ass-ph':'E.g.: Projector in room 204 won’t turn on', 'l-desc':'Description', 'desc-ph':'What happened and when you need it working.', anexar:'Attach photo or file', enviar:'Submit request', 'ev-tit':'AV support for an event', 'e-nome':'Event name', 'e-nome-ph':'E.g.: Lower School Assembly', 'e-tipo':'Type', 'e-data':'Date', 'e-ini':'Start', 'e-fim':'End', 'e-mont':'Setup starts', 'e-pub':'Expected audience', 'e-local':'Event location', 'e-equip':'Equipment', 'e-obs':'Notes', 'e-obs-ph':'Run of show, speakers, whether it needs recording.', 'e-enviar':'Submit event request', 'f-abertos':'Open', 'f-todos':'All', 'th-n':'No.', 'th-ass':'Subject', 'th-est':'Status', 'th-at':'Updated', fab:'Chat with IT', 'chat-sub':'Online · usually replies in minutes', msg:'Message', 'msg-ph':'Write your message', 'enviar-c':'Send'}
+};
+$$('#t-portal [data-i18n]').forEach(el => { TX.pt[el.dataset.i18n] = el.textContent; });
+$$('#t-portal [data-i18n-ph]').forEach(el => { TX.pt[el.dataset.i18nPh] = el.placeholder; });
+const tx = k => (TX[idioma][k] != null ? TX[idioma][k] : TX.pt[k]);
+const LOC_EN = {'Subsolo':'Basement', 'Térreo':'Ground floor', '1º andar':'1st floor', '2º andar':'2nd floor', 'Cobertura':'Rooftop', 'Prédio A':'Building A', 'Prédio B':'Building B', 'Prédio principal':'Main building', 'Sala de servidores':'Server room', 'Depósito de AV':'AV storage', 'Garagem':'Garage', 'Recepção':'Reception', 'Secretaria':'Front office', 'Enfermaria':'Nurse’s office', 'Ginásio':'Gym', 'Refeitório':'Cafeteria', 'Laboratório de informática':'Computer lab', 'Sala dos professores':'Teachers’ room', 'Auditório':'Auditorium', 'Terraço':'Terrace', 'Estúdio de música':'Music studio', 'Biblioteca':'Library', 'Laboratório de ciências':'Science lab', 'RH':'HR', 'Financeiro':'Finance', 'Teatro':'Theater', 'Entre campi':'Both campuses'};
+const trL = s => en() ? (LOC_EN[s] || s.replace(/^Sala /, 'Room ')) : s;
+const OPC = {
+  pessoa:[['Funcionário(a) da escola', 'School staff'], ['Responsável por aluno', 'Parent or guardian']],
+  motivos:[['hardware', 'Equipamento', 'Hardware'], ['edu', 'Software educacional', 'Educational software'], ['adm', 'Software administrativo', 'Administrative software'], ['rede', 'Rede e internet', 'Network and internet'], ['av', 'Audiovisual', 'Audiovisual'], ['outros', 'Outros', 'Other']],
+  equip:[['', 'Escolha…', 'Choose…'], ['projetor', 'Projetor', 'Projector'], ['impressora', 'Impressora', 'Printer'], ['notebook', 'Notebook ou Chromebook', 'Laptop or Chromebook'], ['som', 'Caixa de som', 'Speaker'], ['lousa', 'Lousa digital', 'Smartboard']],
+  sint:{projetor:[['Não liga', 'Won’t turn on'], ['Liga mas sem imagem', 'Turns on but shows no image'], ['Imagem fraca ou piscando', 'Dim or flickering image']], impressora:[['Não imprime', 'Won’t print'], ['Sem toner', 'Out of toner'], ['Papel enroscado', 'Paper jam'], ['Não liga', 'Won’t turn on']], notebook:[['Não liga', 'Won’t turn on'], ['Muito lento', 'Very slow'], ['Tela quebrada', 'Broken screen']], som:[['Sem som', 'No sound'], ['Chiado', 'Crackling'], ['Volume baixo', 'Low volume']], lousa:[['Toque não responde', 'Touch not responding'], ['Imagem desalinhada', 'Image misaligned']]},
+  equipEv:[['Projetor', 'Projector'], ['Telão', 'Large screen'], ['Microfone sem fio', 'Wireless microphone'], ['Mesa de som', 'Mixing desk'], ['Caixas de som', 'Speakers'], ['Transmissão ao vivo', 'Live stream'], ['Gravação', 'Recording'], ['Cabines de tradução', 'Interpretation booths'], ['Fones de tradução', 'Interpretation headsets']],
+  cats:[['Wi-Fi e rede', 'Wi-Fi and network', '8 artigos', '8 articles'], ['Impressoras', 'Printers', '6 artigos', '6 articles'], ['Sala de aula', 'Classroom', 'projetor, som, lousa', 'projector, sound, smartboard'], ['Contas e senhas', 'Accounts and passwords', 'Google e sistemas', 'Google and school systems']]
+};
+const ARTIGOS = [
+  {pt:'Projetor não liga: o que verificar', en:'Projector won’t turn on: what to check', k:'projetor projector liga sala'},
+  {pt:'Conectar o notebook ao projetor da sala', en:'Connect your laptop to the classroom projector', k:'projetor notebook hdmi imagem'},
+  {pt:'Conectar ao Wi-Fi da escola', en:'Connect to the school Wi-Fi', k:'wi-fi wifi rede internet senha'},
+  {pt:'Instalar a impressora do seu setor', en:'Install your department printer', k:'impressora printer imprimir'},
+  {pt:'Recuperar a senha do Google', en:'Recover your Google password', k:'senha google conta password'},
+  {pt:'Imprimir frente e verso', en:'Print double-sided', k:'impressora frente verso imprimir'},
+  {pt:'Sala sem som: o que verificar', en:'No sound in the classroom', k:'som caixa audio chiado microfone sound'}
+];
+let pvAtual = 'inicio', motivo = 'hardware', travado = null, filtroPedidos = 'abertos';
+const CHAT = [
+  {d:true, pt:'Hoje · pedido #8412', en:'Today · request #8412'},
+  {eu:true, pt:'Oi! O projetor da sala 204 continua sem ligar e minha aula começa às 10:30.', en:'Hi! The projector in room 204 still won’t turn on and my class starts at 10:30.'},
+  {pt:'Olá, Mariana! Sou o Rafael, do suporte. Já deixei um projetor portátil na sala.', en:'Hi Mariana! This is Rafael from IT support. I’ve already left a portable projector in the room.'},
+  {pt:'Pode testar e me dizer se funcionou?', en:'Could you test it and let me know if it works?'},
+  {aval:true}
+];
+let notaChat = 0;
+const LEG = {pt:['1 = muito ruim · 5 = excelente', 'Sentimos muito. O que deu errado?', 'Obrigado. O que podemos melhorar?', 'Obrigado pelo retorno.', 'Que bom. Obrigado.', 'Que ótimo. Obrigado pela avaliação.'], en:['1 = very poor · 5 = excellent', 'We’re sorry. What went wrong?', 'Thank you. What could we improve?', 'Thanks for the feedback.', 'Glad to hear it. Thank you.', 'Great. Thanks for rating us.']};
+function relP(min){ const d = difDias(AGORA, antes(min)); if (min < 1) return en() ? 'just now' : 'agora'; if (d === 0) return min < 60 ? (en() ? `${min} min ago` : `há ${min} min`) : (en() ? `${Math.floor(min / 60)} h ago` : `há ${Math.floor(min / 60)} h`); if (d === 1) return en() ? 'yesterday' : 'ontem'; return en() ? `${d} days ago` : `há ${d} dias`; }
+function situacao(t){
+  if (t.est === 'aberto') return t.r1 ? ['Em andamento', 'In progress', ''] : ['Recebido', 'Received', ''];
+  if (t.est === 'espera') return ['Em andamento', 'In progress', ''];
+  if (t.est === 'pendente') return ['Aguardando você', 'Waiting for you', 'voce'];
+  if (t.est === 'resolvido') return ['Resolvido · avalie', 'Resolved · rate it', 'ok'];
+  return ['Encerrado', 'Closed', 'fim'];
+}
+function traduzirPortal(){
+  $$('#t-portal [data-i18n]').forEach(el => { el.textContent = tx(el.dataset.i18n); });
+  $$('#t-portal [data-i18n-ph]').forEach(el => { el.placeholder = tx(el.dataset.i18nPh); });
+  $$('#t-portal [data-i18n-al]').forEach(el => el.setAttribute('aria-label', tx(el.dataset.i18nAl)));
+  $$('#seg-idioma button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === idioma));
+  $('#t-portal').lang = en() ? 'en' : 'pt-BR';
+  $('#p-cats').innerHTML = OPC.cats.map(c => `<a href="#portal" data-art><strong>${en() ? c[1] : c[0]}</strong><small>${en() ? c[3] : c[2]}</small></a>`).join('');
+  $('#p-populares').innerHTML = [2, 3, 4, 5].map(i => linkArt(ARTIGOS[i])).join('');
+  $('#p-tipo').innerHTML = OPC.pessoa.map(([pt, e], i) => `<option value="${i}">${en() ? e : pt}</option>`).join('');
+  const eqv = $('#p-equip').value || 'projetor';
+  $('#p-equip').innerHTML = OPC.equip.map(([v, pt, e]) => `<option value="${v}">${en() ? e : pt}</option>`).join(''); $('#p-equip').value = eqv;
+  const tv = $('#e-tipo').value || 'assembly';
+  $('#e-tipo').innerHTML = Object.entries(TIPOS_EV).map(([v, r]) => `<option value="${v}">${en() ? r[1] : r[0]}</option>`).join(''); $('#e-tipo').value = tv;
+  const marcados = new Set($$('#e-equip input:checked').map(i => i.value));
+  $('#e-equip').innerHTML = OPC.equipEv.map(([pt, e]) => `<label><input type="checkbox" value="${pt}" ${marcados.has(pt) ? 'checked' : ''}>${en() ? e : pt}</label>`).join('');
+  ['p', 'e'].forEach(p => { const c = $(`#${p}-campus`).value, a = $(`#${p}-andar`).value, s = $(`#${p}-sala`).value; preencherCampus(p, p === 'e'); setLocal(p, c, a, s); });
+  if (travado) $('#selo-qr').textContent = `${en() ? 'via QR' : 'via QR'} · ${travado.cod}`;
+  condicionais(); sugerir(); buscarPortal(); avisoPrazo(); desenharPedidos(); desenharChat();
+  desenharContaPortal();
+}
+function desenharContaPortal(){ $('#b-conta').setAttribute('aria-label', tx('conta')); }
+$('#seg-idioma').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (!b || b.dataset.l === idioma) return; idioma = b.dataset.l; ls.set('pd-idioma', idioma); traduzirPortal(); });
+$('#b-conta').addEventListener('click', e => alternarMenu(e.currentTarget, [
+  {v:'pedidos', r:tx('pedidos')}, {v:'tema', r:raiz.dataset.theme === 'dark' ? (en() ? 'Light theme' : 'Tema claro') : (en() ? 'Dark theme' : 'Tema escuro')}, {sep:true}, {v:'agente', r:en() ? 'Staff area' : 'Área do técnico'}
+], v => { if (v === 'pedidos') location.hash = '#portal/pedidos'; if (v === 'tema') trocarTema(); if (v === 'agente') location.hash = '#tickets/' + ultimaVisao(); }, {alinhar:'dir', html:'<div class="menu-cab"><span class="av-o">MC</span><span><strong>Mariana Costa</strong><small>mariana.costa@earj.example</small></span></div><hr>'}));
+function portalVista(v){
+  pvAtual = v; ['inicio', 'novo', 'pedidos'].forEach(k => $('#pv-' + k).classList.toggle('oculto', k !== v));
+  $$('.p-nav a').forEach(a => a.dataset.pv === v ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  if (v === 'pedidos') desenharPedidos();
+  window.scrollTo({top:0});
+}
+document.addEventListener('click', e => { const a = e.target.closest('[data-pv]'); if (!a) return; e.preventDefault(); location.hash = a.dataset.pv === 'inicio' ? '#portal' : '#portal/' + a.dataset.pv; });
+function abrirPortal(arg){
+  $('#sim-qr').classList.toggle('oculto', !DEV);
+  const [v, ...r] = (arg || '').split('/');
+  if (v === 'qr') { const sx = SALAS.find(s => s.chave === r.join('/')); portalVista('novo'); abaPortal('sup'); if (sx) travarLocal(sx); }
+  else if (v === 'evento') { portalVista('novo'); abaPortal('ev'); }
+  else portalVista(v === 'novo' || v === 'pedidos' ? v : 'inicio');
+  if (v === 'novo') abaPortal('sup');
+  document.title = en() ? 'IT help center · EARJ' : 'Central de ajuda da TI · EARJ';
+}
+const artTit = a => en() ? a.en : a.pt;
+const linkArt = a => `<a href="#portal" data-art>${artTit(a)}${ic('setad', 14)}</a>`;
+function achar(q){ const ps = semAcento(q).split(/[^a-z0-9-]+/).filter(p => p.length >= 3); if (!ps.length) return []; return ARTIGOS.filter(a => ps.some(p => semAcento(a.k + ' ' + a.pt + ' ' + a.en).includes(p))).slice(0, 3); }
+function sugerir(){ const l = achar($('#p-ass').value); const s = $('#sugest'); s.classList.toggle('oculto', !l.length); s.innerHTML = `<div class="s-tit">${en() ? 'This might solve it now' : 'Talvez isto resolva agora'}</div>${l.map(linkArt).join('')}`; }
+function buscarPortal(){ const q = $('#p-busca').value; const l = achar(q); const r = $('#p-res'); r.classList.toggle('oculto', !q.trim()); r.innerHTML = l.length ? l.map(linkArt).join('') : `<p class="mut">${en() ? 'Nothing found. Open a request and we will help.' : 'Nada encontrado. Abra um pedido e a gente ajuda.'}</p>`; }
+$('#p-ass').addEventListener('input', sugerir);
+$('#p-busca').addEventListener('input', buscarPortal);
+document.addEventListener('click', e => { if (e.target.closest('[data-art]')) { e.preventDefault(); toast(en() ? 'Article (prototype)' : 'Artigo da base (protótipo)'); } });
+function desenharPedidos(){
+  const l = T.filter(t => t.sol === 'Mariana Costa' && (filtroPedidos === 'todos' || naoRes(t))).sort((a, b) => a.atu - b.atu);
+  $('#corpo-pedidos').innerHTML = l.length ? l.map(t => { const [pt, e, c] = situacao(t); return `<tr><td class="num-t">${t.n}</td><td>${esc(en() ? (t.en || t.ass) : t.ass)}</td><td><span class="p-est ${c}">${en() ? e : pt}</span></td><td>${relP(t.atu)}</td></tr>`; }).join('') : `<tr><td colspan="4" class="mut">${en() ? 'No requests.' : 'Nenhum pedido.'}</td></tr>`;
+}
+$('#f-pedidos').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filtroPedidos = b.dataset.f; $$('#f-pedidos button').forEach(x => x.setAttribute('aria-pressed', x === b)); desenharPedidos(); });
+function abaPortal(p){ $$('#abas-portal button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === p)); $('#form-sup').classList.toggle('oculto', p !== 'sup'); $('#form-ev').classList.toggle('oculto', p !== 'ev'); }
+$('#abas-portal').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) abaPortal(b.dataset.p); });
+// Local em cascata: campus → andar → sala
+const ESCOLHA = () => en() ? 'Choose…' : 'Escolha…';
+const andaresDe = c => c === 'entre' ? [{id:'ambos', nome:'Barra + Gávea', salas:['Auditório (Barra) + Teatro (Gávea)', 'Transmissão para os dois campi']}] : LOCAIS[c].predios.flatMap(pr => pr.andares.map(an => ({id:an.id, nome:c === 'gavea' ? `${trL(pr.nome)} · ${trL(an.nome)}` : trL(an.nome), salas:an.salas})));
+const SALAS_ENTRE_EN = {'Auditório (Barra) + Teatro (Gávea)':'Auditorium (Barra) + Theater (Gávea)', 'Transmissão para os dois campi':'Live stream to both campuses'};
+function preencherCampus(p, comEntre){ $(`#${p}-campus`).innerHTML = `<option value="">${ESCOLHA()}</option>` + ['barra', 'gavea', ...(comEntre ? ['entre'] : [])].map(k => `<option value="${k}">${k === 'entre' ? trL('Entre campi') : LOCAIS[k].nome}</option>`).join(''); }
+function preencherAndares(p){
+  const c = $(`#${p}-campus`).value;
+  if (!c) { $(`#w-${p}-andar`).classList.add('oculto'); $(`#w-${p}-sala`).classList.add('oculto'); return; }
+  const an = andaresDe(c);
+  $(`#${p}-andar`).innerHTML = `<option value="">${ESCOLHA()}</option>` + an.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+  $(`#w-${p}-andar`).classList.remove('oculto'); $(`#w-${p}-sala`).classList.add('oculto');
+  if (an.length === 1) { $(`#${p}-andar`).value = an[0].id; preencherSalas(p); }
+}
+function preencherSalas(p){
+  const c = $(`#${p}-campus`).value; const a = c && andaresDe(c).find(x => x.id === $(`#${p}-andar`).value);
+  if (!a) { $(`#w-${p}-sala`).classList.add('oculto'); return; }
+  $(`#${p}-sala`).innerHTML = a.salas.map(s => `<option value="${esc(s)}">${esc(en() && SALAS_ENTRE_EN[s] ? SALAS_ENTRE_EN[s] : trL(s))}</option>`).join('');
+  $(`#w-${p}-sala`).classList.remove('oculto');
+}
+function setLocal(p, c, a, s){ $(`#${p}-campus`).value = c || ''; preencherAndares(p); if (a) { $(`#${p}-andar`).value = a; preencherSalas(p); } if (s) $(`#${p}-sala`).value = s; }
+['p', 'e'].forEach(p => { $(`#${p}-campus`).addEventListener('change', () => preencherAndares(p)); $(`#${p}-andar`).addEventListener('change', () => preencherSalas(p)); });
+function travarLocal(sx){
+  travado = sx;
+  if (sx) setLocal('p', sx.campus, sx.andar.id, sx.sala);
+  ['campus', 'andar', 'sala'].forEach(k => { $('#p-' + k).disabled = !!sx; });
+  $('#local-sup').classList.toggle('qr', !!sx);
+  $('#selo-qr').classList.toggle('oculto', !sx); $('#nao-estou').classList.toggle('oculto', !sx);
+  if (sx) $('#selo-qr').textContent = `via QR · ${sx.cod}`;
+}
+$('#sim-qr').addEventListener('click', () => { travarLocal(salaDe('barra', 'Sala 214')); toast(en() ? 'QR read: Room 214 · Barra · 2nd floor' : 'QR lido: Sala 214 · Barra · 2º andar'); });
+$('#nao-estou').addEventListener('click', () => { travarLocal(null); $('#p-campus').focus(); });
+function condicionais(){
+  $('#w-equip').classList.toggle('oculto', motivo !== 'hardware');
+  const s = OPC.sint[$('#p-equip').value]; $('#w-sint').classList.toggle('oculto', !s);
+  if (s) $('#p-sint').innerHTML = s.map(([pt, e]) => `<option value="${esc(pt)}">${en() ? e : pt}</option>`).join('');
+  $('#motivos').innerHTML = OPC.motivos.map(([v, pt, e]) => `<button type="button" role="radio" aria-checked="${v === motivo}" tabindex="${v === motivo ? 0 : -1}" data-m="${v}">${en() ? e : pt}</button>`).join('');
+}
+$('#p-equip').addEventListener('change', condicionais);
+$('#motivos').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; motivo = b.dataset.m; condicionais(); $(`#motivos [data-m="${motivo}"]`).focus(); });
+$('#motivos').addEventListener('keydown', e => { if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) return; e.preventDefault(); const ids = OPC.motivos.map(m => m[0]); const i = ids.indexOf(motivo); motivo = ids[(i + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1) + ids.length) % ids.length]; condicionais(); $(`#motivos [data-m="${motivo}"]`).focus(); });
+$('#p-anexar').addEventListener('click', () => toast(en() ? 'Attach (prototype)' : 'Anexar (protótipo)'));
+let proxNum = 8481;
+$('#form-sup').addEventListener('submit', e => {
+  e.preventDefault();
+  const ass = $('#p-ass').value.trim(); if (!ass) { $('#p-ass').focus(); toast(en() ? 'Write a subject' : 'Escreva o assunto'); return; }
+  const c = $('#p-campus').value; const s = $('#w-p-sala').classList.contains('oculto') ? null : $('#p-sala').value;
+  const n = proxNum++;
+  add({n, est:'aberto', r1:false, campus:c === 'barra' || c === 'gavea' ? c : null, sala:c && c !== 'entre' ? s : null, lang:en() ? 'EN' : 'PT', ass, sol:'Mariana Costa', email:'mariana.costa@earj.example', criado:0, atu:0, sla:{tipo:'r1', vence:240, total:240}, canal:travado ? 'QR da sala' : 'Portal', equip:$('#p-equip').value ? OPC.equip.find(x => x[0] === $('#p-equip').value)[1] : '', lido:false, grupo:c === 'gavea' ? 'Suporte Gávea' : 'Suporte Barra'});
+  const t = T[T.length - 1]; if (t.sala) { const sx = salaDe(t.campus, t.sala); if (sx) t.andar = sx.andar.id; } porN.set(n, t);
+  $('#p-ass').value = ''; $('#p-desc').value = ''; sugerir();
+  toast(en() ? `Request #${n} submitted · confirmation by email` : `Pedido #${n} enviado · confirmação por e-mail`);
+});
+// Evento de AV
+function avisoPrazo(){
+  const v = $('#e-data').value, av = $('#e-aviso');
+  if (!v) { av.classList.add('oculto'); return; }
+  if (pIso(v) < diaZero(AGORA)) { av.textContent = en() ? 'This date has passed.' : 'Esta data já passou.'; av.classList.remove('oculto'); return; }
+  const du = diasUteis(v);
+  if (du < 5) { av.textContent = en() ? `${du} business ${du === 1 ? 'day' : 'days'} left. With fewer than 5, the request is marked as late.` : `${du === 1 ? 'Falta 1 dia útil' : `Faltam ${du} dias úteis`}. Com menos de 5, o pedido fica marcado como fora do prazo.`; av.classList.remove('oculto'); }
+  else av.classList.add('oculto');
+}
+$('#e-data').addEventListener('change', () => { const v = $('#e-data').value; if (v) $('#e-mont').value = v + 'T07:00'; avisoPrazo(); });
+$('#e-data').addEventListener('input', avisoPrazo);
+$('#form-ev').addEventListener('submit', e => { e.preventDefault(); if (!$('#e-nome').value.trim()) { $('#e-nome').focus(); toast(en() ? 'Write the event name' : 'Escreva o nome do evento'); return; } const fora = !$('#e-aviso').classList.contains('oculto'); const n = proxNum++; toast(en() ? `Event request #${n} submitted${fora ? ' · marked late' : ''}` : `Pedido de evento #${n} enviado${fora ? ' · fora do prazo' : ''}`); $('#e-nome').value = ''; });
+// Chat "Fale com a TI" / "Chat with IT"
+function desenharChat(){
+  $('#corpo-chat').innerHTML = CHAT.map(m => m.d ? `<span class="dia-chat">${en() ? m.en : m.pt}</span>` : m.aval ? `<section class="aval"><strong>${en() ? 'How was the support?' : 'Como foi o atendimento?'}</strong><div class="notas" role="radiogroup" aria-label="${en() ? 'Rating from 1 to 5' : 'Nota de 1 a 5'}">${[1, 2, 3, 4, 5].map(k => `<button type="button" role="radio" aria-checked="${k === notaChat}">${k}</button>`).join('')}</div><span class="mut" style="font-size:var(--t-12)">${LEG[idioma][notaChat]}</span></section>` : `<div class="bal ${m.eu ? 'eu' : 'eles'}">${esc(m.txt || (en() ? m.en : m.pt))}</div>`).join('');
+  $('#digitando').textContent = en() ? 'Rafael is typing…' : 'Rafael está escrevendo…';
+}
+function fecharChat(){ $('#chat').classList.remove('vis'); $('#fab').setAttribute('aria-expanded', 'false'); }
+$('#fab').addEventListener('click', () => { const ab = !$('#chat').classList.contains('vis'); $('#chat').classList.toggle('vis', ab); $('#fab').setAttribute('aria-expanded', ab); if (ab) { desenharChat(); $('#m-chat').focus(); } });
+$('#fechar-chat').addEventListener('click', () => { fecharChat(); $('#fab').focus(); });
+$('#corpo-chat').addEventListener('click', e => { const b = e.target.closest('.notas button'); if (!b) return; notaChat = +b.textContent; desenharChat(); });
+$('#form-chat').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('#m-chat').value.trim(); if (!v) return;
+  CHAT.push({eu:true, txt:v}); $('#m-chat').value = ''; desenharChat(); $('#corpo-chat').scrollTop = 1e6;
+  $('#digitando').classList.remove('oculto');
+  setTimeout(() => { $('#digitando').classList.add('oculto'); CHAT.push({pt:'Anotado. Já estou vendo isso.', en:'Got it. I’m on it.'}); desenharChat(); $('#corpo-chat').scrollTop = 1e6; }, 1400);
+});
+
+// ---------- Entrar ----------
+$('#entrar-google').addEventListener('click', () => { location.hash = '#tickets/' + ultimaVisao(); toast('Você entrou com a conta Google @earj.com.br'); });
+$('#entrar-link').addEventListener('click', e => { const f = $('#form-link'); const ab = f.classList.contains('oculto'); f.classList.toggle('oculto', !ab); e.currentTarget.setAttribute('aria-expanded', ab); if (ab) $('#e-link').focus(); });
+$('#form-link').addEventListener('submit', e => { e.preventDefault(); if (!$('#e-link').value.trim()) { $('#e-link').focus(); return; } $('#e-link').value = ''; toast('Link de acesso enviado · confira o e-mail'); });
+
+// ---------- Atalhos ----------
+function abrirAtalhos(){ $('#atalhos-veu').classList.add('vis'); $('#fechar-atalhos').focus(); }
+function fecharAtalhos(){ $('#atalhos-veu').classList.remove('vis'); }
+$('#fechar-atalhos').addEventListener('click', fecharAtalhos);
+$('#atalhos-veu').addEventListener('click', e => { if (e.target.id === 'atalhos-veu') fecharAtalhos(); });
+function vizinho(d){ const l = linhas().map(t => t.n); const i = l.indexOf(ticketAtual); const n = l[i + d]; if (n) abrirTicket(n); }
+document.addEventListener('keydown', e => {
+  const externa = telaAtual === 'portal' || telaAtual === 'entrar';
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !externa) { e.preventDefault(); fecharMenu(); focarBusca(); return; }
+  if (e.key === 'Escape') {
+    if (menu.classList.contains('vis')) { fecharMenu(true); return; }
+    if ($('#atalhos-veu').classList.contains('vis')) { fecharAtalhos(); return; }
+    if ($('#gaveta').classList.contains('vis')) { fecharGaveta(); return; }
+    if ($('#notif').classList.contains('vis')) { fecharNotif(); $('#b-notif').focus(); return; }
+    if (!$('#pop-macro').classList.contains('oculto')) { fecharMacro(); $('#b-macro').focus(); return; }
+    if ($('#chat').classList.contains('vis')) { fecharChat(); $('#fab').focus(); return; }
+    if (telaAtual === 'ticket' && !$('#editor').classList.contains('oculto')) { fecharEditor(); return; }
+    if (telaAtual === 'tickets' && L.sel.size) { limparSel(); return; }
+    $('#app').classList.remove('nav-aberta');
+    return;
+  }
+  if (digitando() || e.ctrlKey || e.metaKey || e.altKey || externa) return;
+  if (menu.classList.contains('vis') || $('.veu.vis') || $('#gaveta.vis')) return;
+  const k = e.key;
+  if (k === '?') { e.preventDefault(); abrirAtalhos(); return; }
+  if (k === '/') { e.preventDefault(); focarBusca(); return; }
+  if (k === 'n' || k === 'N') { e.preventDefault(); novoTicket(); return; }
+  if (telaAtual === 'tickets') {
+    const tr = linhaFoco(); const t = tr && porN.get(+tr.dataset.n);
+    if (k === 'j') { e.preventDefault(); focar(L.foco + 1); }
+    else if (k === 'k') { e.preventDefault(); focar(L.foco - 1); }
+    else if (k === 'Enter' && t && (document.activeElement === document.body || document.activeElement.closest('#corpo'))) { e.preventDefault(); abrirTicket(t.n); }
+    else if (k === 'x' && t) { e.preventDefault(); marcar(t.n, !L.sel.has(t.n)); }
+    else if (k === 'a' && t) { e.preventDefault(); if (L.sel.size) emMassa(`Atribuído a ${EU}`, x => assumir(x)); else { assumir(t); desenharLista(); } }
+    else if (k === 's' && t) { e.preventDefault(); const b = $('[data-rap="estado"]', tr); if (b) menuEstadoLinha(t, b); }
+    return;
+  }
+  if (telaAtual === 'ticket') {
+    if (k === 'r') { e.preventDefault(); abrirEditor(false); }
+    else if (k === 'i' || k === 'I') { e.preventDefault(); abrirEditor(true); }
+    else if (k === 's') { e.preventDefault(); abrirCampo('est', $('#tk-est')); }
+    else if (k === 'a') { e.preventDefault(); assumir(tA()); desenharTicket(); }
+    else if (k === 'j') { e.preventDefault(); vizinho(1); }
+    else if (k === 'k') { e.preventDefault(); vizinho(-1); }
+  }
+});
+
+// ---------- Rotas ----------
+const TELAS = ['entrar', 'tickets', 'ticket', 'eventos', 'qr', 'relatorios', 'portal'];
+const TITULOS = {entrar:'Entrar', eventos:'Eventos', qr:'QR das salas', relatorios:'Relatórios'};
+let telaAtual = null, filtrosPendentes = null;
+const ultimaVisao = () => { const v = ls.get('pd-visao'); return v && acharVisao(v) && v !== 'todos' ? v : 'geral'; };
+function rota(){
+  const h = decodeURIComponent(location.hash.slice(1));
+  let [tela, ...resto] = h.split('/'); let arg = resto.join('/');
+  if (!TELAS.includes(tela)) { tela = 'tickets'; arg = ultimaVisao(); history.replaceState(null, '', '#tickets/' + arg); }
+  if (tela === 'tickets') {
+    if (!acharVisao(arg)) { arg = ultimaVisao(); history.replaceState(null, '', '#tickets/' + arg); }
+    if (arg !== L.visao || filtrosPendentes) { L.visao = arg; L.filtros = filtrosPendentes || []; L.pag = 0; L.sel.clear(); filtrosPendentes = null; }
+    if (arg !== 'todos') ls.set('pd-visao', arg);
+  }
+  if (tela === 'ticket') { const n = +arg; if (porN.has(n)) ticketAtual = n; else history.replaceState(null, '', '#ticket/' + ticketAtual); }
+  mostrar(tela, arg);
+}
+function mostrar(tela, arg){
+  const aplicar = () => {
+    const mudou = telaAtual !== tela; telaAtual = tela;
+    $$('.tela').forEach(s => s.classList.toggle('ativa', s.id === 't-' + tela));
+    $('#app').classList.toggle('externa', tela === 'entrar' || tela === 'portal');
+    $('#app').classList.remove('nav-aberta');
+    fecharMenu(); fecharNotif(); fecharBusca(); fecharGaveta(); fecharAtalhos(); esconderDica();
+    if (tela !== 'portal') fecharChat();
+    if (tela !== 'ticket' && !$('#editor').classList.contains('oculto')) { $('#editor').classList.add('oculto'); $('#ed-botoes').classList.remove('oculto'); }
+    if (tela === 'tickets') { carregarLista(); document.title = `${(acharVisao(L.visao) || VISOES[0]).nome} · PantherDesk`; }
+    if (tela === 'ticket') { if (mudou || true) { modoInterna = false; $('#editor').classList.add('oculto'); $('#ed-botoes').classList.remove('oculto'); $('#previa').classList.add('oculto'); macroAtual = null; $('#texto').value = ''; } desenharTicket(); $('#conversa').scrollTop = 0; }
+    if (tela === 'eventos') desenharCal();
+    if (tela === 'qr') { if (arg && SALAS.some(s => s.chave === arg)) qrSel = arg; desenharQr(); const b = $(`#qr-arvore [aria-current="true"]`); if (b) b.scrollIntoView({block:'center'}); }
+    if (tela === 'relatorios') desenharRel();
+    if (tela === 'portal') abrirPortal(arg);
+    if (TITULOS[tela]) document.title = `${TITULOS[tela]} · PantherDesk`;
+    marcarNav(tela);
+    if (mudou) { $('#conteudo').scrollTop = 0; window.scrollTo(0, 0); }
+  };
+  telaAtual ? transicao(aplicar) : aplicar();
+}
+window.addEventListener('hashchange', rota);
+
+// ---------- Partida ----------
+traduzirPortal();
+rota();
+</script>
+<script>
+// Recarregamento automático do protótipo (só no localhost): a página confere a cada 2 s se o arquivo mudou.
+(function(){
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  var anterior = null;
+  function assinatura(t){ var h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+  setInterval(function(){
+    fetch(location.pathname, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+      var a = assinatura(t);
+      if (anterior && a !== anterior) { try { sessionStorage.setItem('pd-tela', location.hash); } catch (e) {} location.reload(); }
+      anterior = a;
+    }).catch(function(){});
+  }, 2000);
+})();
+</script>
+</body>
+</html>
