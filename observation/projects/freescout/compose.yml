@@ -1,0 +1,40 @@
+name: obs-freescout
+
+networks:
+  lab:
+    external: true
+    name: obslab_lab
+
+services:
+  db:
+    image: mariadb:10.11
+    networks: [lab]
+    environment:
+      MARIADB_ROOT_PASSWORD: obs-lab-only
+      MARIADB_DATABASE: freescout
+      MARIADB_USER: freescout
+      MARIADB_PASSWORD: obs-lab-only
+      TZ: UTC
+    volumes: [db:/var/lib/mysql]
+
+  web:
+    build: .
+    image: obs/freescout:1.8.248
+    depends_on: [db]
+    networks:
+      lab:
+        aliases: [freescout.lab.test]
+    volumes: [app:/var/www/html]
+
+  # Laravel scheduler: mail fetch, queued jobs, auto-replies, workflows.
+  cron:
+    image: obs/freescout:1.8.248
+    depends_on: [web]
+    networks: [lab]
+    user: www-data
+    command: ["sh", "-c", "while true; do php /var/www/html/artisan schedule:run --no-interaction; sleep 60; done"]
+    volumes: [app:/var/www/html]
+
+volumes:
+  db:
+  app:

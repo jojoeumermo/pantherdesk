@@ -1,0 +1,36 @@
+name: obs-frappe
+
+networks:
+  lab:
+    external: true
+    name: obslab_lab
+
+services:
+  db:
+    image: mariadb:10.11
+    networks: [lab]
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      MARIADB_ROOT_PASSWORD: obs-lab-only
+      TZ: UTC
+    volumes: [db:/var/lib/mysql]
+
+  redis:
+    image: redis:7.4-alpine
+    networks: [lab]
+
+  app:
+    build: .
+    image: obs/frappe-helpdesk:v1.31.0
+    depends_on: [db, redis]
+    networks:
+      lab:
+        aliases: [frappe.lab.test]
+    volumes: [sites:/home/frappe/frappe-bench/sites]
+
+volumes:
+  db:
+  sites:

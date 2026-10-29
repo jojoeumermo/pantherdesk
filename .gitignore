@@ -1,0 +1,6 @@
+# Upstream deployment files fetched by observation/tools/fetch-upstream.ps1
+observation/projects/zammad/upstream/
+observation/projects/uvdesk/upstream/
+
+# Local secrets for lab API tokens
+*.secret.env

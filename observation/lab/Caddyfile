@@ -1,0 +1,42 @@
+{
+	auto_https off
+	admin off
+}
+
+# Upstream names are network aliases declared in each project's compose file.
+# A project that is not running just answers 502 on its port.
+
+:8101 {
+	reverse_proxy zammad.lab.test:8080
+}
+
+:8102 {
+	reverse_proxy chatwoot.lab.test:3000
+}
+
+:8103 {
+	reverse_proxy freescout.lab.test:80
+}
+
+:8104 {
+	reverse_proxy osticket.lab.test:80
+}
+
+:8105 {
+	reverse_proxy znuny.lab.test:80
+}
+
+:8106 {
+	reverse_proxy uvdesk.lab.test:80
+}
+
+# Frappe routes by Host header; the site is named helpdesk.localhost.
+:8107 {
+	# Realtime (socket.io) runs on its own port inside the bench.
+	reverse_proxy /socket.io/* frappe.lab.test:9000 {
+		header_up Host helpdesk.localhost
+	}
+	reverse_proxy frappe.lab.test:8000 {
+		header_up Host helpdesk.localhost
+	}
+}

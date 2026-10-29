@@ -1,0 +1,68 @@
+# Shared observation lab infrastructure. Start this first, then one project at a time.
+#
+# Networks:
+#   lab  - internal: true. No route to the internet. Every helpdesk container lives here only.
+#   edge - ordinary bridge. Only the proxy, the mail server and the webhook sink join it,
+#          and they publish ports on 127.0.0.1 exclusively.
+#
+# Usage: docker compose -p obslab -f observation/lab/compose.yml up -d
+name: obslab
+
+networks:
+  lab:
+    name: obslab_lab
+    internal: true
+  edge:
+    name: obslab_edge
+
+services:
+  # SMTP + IMAP + POP3 test server. Accepts mail for any address, never relays outside.
+  # Auth is disabled: any login creates the mailbox on first use.
+  mail:
+    image: greenmail/standalone:2.1.15
+    environment:
+      GREENMAIL_OPTS: >-
+        -Dgreenmail.setup.test.all
+        -Dgreenmail.hostname=0.0.0.0
+        -Dgreenmail.auth.disabled
+        -Dgreenmail.verbose
+      TZ: UTC
+    networks:
+      lab:
+        aliases: [mail.lab.test]
+      edge: {}
+    ports:
+      - "127.0.0.1:3025:3025"   # SMTP
+      - "127.0.0.1:3110:3110"   # POP3
+      - "127.0.0.1:3143:3143"   # IMAP
+      - "127.0.0.1:8089:8080"   # GreenMail REST API / web UI
+    restart: unless-stopped
+
+  # Records every HTTP request it receives (webhooks) as one JSON line per request.
+  webhook-sink:
+    image: node:24-alpine
+    command: ["node", "/app/server.mjs"]
+    environment:
+      SINK_PORT: "8090"
+      SINK_LOG: /data/requests.jsonl
+      TZ: UTC
+    volumes:
+      - ./webhook-sink:/app:ro
+      - ../evidence/_webhooks:/data
+    networks:
+      lab:
+        aliases: [hooks.lab.test]
+      edge: {}
+    ports:
+      - "127.0.0.1:8090:8090"
+    restart: unless-stopped
+
+  # The only way from the host browser into the helpdesks. One port per project.
+  proxy:
+    image: caddy:2.10-alpine
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [lab, edge]
+    ports:
+      - "127.0.0.1:8101-8107:8101-8107"
+    restart: unless-stopped

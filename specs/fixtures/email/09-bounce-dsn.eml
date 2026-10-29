@@ -1,0 +1,34 @@
+From: Mail Delivery System <MAILER-DAEMON@mx.lab.test>
+To: {{SUPPORT}}
+Subject: Undelivered Mail Returned to Sender
+Date: Mon, 26 Oct 2026 12:10:00 +0000
+Message-ID: <fx09.{{RUN}}@mx.lab.test>
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status; boundary="dsn-fx09"
+
+--dsn-fx09
+Content-Type: text/plain; charset=us-ascii
+
+This is the mail system at host mx.lab.test.
+Your message could not be delivered to nobody@nowhere.lab.test: user unknown.
+
+--dsn-fx09
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mx.lab.test
+
+Final-Recipient: rfc822; nobody@nowhere.lab.test
+Action: failed
+Status: 5.1.1
+Diagnostic-Code: smtp; 550 5.1.1 user unknown
+
+--dsn-fx09
+Content-Type: message/rfc822-headers
+
+From: {{SUPPORT}}
+To: nobody@nowhere.lab.test
+Subject: {{REPLY_SUBJECT}}
+Message-ID: {{REPLY_MSGID}}
+
+--dsn-fx09--

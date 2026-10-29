@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Help Desk EARJ — protótipo PantherDesk</title>
+<style>
+@font-face{font-family:Montserrat;src:url(assets/Montserrat-Light.ttf);font-weight:300}
+@font-face{font-family:Montserrat;src:url(assets/Montserrat-Regular.ttf);font-weight:400 500}
+@font-face{font-family:Montserrat;src:url(assets/Montserrat-Bold.ttf);font-weight:600 700}
+@font-face{font-family:Montserrat;src:url(assets/Montserrat-ExtraBold.ttf);font-weight:800}
+
+/* Paleta oficial EARJ (templates institucionais): azul #27348B, vermelho #E4051F, verde #00B050 */
+:root{
+  --azul:#27348B; --azul-esc:#1B2466; --azul-claro:#E8EAF6;
+  --verde:#00B050; --verde-txt:#007A38; --verde-claro:#E3F6EA;
+  --vermelho:#E4051F; --vermelho-claro:#FDE7EA;
+  --ambar:#9A5B00; --ambar-claro:#FFF2DC;
+  --roxo:#5B3BB0; --roxo-claro:#EFE9FB;
+  --bg:#F3F4F9; --surface:#FFFFFF; --surface-2:#F7F8FC; --line:#E0E3EE;
+  --ink:#121633; --muted:#565D78; --nota:#FFF7E0; --nota-borda:#EBCB73;
+  --sombra:0 8px 28px rgba(18,22,51,.14);
+}
+:root[data-theme="dark"]{
+  --azul-claro:#252C5C; --verde-claro:#123524; --verde-txt:#4FD18A;
+  --vermelho-claro:#3D1219; --ambar:#F2B85A; --ambar-claro:#3A2A0F;
+  --roxo:#B9A2F2; --roxo-claro:#2B2249;
+  --bg:#0D1022; --surface:#161A33; --surface-2:#1C2140; --line:#2B3156;
+  --ink:#EEF0FA; --muted:#A8AEC9; --nota:#2E2812; --nota-borda:#6B5A22;
+  --sombra:0 8px 28px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,system-ui,sans-serif;font-size:14px}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--azul)}
+:root[data-theme="dark"] a{color:#9DA8FF}
+.sr{position:absolute;left:-9999px}
+:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+
+/* ---------- Barra superior ---------- */
+.topo{background:var(--azul);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:0 18px;min-height:60px;position:relative}
+.topo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--vermelho) 0 33%,var(--verde) 33% 66%,#fff 66% 100%);opacity:.9}
+.marca{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+.marca img{height:38px}
+.marca span{font-weight:700;font-size:13px;border-left:1px solid rgba(255,255,255,.35);padding-left:12px;line-height:1.2}
+.marca small{display:block;font-weight:400;opacity:.85}
+.nav{display:flex;gap:2px;flex-wrap:wrap}
+.nav button{background:none;border:0;color:#DDE1FF;padding:10px 12px;border-radius:8px;font-weight:600}
+.nav button[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff}
+.nav button:hover{background:rgba(255,255,255,.1)}
+.espaco{flex:1 1 20px}
+.busca{position:relative}
+.busca input{width:300px;max-width:52vw;height:38px;border-radius:10px;border:0;padding:0 12px 0 34px;background:rgba(255,255,255,.14);color:#fff}
+.busca input::placeholder{color:#CDD2FF}
+.busca svg{position:absolute;left:10px;top:11px}
+.icone{width:40px;height:40px;border-radius:10px;border:0;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;position:relative}
+.icone .bolha{position:absolute;top:4px;right:4px;background:var(--vermelho);color:#fff;font-size:10px;font-weight:700;border-radius:8px;min-width:16px;height:16px;line-height:16px}
+.btn-novo{height:40px;border-radius:10px;border:0;background:var(--verde);color:#062A15;font-weight:700;padding:0 14px}
+.avatar{width:36px;height:36px;border-radius:50%;background:#fff;color:var(--azul);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;border:0;box-shadow:0 0 0 3px var(--azul),0 0 0 5px var(--verde)}
+.abas{display:flex;gap:4px;padding:8px 18px 0;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.abas button{border:1px solid var(--line);border-bottom:0;background:var(--surface-2);border-radius:10px 10px 0 0;padding:8px 12px;font-size:12px;font-weight:600;color:var(--muted);display:flex;gap:8px;align-items:center}
+.abas button.ativa{background:var(--surface);color:var(--ink);box-shadow:inset 0 3px 0 var(--azul)}
+.abas .x{opacity:.6}
+
+/* ---------- Menus flutuantes ---------- */
+.pop{position:absolute;top:52px;right:0;width:320px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sombra);padding:12px;z-index:30;display:none}
+.pop.aberto{display:block}
+.pop h3{margin:4px 6px 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.pop .item{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;background:none;padding:9px 8px;border-radius:8px;font-size:13px}
+.pop .item:hover{background:var(--surface-2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 6px 10px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600}
+.chip.on{background:var(--azul);border-color:var(--azul);color:#fff}
+
+/* ---------- Estrutura geral ---------- */
+main{padding:22px;max-width:1500px;margin:0 auto}
+.tela{display:none}
+.tela.ativa{display:block}
+.cartao{background:var(--surface);border:1px solid var(--line);border-radius:16px}
+h1{font-weight:800;font-size:24px;margin:0;letter-spacing:-.01em}
+h2{font-weight:700;font-size:16px;margin:0}
+.muted{color:var(--muted)}
+.linha{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:0 14px;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--azul)}
+.btn.prim{background:var(--azul);border-color:var(--azul);color:#fff}
+.btn.verde{background:var(--verde);border-color:var(--verde);color:#062A15}
+.estado{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.e-aberto{background:var(--vermelho-claro);color:var(--vermelho)}
+:root[data-theme="dark"] .e-aberto{color:#FF8A97}
+.e-pendente{background:var(--azul-claro);color:var(--azul)}
+:root[data-theme="dark"] .e-pendente{color:#AEB6FF}
+.e-espera{background:var(--roxo-claro);color:var(--roxo)}
+.e-resolvido{background:var(--verde-claro);color:var(--verde-txt)}
+.e-fechado{background:var(--surface-2);color:var(--muted)}
+.sla{font-weight:700;font-size:12px;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.sla.ok{background:var(--verde-claro);color:var(--verde-txt)}
+.sla.alerta{background:var(--ambar-claro);color:var(--ambar)}
+.sla.vencido{background:var(--vermelho);color:#fff}
+.sla.pausa{background:var(--surface-2);color:var(--muted)}
+
+/* ---------- Início ---------- */
+.grade-inicio{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;margin-top:18px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+.stat{padding:16px}
+.stat b{display:block;font-size:30px;font-weight:800;margin:4px 0}
+.seg{display:flex;gap:6px;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--line)}
+.seg button{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px}
+.seg button.on{background:var(--azul);color:#fff;border-color:var(--azul)}
+.lista-cartoes{display:flex;flex-direction:column}
+.tcard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-top:0;width:100%}
+.tcard:hover{background:var(--surface-2)}
+.tcard .tit{font-weight:700}
+.tcard .prev{color:var(--muted);font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed a{display:block;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:13px}
+.feed a span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+/* ---------- Filas ---------- */
+.grade-filas{display:grid;grid-template-columns:250px minmax(0,1fr);gap:18px}
+.filas-lista button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;border:0;background:none;padding:10px 12px;border-radius:10px;font-size:13px;font-weight:600;color:var(--ink);text-align:left}
+.filas-lista button.on{background:var(--azul);color:#fff}
+.filas-lista button:hover:not(.on){background:var(--surface-2)}
+.ponto{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:8px}
+.tabela{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+.tabela th{text-align:left;color:var(--muted);font-size:12px;font-weight:700;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tabela td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tabela tr.grupo td{background:var(--surface-2);font-weight:700;font-size:12px;color:var(--muted)}
+.tabela tr.sel td{background:var(--azul-claro)}
+.tabela tbody tr:not(.grupo):hover td{background:var(--surface-2);cursor:pointer}
+.olho{display:inline-flex;align-items:center;gap:4px;color:var(--roxo);font-size:11px;font-weight:700}
+.barra-massa{position:sticky;bottom:12px;margin-top:12px;background:var(--azul-esc);color:#fff;border-radius:14px;padding:10px 14px;display:none;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:var(--sombra)}
+.barra-massa.vis{display:flex}
+.barra-massa button{height:36px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;padding:0 12px;font-weight:600}
+.gaveta{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:92vw;background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--sombra);transform:translateX(105%);transition:transform .2s;z-index:40;padding:20px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.gaveta.aberta{transform:none}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo label{font-size:12px;font-weight:700;color:var(--muted)}
+.campo select,.campo input,.campo textarea{height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:0 10px}
+.campo textarea{height:auto;min-height:90px;padding:10px;resize:vertical}
+
+/* ---------- Ticket ---------- */
+.grade-ticket{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px}
+.migalhas{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);font-weight:600}
+.migalhas button{border:0;background:var(--surface-2);border-radius:6px;padding:4px 8px;font-weight:600;color:var(--ink)}
+.cab-ticket{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.conversa{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.msg{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.msg.interna{background:var(--nota);border-color:var(--nota-borda)}
+.msg.paralela{background:var(--roxo-claro);border-color:transparent}
+.msg.sistema{align-self:center;background:var(--surface-2);border:0;border-radius:999px;padding:5px 12px;font-size:12px;color:var(--muted)}
+.msg .quem{display:flex;gap:10px;align-items:center;font-size:12px;margin-bottom:6px}
+.msg .quem b{font-size:13px}
+.msg p{margin:0;line-height:1.55}
+.ini{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;background:var(--azul-claro);color:var(--azul);flex:0 0 30px}
+:root[data-theme="dark"] .ini{color:#C7CCFF}
+.resumo{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;background:var(--surface-2)}
+.editor{margin:0 20px 16px;border:2px solid var(--line);border-radius:14px;background:var(--surface)}
+.editor.interna{border-color:var(--nota-borda);background:var(--nota)}
+.editor textarea{width:100%;border:0;background:transparent;min-height:90px;padding:12px 14px;resize:vertical;line-height:1.5;outline:none}
+.editor .topo-ed{display:flex;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.toggle{display:flex;background:var(--surface-2);border-radius:10px;padding:3px}
+.toggle button{border:0;background:none;border-radius:8px;padding:7px 12px;font-weight:700;font-size:12px;color:var(--muted)}
+.toggle button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.rodape-ed{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px;border-top:1px solid var(--line)}
+.split{display:flex;margin-left:auto;position:relative}
+.split .principal{height:42px;border-radius:10px 0 0 10px;border:0;background:var(--azul);color:#fff;font-weight:700;padding:0 16px}
+.split .seta{height:42px;width:38px;border-radius:0 10px 10px 0;border:0;border-left:1px solid rgba(255,255,255,.3);background:var(--azul);color:#fff}
+.split .pop{top:auto;bottom:48px;width:230px}
+.painel-abas{display:flex;gap:2px;padding:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.painel-abas button{border:0;background:none;border-radius:8px;padding:8px 10px;font-weight:700;font-size:12px;color:var(--muted)}
+.painel-abas button.on{background:var(--azul-claro);color:var(--azul)}
+:root[data-theme="dark"] .painel-abas button.on{color:#C7CCFF}
+.painel{padding:16px;display:none;flex-direction:column;gap:14px}
+.painel.on{display:flex}
+.par{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.par span:first-child{color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:12px}
+
+/* ---------- Clientes ---------- */
+.grade-clientes{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px}
+
+/* ---------- Portal ---------- */
+.portal-topo{background:var(--azul);color:#fff;position:relative;overflow:hidden;border-radius:18px}
+.portal-topo .listras{position:absolute;right:40px;top:0;bottom:0;width:360px;opacity:.95}
+.portal-topo .conteudo{position:relative;padding:28px 32px 36px;display:flex;flex-direction:column;gap:14px;max-width:720px}
+.portal-topo .barra-verde{height:8px;width:280px;background:var(--verde)}
+.portal-busca{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:0 14px;height:52px;color:#121633;max-width:600px}
+.portal-busca input{border:0;outline:none;width:100%;font-size:15px;color:#121633;background:transparent}
+.grade-portal{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;margin-top:18px}
+.deflexao{background:var(--verde-claro);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.deflexao b{color:var(--verde-txt)}
+.fab{position:fixed;right:24px;bottom:24px;height:56px;border-radius:28px;border:0;background:var(--verde);color:#062A15;font-weight:800;padding:0 20px;box-shadow:var(--sombra);display:none;z-index:35}
+.fab.vis{display:block}
+.chat{position:fixed;right:24px;bottom:92px;width:380px;max-width:calc(100vw - 32px);height:560px;background:var(--surface);border-radius:18px;box-shadow:var(--sombra);border:1px solid var(--line);display:none;flex-direction:column;overflow:hidden;z-index:36}
+.chat.aberto{display:flex}
+.chat header{background:var(--azul);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.chat .corpo{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--surface-2)}
+.bal{max-width:80%;padding:9px 12px;border-radius:14px;line-height:1.45;font-size:13px}
+.bal.eu{align-self:flex-end;background:var(--azul);color:#fff;border-bottom-right-radius:4px}
+.bal.eles{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.notas{display:flex;gap:6px}
+.notas button{flex:1;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:800}
+.notas button.on{background:var(--verde);border-color:var(--verde);color:#062A15}
+
+/* ---------- Diálogo de atalhos ---------- */
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);padding:0;width:640px;max-width:94vw;box-shadow:var(--sombra)}
+dialog::backdrop{background:rgba(10,12,30,.45)}
+.dlg{padding:22px;display:flex;flex-direction:column;gap:14px}
+kbd{font-family:inherit;font-weight:700;font-size:12px;border:1px solid var(--line);border-bottom-width:3px;border-radius:6px;padding:2px 7px;background:var(--surface-2)}
+.atalhos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px}
+.atalhos div{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)}
+.aviso-proto{font-size:12px;color:var(--muted);text-align:center;padding:18px}
+
+@media (max-width:1100px){
+  .grade-inicio,.grade-ticket,.grade-portal{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grade-filas,.grade-clientes{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <a href="#" class="marca" data-ir="inicio" aria-label="Help Desk EARJ, início">
+    <img src="assets/earj-logo-branco.png" alt="EARJ">
+    <span>Help Desk de TI<small>com PantherDesk</small></span>
+  </a>
+  <nav class="nav" aria-label="Seções">
+    <button data-ir="inicio" aria-current="page">Início</button>
+    <button data-ir="filas">Filas</button>
+    <button data-ir="clientes">Pessoas</button>
+    <button data-ir="portal">Portal (visão do solicitante)</button>
+  </nav>
+  <div class="espaco"></div>
+  <div class="busca">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="#CDD2FF" stroke-width="1.7"/><path d="M11 11l3.5 3.5" stroke="#CDD2FF" stroke-width="1.7"/></svg>
+    <label class="sr" for="busca">Buscar</label>
+    <input id="busca" type="search" placeholder="Buscar  ( / )" autocomplete="off">
+    <div class="pop" id="pop-busca" role="dialog" aria-label="Busca">
+      <div class="chips"><button class="chip on">Tickets</button><button class="chip">Artigos</button><button class="chip">Pessoas</button><button class="chip">Organizações</button><button class="chip">Conversas paralelas</button></div>
+      <h3>Vistos recentemente</h3>
+      <button class="item" data-ir="ticket"><span>#8561 Projetor da sala 32 não liga</span><span class="estado e-aberto">Aberto</span></button>
+      <button class="item"><span>#8540 Tradução simultânea no auditório</span><span class="estado e-pendente">Pendente</span></button>
+      <button class="item" data-ir="clientes"><span>Perfil: Beatriz Moura</span><span class="muted">pessoa</span></button>
+      <button class="item"><span><b>Ver todos os resultados</b></span><span>→</span></button>
+    </div>
+  </div>
+  <div style="position:relative">
+    <button class="btn-novo" id="btn-novo" aria-haspopup="true" aria-expanded="false">+ Novo</button>
+    <div class="pop" id="pop-novo" role="menu">
+      <button class="item" role="menuitem"><span>Ticket</span><kbd>N</kbd></button>
+      <button class="item" role="menuitem"><span>Pessoa</span></button>
+      <button class="item" role="menuitem"><span>Organização</span></button>
+      <h3 style="margin-top:12px">Tickets vistos recentemente</h3>
+      <button class="item" data-ir="ticket"><span>#8561 Projetor da sala 32</span><span class="estado e-aberto">Aberto</span></button>
+      <button class="item"><span>#8540 Tradução simultânea</span><span class="estado e-pendente">Pendente</span></button>
+    </div>
+  </div>
+  <div style="position:relative">
+    <button class="icone" id="btn-notif" aria-label="Notificações: 3 novas" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 13V8a5 5 0 0110 0v5l1.5 1.5h-13zM7 16h4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span class="bolha">3</span>
+    </button>
+    <div class="pop" id="pop-notif" role="dialog" aria-label="Notificações">
+      <div class="linha" style="justify-content:space-between;margin:0 6px 8px"><h2>Notificações</h2><button class="btn" style="height:30px;font-size:12px">Preferências</button></div>
+      <button class="item" data-ir="ticket"><span><b>Rafael Duarte</b> mencionou você em #8561</span><span class="muted">12 min</span></button>
+      <button class="item"><span><b>SLA:</b> #8512 vence em 1 hora útil</span><span class="muted">25 min</span></button>
+      <button class="item"><span><b>Eventos Gávea</b> devolveu #8530 para você</span><span class="muted">1 h</span></button>
+    </div>
+  </div>
+  <div style="position:relative">
+    <button class="avatar" id="btn-perfil" aria-label="Seu perfil e preferências" aria-expanded="false">VC</button>
+    <div class="pop" id="pop-perfil" role="menu">
+      <div style="margin:4px 6px 10px"><b>Você</b><div class="muted" style="font-size:12px">agente · Suporte Barra, Eventos Barra</div></div>
+      <h3>Disponibilidade</h3>
+      <div class="chips"><button class="chip on">Disponível</button><button class="chip">Ausente</button></div>
+      <h3>Aparência</h3>
+      <div class="chips" id="temas"><button class="chip on" data-tema="light">Claro</button><button class="chip" data-tema="dark">Escuro</button><button class="chip" data-tema="sistema">Igual ao sistema</button></div>
+      <h3>Idioma</h3>
+      <div class="chips"><button class="chip on">Português</button><button class="chip">English</button></div>
+      <button class="item" id="abrir-atalhos"><span>Atalhos do teclado</span><kbd>?</kbd></button>
+      <button class="item"><span>Meu perfil e assinatura</span><span>→</span></button>
+      <button class="item"><span>Sair</span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="abas" role="tablist" aria-label="Abertos agora">
+  <button class="ativa" data-ir="ticket">#8561 Projetor sala 32 <span class="x" aria-hidden="true">✕</span></button>
+  <button data-ir="ticket">#8540 Tradução simultânea <span class="x" aria-hidden="true">✕</span></button>
+  <button data-ir="clientes">Beatriz Moura <span class="x" aria-hidden="true">✕</span></button>
+</div>
+
+<main>
+
+<!-- =================== INÍCIO =================== -->
+<section class="tela ativa" id="t-inicio" aria-labelledby="h-inicio">
+  <div class="linha" style="justify-content:space-between">
+    <div><div class="muted" style="font-weight:600">Segunda, 26 de outubro · Barra</div><h1 id="h-inicio">Bom dia! 5 tickets esperam por você.</h1></div>
+    <button class="btn verde" data-ir="ticket">▶ Começar pela minha fila</button>
+  </div>
+  <div class="stats">
+    <div class="cartao stat"><span class="muted">Resolvidos na semana</span><b>23</b><span style="color:var(--verde-txt);font-weight:600;font-size:12px">+5 que a semana passada</span></div>
+    <div class="cartao stat"><span class="muted">Avaliações na semana</span><b>9 · 0</b><span class="muted" style="font-size:12px">satisfeitos · insatisfeitos</span></div>
+    <div class="cartao stat"><span class="muted">Satisfação · 60 dias</span><b>100%</b><span class="muted" style="font-size:12px">Help Desk EARJ: 99%</span></div>
+    <div class="cartao stat"><span class="muted">Abertos nos meus grupos</span><b>12</b><span style="color:var(--vermelho);font-weight:700;font-size:12px">1 com SLA vencido</span></div>
+  </div>
+  <div class="grade-inicio">
+    <div class="cartao">
+      <div class="seg" role="tablist" aria-label="Meu trabalho">
+        <button class="on">Meus tickets · 5</button><button>Em cópia · 0</button><button>Seguindo · 1</button><button>Concluídos em 30 dias · 34</button>
+        <span class="espaco"></span>
+        <select class="btn" aria-label="Filtrar por estado"><option>Todos os estados</option><option>Aberto</option><option>Pendente</option><option>Em espera</option></select>
+        <select class="btn" aria-label="Filtrar por canal"><option>Todos os canais</option><option>Formulário</option><option>E-mail</option><option>Chat</option></select>
+        <select class="btn" aria-label="Ordenar"><option>Mais urgentes primeiro</option><option>Atualizados há mais tempo</option><option>Atualizados recentemente</option></select>
+      </div>
+      <div class="lista-cartoes" id="lista-inicio"></div>
+    </div>
+    <aside class="cartao" style="padding:16px">
+      <div class="linha" style="justify-content:space-between"><h2>Atividade</h2><button class="btn" style="height:30px;font-size:12px">Marcar como lida</button></div>
+      <div class="feed" id="feed"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- =================== FILAS =================== -->
+<section class="tela" id="t-filas" aria-labelledby="h-filas">
+  <div class="grade-filas">
+    <nav class="cartao filas-lista" style="padding:10px" aria-label="Filas">
+      <div class="linha" style="justify-content:space-between;padding:6px 8px 10px"><h2>Filas</h2><button class="btn" style="height:30px;font-size:12px" aria-label="Atualizar contagens">↻</button></div>
+      <div id="filas-comp"></div>
+      <div class="muted" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:14px 12px 6px">Minhas filas (2 de 10)</div>
+      <div id="filas-pess"></div>
+      <button style="justify-content:center;border:1px dashed var(--line);margin-top:8px">+ Nova fila pessoal</button>
+      <div class="muted" style="font-size:12px;padding:12px">Quarentena de e-mail: <b>2</b></div>
+    </nav>
+    <div>
+      <div class="cartao" style="padding:16px 18px">
+        <div class="linha" style="justify-content:space-between">
+          <div><h1 id="h-filas">Não resolvidos</h1><div class="muted" style="font-size:13px;margin-top:4px"><span id="contagem">31 tickets</span> · atualizada agora · agrupada por estado</div></div>
+          <div class="linha">
+            <button class="btn" id="btn-filtro">Filtrar</button>
+            <div style="position:relative"><button class="btn" id="btn-acoes" aria-expanded="false">Ações ▾</button>
+              <div class="pop" id="pop-acoes" style="width:240px"><button class="item">Exportar CSV</button><button class="item">Mostrar como cartões</button><button class="item">Editar colunas (admin)</button></div></div>
+            <button class="btn verde" data-ir="ticket">▶ Trabalhar em sequência</button>
+          </div>
+        </div>
+      </div>
+      <div class="cartao" style="margin-top:12px;overflow-x:auto">
+        <table class="tabela">
+          <thead><tr><th><input type="checkbox" id="sel-todos" aria-label="Selecionar todos"></th><th>Estado</th><th>Nº</th><th>Aberto em</th><th>Unidade</th><th>SLA</th><th>Assunto</th><th>Solicitante</th><th>Responsável</th><th>Atualizado</th></tr></thead>
+          <tbody id="corpo-fila"></tbody>
+        </table>
+      </div>
+      <div class="barra-massa" id="barra-massa" role="region" aria-label="Edição em massa">
+        <b id="qtd-sel">0 selecionados</b><span class="espaco"></span>
+        <button>Atribuir</button><button>Estado</button><button>Grupo</button><button>Aplicar macro</button><button>Etiquetas</button><button id="cancelar-sel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== TICKET =================== -->
+<section class="tela" id="t-ticket" aria-labelledby="h-ticket">
+  <div class="grade-ticket">
+    <div class="cartao">
+      <div class="cab-ticket">
+        <div class="migalhas"><button>EARJ · Upper School</button><span>›</span><button data-ir="clientes">Beatriz Moura</button><span>›</span><span>Ticket #8561</span></div>
+        <div class="linha">
+          <span class="estado e-aberto" id="estado-ticket">Aberto</span>
+          <h1 id="h-ticket" style="flex:1 1 300px">Projetor da sala 32 não liga</h1>
+          <span class="sla alerta" title="Resolução vence em 1 h 20 min úteis">⏱ 1 h 20 min</span>
+          <span class="tag" title="Canal">Formulário do portal</span>
+          <div style="position:relative">
+            <button class="btn" id="btn-mais" aria-label="Mais ações" aria-expanded="false">⋯</button>
+            <div class="pop" id="pop-mais" style="width:270px">
+              <button class="item">Mesclar em outro ticket</button>
+              <button class="item">Criar ticket de continuação</button>
+              <button class="item">Salvar esta resposta como macro</button>
+              <button class="item">Traduzir conversa</button>
+              <button class="item">Imprimir</button>
+              <button class="item">Ver como agente de apoio</button>
+              <button class="item">Histórico de alterações</button>
+              <button class="item">Marcar como spam</button>
+              <button class="item" style="color:var(--vermelho);font-weight:700">Suspender solicitante</button>
+            </div>
+          </div>
+        </div>
+        <div class="linha muted" style="font-size:12px;font-weight:600">
+          <span>aberto hoje 08:12 · por formulário</span>
+          <span style="margin-left:auto" class="olho">👁 Rafael Duarte também está neste ticket</span>
+        </div>
+      </div>
+      <div class="conversa">
+        <div class="linha" style="justify-content:space-between">
+          <div class="toggle" role="group" aria-label="Mostrar"><button class="on">Tudo</button><button>Só públicas</button><button>Só internas</button></div>
+          <button class="btn" id="ordem" style="height:32px;font-size:12px">Mais novas primeiro ⇅</button>
+        </div>
+        <section class="resumo" aria-label="Resumo do ticket por IA">
+          <div class="linha" style="justify-content:space-between;font-size:12px"><b style="text-transform:uppercase;letter-spacing:.05em">Resumo fixado (IA)</b><span class="muted">gerado por você 09:02 · até a mensagem 4</span></div>
+          <p style="margin:6px 0 0;line-height:1.5">Projetor da sala 32 (Barra) não liga desde cedo; aula às 10:30. Lâmpada queimada. Projetor portátil entregue; troca pedida ao fornecedor.</p>
+        </section>
+        <div id="mensagens" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+      <form class="editor" id="editor" onsubmit="return false">
+        <div class="topo-ed">
+          <div class="toggle" role="group" aria-label="Tipo de mensagem"><button type="button" class="on" id="ed-pub">Resposta pública</button><button type="button" id="ed-int">Nota interna</button></div>
+          <span class="muted" style="font-size:12px;font-weight:600" id="ed-para">Para: Beatriz Moura · <a href="#">+ Cc</a></span>
+          <span class="espaco"></span>
+          <button type="button" class="btn" style="height:32px;font-size:12px">Melhorar texto (IA)</button>
+        </div>
+        <label class="sr" for="texto">Mensagem</label>
+        <textarea id="texto">Beatriz, a lâmpada do projetor queimou. Deixamos um projetor portátil na sala 32 para a sua aula das 10:30 e já pedimos a troca ao fornecedor.</textarea>
+        <div class="rodape-ed">
+          <select class="btn" aria-label="Aplicar macro"><option>⚡ Aplicar macro…</option><option>[POR] Atendimento no local</option><option>[POR] Pendente — em análise</option><option>[POR] Em espera — fornecedor</option><option>[POR] Resolvido — encerramento</option><option>[ING] On-site support</option><option>Enviar para outra equipe (com retorno)</option></select>
+          <button type="button" class="btn" style="height:38px">📎 Anexar</button>
+          <span class="muted" style="font-size:12px">Rascunho salvo</span>
+          <select class="btn" aria-label="Depois de enviar"><option>Depois de enviar: ficar no ticket</option><option>Depois de enviar: fechar a aba</option><option>Depois de enviar: próximo da fila</option></select>
+          <div class="split">
+            <button type="submit" class="principal" id="enviar">Enviar como Em espera</button>
+            <button type="button" class="seta" id="btn-estado" aria-label="Escolher estado do envio" aria-expanded="false">▾</button>
+            <div class="pop" id="pop-estado">
+              <button type="button" class="item" data-est="Aberto"><span>Aberto</span><kbd>Ctrl ⇧ A</kbd></button>
+              <button type="button" class="item" data-est="Pendente"><span>Pendente</span><kbd>Ctrl ⇧ P</kbd></button>
+              <button type="button" class="item" data-est="Em espera"><span>Em espera</span><kbd>Ctrl ⇧ E</kbd></button>
+              <button type="button" class="item" data-est="Resolvido"><span>Resolvido</span><kbd>Ctrl ⇧ R</kbd></button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <aside class="cartao" aria-label="Painel do ticket">
+      <div class="painel-abas" role="tablist">
+        <button class="on" data-painel="p-det">Detalhes</button><button data-painel="p-sol">Solicitante</button><button data-painel="p-kb">Artigos</button><button data-painel="p-par">Paralelas · 1</button><button data-painel="p-rel">Parecidos · 3</button>
+      </div>
+      <div class="painel on" id="p-det">
+        <div class="campo"><label for="f-grupo">Grupo</label><select id="f-grupo"><option>Suporte Barra</option><option>Eventos Barra</option><option>Sistemas</option></select></div>
+        <div class="campo"><label>Responsável *</label><div class="linha"><select style="flex:1;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:0 10px" aria-label="Responsável"><option>Você</option><option>Rafael Duarte</option></select><button class="btn" style="height:40px">Assumir</button></div></div>
+        <div class="campo"><label>Seguidores</label><div class="linha"><span class="tag">Paula Lima</span><button class="btn" style="height:30px;font-size:12px">Seguir</button></div></div>
+        <div class="linha" style="gap:10px"><div class="campo" style="flex:1"><label for="f-pri">Prioridade</label><select id="f-pri"><option>Normal</option><option selected>Alta</option><option>Urgente</option><option>Baixa</option></select></div><div class="campo" style="flex:1"><label for="f-tipo">Tipo</label><select id="f-tipo"><option>Incidente</option><option>Pergunta</option><option>Problema</option><option>Tarefa</option></select></div></div>
+        <div style="border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:12px">
+          <div class="muted" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em">Formulário de serviço</div>
+          <div class="campo"><label for="f-solic">Tipo de solicitante</label><select id="f-solic"><option>Funcionário(a)</option><option>Responsável por aluno</option></select></div>
+          <div class="campo"><label for="f-unid">Unidade *</label><select id="f-unid" data-cond="unid"><option value="barra">Barra</option><option value="gavea">Gávea</option><option value="ambas">Entre unidades</option></select></div>
+          <div class="campo" id="w-sala"><label for="f-sala" id="l-sala">Sala ou setor · Barra *</label><select id="f-sala"></select></div>
+          <div class="campo"><label for="f-mot">Motivo do contato *</label><select id="f-mot"><option value="hardware">Hardware</option><option value="edu">Software educacional</option><option value="adm">Software administrativo</option><option value="rede">Rede e infraestrutura</option><option value="av" selected>Audiovisual</option><option value="outros">Outros</option></select></div>
+          <div class="campo" id="w-sub"><label for="f-sub" id="l-sub">Equipamento audiovisual *</label><select id="f-sub"></select></div>
+          <div class="muted" style="font-size:12px">Os campos mudam conforme a unidade e o motivo.</div>
+        </div>
+        <div class="campo"><label>Etiquetas</label><div class="tags"><span class="tag">projetor ✕</span><span class="tag">barra ✕</span><span class="tag">sala-32 ✕</span></div></div>
+        <button class="btn" style="height:44px">Enviar para outra equipe (com retorno)…</button>
+      </div>
+      <div class="painel" id="p-sol">
+        <div class="linha"><span class="ini" style="width:42px;height:42px">BM</span><div><b>Beatriz Moura</b><div class="muted" style="font-size:12px">beatriz.moura@exemplo-escola.org</div></div></div>
+        <div class="par"><span>Hora local</span><span>seg., 10:04 (Brasília)</span></div>
+        <div class="par"><span>Idioma</span><span>Português</span></div>
+        <div class="par"><span>Cargo</span><span>Professora · Upper School</span></div>
+        <div class="par"><span>Gestor</span><span>Henrique Sá</span></div>
+        <div class="par"><span>Máquina</span><span>NB-BAR-0417</span></div>
+        <div class="campo"><label for="obs">Observações</label><textarea id="obs">Prefere contato por e-mail; dá aula pela manhã.</textarea></div>
+        <h2 style="font-size:13px">Histórico de pedidos</h2>
+        <div class="par"><span>#8402 Som da sala 32 baixo</span><span class="estado e-resolvido">Resolvido</span></div>
+        <div class="par"><span>#8170 Ativação do Office</span><span class="estado e-fechado">Fechado</span></div>
+        <div class="par"><span>#7955 Smart TV sala 32</span><span class="estado e-fechado">Fechado</span></div>
+      </div>
+      <div class="painel" id="p-kb">
+        <div class="campo"><label for="kb">Buscar na base</label><input id="kb" value="projetor não liga"></div>
+        <div class="cartao" style="padding:12px"><b>Projetor não liga: o que verificar</b><div class="muted" style="font-size:12px;margin:4px 0 8px">Público · PT e EN</div><button class="btn" style="height:32px;font-size:12px">Inserir link na resposta</button></div>
+        <div class="cartao" style="padding:12px"><b>Troca de lâmpada de projetor (interno)</b><div class="muted" style="font-size:12px;margin:4px 0 8px">Interno · não pode ir para o solicitante</div><button class="btn" style="height:32px;font-size:12px">Ler</button></div>
+      </div>
+      <div class="painel" id="p-par">
+        <div class="msg paralela"><div class="quem"><b>Fornecedor AV</b><span class="muted">assistencia@fornecedor.exemplo · 08:55</span></div><p>Precisamos de uma lâmpada para projetor modelo XG-300 na Barra. Qual o prazo?</p></div>
+        <button class="btn prim">+ Nova conversa paralela</button>
+        <div class="muted" style="font-size:12px">Só a equipe vê. Quando o fornecedor responder, o ticket volta para Aberto.</div>
+      </div>
+      <div class="painel" id="p-rel">
+        <div class="par"><span>#8544 Projetor sala 18 desligando</span><span class="estado e-aberto">Aberto</span></div>
+        <div class="par"><span>#8501 Projetor auditório sem imagem</span><span class="estado e-resolvido">Resolvido</span></div>
+        <div class="par"><span>#8399 Lâmpada projetor sala 12</span><span class="estado e-fechado">Fechado</span></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- =================== PESSOAS =================== -->
+<section class="tela" id="t-clientes" aria-labelledby="h-cli">
+  <div class="grade-clientes">
+    <nav class="cartao filas-lista" style="padding:10px" aria-label="Listas de pessoas">
+      <button class="on">Todos os solicitantes <span>1.627</span></button>
+      <button>Organizações <span>3</span></button>
+      <button>Suspensos <span>2</span></button>
+      <button>Endereços não verificados <span>14</span></button>
+    </nav>
+    <div class="cartao" style="padding:18px">
+      <div class="linha" style="justify-content:space-between"><h1 id="h-cli">Solicitantes</h1><button class="btn prim">+ Adicionar solicitante</button></div>
+      <div class="campo" style="margin:14px 0"><label for="b-cli" class="sr">Buscar pessoas</label><input id="b-cli" placeholder="Buscar por nome, e-mail, cargo ou máquina"></div>
+      <div style="overflow-x:auto"><table class="tabela" style="min-width:700px"><thead><tr><th>Nome</th><th>E-mail</th><th>Cargo · Equipe</th><th>Unidade</th><th>Tickets</th></tr></thead><tbody id="corpo-cli"></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PORTAL =================== -->
+<section class="tela" id="t-portal" aria-labelledby="h-portal">
+  <div class="portal-topo">
+    <svg class="listras" viewBox="0 0 360 260" aria-hidden="true"><g fill="#00B050"><rect x="40" y="0" width="16" height="120"/><rect x="72" y="0" width="16" height="150"/><rect x="104" y="0" width="16" height="180"/><rect x="150" y="150" width="130" height="16"/><rect x="150" y="182" width="130" height="16"/><rect x="150" y="214" width="130" height="16"/><rect x="300" y="40" width="16" height="200"/><rect x="332" y="70" width="16" height="190"/></g></svg>
+    <div class="conteudo">
+      <img src="assets/earj-logo-branco.png" alt="Escola Americana do Rio de Janeiro" style="height:72px;align-self:flex-start">
+      <div class="barra-verde"></div>
+      <h1 id="h-portal" style="font-size:32px;font-weight:800;text-transform:uppercase;letter-spacing:.01em">Central de ajuda de TI</h1>
+      <div style="font-weight:300;font-size:18px">Como podemos ajudar? · How can we help?</div>
+      <div class="portal-busca"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="#565D78" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="#565D78" stroke-width="1.6"/></svg><label class="sr" for="pb">Buscar</label><input id="pb" placeholder="Senha do Wi-Fi, impressora, projetor, VPN…"></div>
+    </div>
+  </div>
+  <div class="grade-portal">
+    <form class="cartao" style="padding:22px;display:flex;flex-direction:column;gap:16px" onsubmit="return false" aria-label="Abrir pedido">
+      <div class="linha" style="justify-content:space-between"><h2 style="font-size:20px;font-weight:800">Abrir um pedido</h2><span class="muted" style="font-size:12px">PT · <a href="#">EN</a></span></div>
+      <div class="linha" style="gap:14px;align-items:stretch">
+        <div class="campo" style="flex:1 1 200px"><label for="p-tipo">Você é</label><select id="p-tipo"><option>Funcionário(a) da escola</option><option>Responsável por aluno</option></select></div>
+        <div class="campo" style="flex:1 1 200px"><label for="p-unid">Unidade *</label><select id="p-unid"><option value="">Escolha…</option><option value="barra" selected>Barra</option><option value="gavea">Gávea</option><option value="ambas">Entre unidades</option></select></div>
+      </div>
+      <div class="campo" id="pw-sala"><label for="p-sala" id="pl-sala">Sala ou setor *</label><select id="p-sala"></select></div>
+      <div class="campo"><label for="p-mot">Motivo do contato *</label><select id="p-mot"><option value="">Escolha…</option><option value="hardware" selected>Hardware</option><option value="edu">Software educacional</option><option value="adm">Software administrativo</option><option value="rede">Rede e infraestrutura</option><option value="av">Audiovisual</option><option value="outros">Outros</option></select></div>
+      <div class="linha" style="gap:14px;align-items:stretch">
+        <div class="campo" id="pw-sub" style="flex:1 1 200px"><label for="p-sub" id="pl-sub">Equipamento *</label><select id="p-sub"></select></div>
+        <div class="campo" id="pw-sint" style="flex:1 1 200px"><label for="p-sint">O que está acontecendo? *</label><select id="p-sint"></select></div>
+      </div>
+      <div class="campo"><label for="p-ass">Assunto *</label><input id="p-ass" value="Projetor da sala 32 não liga"></div>
+      <div class="deflexao" aria-live="polite"><b>Talvez isto resolva agora</b><a href="#">Projetor não liga: o que verificar antes de abrir um pedido</a><a href="#">Como conectar o notebook ao projetor da sala</a></div>
+      <div class="campo"><label for="p-desc">Descrição</label><textarea id="p-desc">Tenho aula às 10:30 e preciso do projetor.</textarea></div>
+      <div class="linha"><button class="btn">📎 Foto ou arquivo</button><span class="espaco"></span><button class="btn prim" style="height:46px;padding:0 24px">Enviar pedido</button></div>
+    </form>
+    <aside style="display:flex;flex-direction:column;gap:16px">
+      <div class="cartao" style="padding:18px;display:flex;flex-direction:column;gap:10px">
+        <h2>Meus pedidos</h2>
+        <div class="par"><span style="color:var(--ink);font-weight:600">#8561 Projetor da sala 32</span><span class="estado e-aberto">Em andamento</span></div>
+        <div class="par"><span style="color:var(--ink);font-weight:600">#8402 Som da sala 32</span><span class="estado e-pendente">Aguardando você</span></div>
+        <div class="par"><span style="color:var(--ink);font-weight:600">#8170 Ativação do Office</span><span class="estado e-resolvido">Resolvido · avalie</span></div>
+      </div>
+      <div class="cartao" style="padding:18px;display:flex;flex-direction:column;gap:8px">
+        <h2>Mais procurados</h2>
+        <a href="#">Conectar ao Wi-Fi da escola</a><a href="#">Instalar a impressora do setor</a><a href="#">Acessar a VPN de casa</a><a href="#">Recuperar a senha do Google</a><a href="#">Usar a document camera</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<p class="aviso-proto">Protótipo de interface (dados fictícios) · PantherDesk para o Help Desk de TI da EARJ · cores e fonte oficiais da EARJ.</p>
+</main>
+
+<button class="fab" id="fab" aria-expanded="false">💬 Fale com a TI</button>
+<div class="chat" id="chat" role="dialog" aria-label="Chat com a TI">
+  <header><img src="assets/earj-logo-branco.png" alt="" style="height:28px"><div style="flex:1"><b>TI · EARJ</b><div style="font-size:12px;opacity:.85">Respondemos em horário escolar</div></div><button class="icone" id="fechar-chat" aria-label="Fechar chat">✕</button></header>
+  <div class="corpo">
+    <span class="muted" style="align-self:center;font-size:11px">Hoje · pedido #8570</span>
+    <div class="bal eu">O som do ginásio não está funcionando e o evento começa às 14h.</div>
+    <span class="muted" style="align-self:flex-end;font-size:11px">11:02 · lido</span>
+    <div class="bal eles">Olá! Sou o Rafael, do suporte Barra. Já estou indo ao ginásio verificar a mesa de som.</div>
+    <div class="bal eles">Resolvido: era o cabo da caixa principal. Pode testar?</div>
+    <div class="cartao" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+      <b style="font-size:13px">Como foi o atendimento?</b>
+      <div class="notas" role="radiogroup" aria-label="Nota de 1 a 5" id="notas"><button role="radio" aria-checked="false">1</button><button role="radio" aria-checked="false">2</button><button role="radio" aria-checked="false">3</button><button role="radio" aria-checked="false">4</button><button role="radio" aria-checked="false">5</button></div>
+      <span class="muted" style="font-size:11px">1 = muito ruim · 5 = excelente</span>
+    </div>
+  </div>
+  <div class="muted" style="font-size:12px;padding:6px 14px;background:var(--surface-2)">Rafael está escrevendo…</div>
+  <form style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)" onsubmit="return false"><label class="sr" for="m-chat">Mensagem</label><input id="m-chat" placeholder="Escreva sua mensagem" style="flex:1;height:42px;border-radius:10px;border:1px solid var(--line);padding:0 12px;background:var(--surface)"><button class="btn prim" style="height:42px">Enviar</button></form>
+</div>
+
+<aside class="gaveta" id="gaveta" aria-label="Filtros da fila">
+  <div class="linha" style="justify-content:space-between"><h2>Filtrar fila</h2><button class="btn" id="fechar-gaveta" aria-label="Fechar">✕</button></div>
+  <div class="campo"><label>Estado</label><div class="chips" style="margin:0"><button class="chip on">Aberto</button><button class="chip on">Pendente</button><button class="chip on">Em espera</button><button class="chip">Resolvido</button></div></div>
+  <div class="campo"><label for="g-unid">Unidade</label><select id="g-unid"><option>Todas</option><option>Barra</option><option>Gávea</option><option>Entre unidades</option></select></div>
+  <div class="campo"><label for="g-sla">SLA</label><select id="g-sla"><option>Qualquer</option><option>Vence em menos de 1 h útil</option><option>Vencido</option></select></div>
+  <div class="campo"><label for="g-resp">Responsável</label><select id="g-resp"><option>Qualquer</option><option>Eu</option><option>Sem responsável</option></select></div>
+  <div class="campo"><label for="g-tag">Etiqueta</label><input id="g-tag" placeholder="ex.: projetor"></div>
+  <div class="campo"><label for="g-data">Aberto entre</label><input id="g-data" placeholder="01/10/2026 – 26/10/2026"></div>
+  <div class="linha" style="margin-top:auto"><button class="btn" id="cancelar-gaveta">Cancelar</button><span class="espaco"></span><button class="btn prim">Aplicar filtros</button></div>
+</aside>
+
+<dialog id="dlg-atalhos" aria-labelledby="h-at">
+  <div class="dlg">
+    <div class="linha" style="justify-content:space-between"><h2 id="h-at">Atalhos do teclado</h2><button class="btn" id="fechar-atalhos">Fechar</button></div>
+    <div class="atalhos">
+      <div><span>Buscar</span><span><kbd>/</kbd></span></div>
+      <div><span>Mostrar atalhos</span><span><kbd>?</kbd></span></div>
+      <div><span>Novo ticket</span><span><kbd>N</kbd></span></div>
+      <div><span>Ir para Início / Filas / Pessoas</span><span><kbd>G</kbd> <kbd>I</kbd> · <kbd>F</kbd> · <kbd>P</kbd></span></div>
+      <div><span>Próximo / anterior na lista</span><span><kbd>J</kbd> <kbd>K</kbd></span></div>
+      <div><span>Selecionar na lista</span><span><kbd>X</kbd></span></div>
+      <div><span>Responder em público</span><span><kbd>R</kbd></span></div>
+      <div><span>Nota interna</span><span><kbd>I</kbd></span></div>
+      <div><span>Aplicar macro</span><span><kbd>M</kbd></span></div>
+      <div><span>Enviar</span><span><kbd>Ctrl</kbd> <kbd>Enter</kbd></span></div>
+      <div><span>Enviar como Pendente / Em espera / Resolvido</span><span><kbd>Ctrl ⇧ P</kbd> <kbd>E</kbd> <kbd>R</kbd></span></div>
+      <div><span>Próximo ticket da fila</span><span><kbd>Ctrl ⇧ ↓</kbd></span></div>
+    </div>
+    <div class="muted" style="font-size:12px">Os atalhos de uma letra só funcionam fora de campos de texto. Podem ser desligados no seu perfil.</div>
+  </div>
+</dialog>
+
+<script>
+// ---------------- Dados fictícios ----------------
+const tickets = [
+  {n:8561, est:'Aberto', cls:'e-aberto', ass:'Projetor da sala 32 não liga', sol:'Beatriz Moura', resp:'Você', unid:'Barra', sla:['alerta','1 h 20 min'], ab:'26/10 08:12', at:'há 3 min', prev:'Rafael Duarte: lâmpada queimada, @Paula temos reserva?', canal:'Formulário', olho:'Rafael'},
+  {n:8558, est:'Aberto', cls:'e-aberto', ass:'Site bloqueado no laboratório', sol:'Marcos Teixeira', resp:'Você', unid:'Barra', sla:['ok','2 d'], ab:'25/10 15:40', at:'há 1 h', prev:'Preciso liberar um site de matemática para os alunos.', canal:'E-mail'},
+  {n:8540, est:'Pendente', cls:'e-pendente', ass:'Tradução simultânea no auditório', sol:'Clara Nogueira', resp:'Você', unid:'Gávea', sla:['pausa','⏸'], ab:'24/10 10:05', at:'ontem', prev:'Aguardando confirmação do horário do evento.', canal:'Formulário'},
+  {n:8536, est:'Em espera', cls:'e-espera', ass:'Troca de notebook autorizada', sol:'Bruno Faria', resp:'Você', unid:'Barra', sla:['vencido','vencido há 2 h'], ab:'22/10 09:30', at:'há 2 d', prev:'Aguardando entrega do fornecedor (até 5 dias úteis).', canal:'Formulário'},
+  {n:8529, est:'Aberto', cls:'e-aberto', ass:'Document camera sem imagem', sol:'Helena Ribas', resp:'Você', unid:'Barra', sla:['ok','4 d'], ab:'21/10 13:12', at:'há 3 h', prev:'A câmera liga mas o projetor não mostra.', canal:'Chat'},
+  {n:8522, est:'Aberto', cls:'e-aberto', ass:'Wi-Fi fraco no ginásio', sol:'Otávio Reis', resp:'Rafael Duarte', unid:'Barra', sla:['ok','1 d'], ab:'21/10 08:50', at:'há 4 h', prev:'Sinal cai durante a aula de educação física.', canal:'Formulário', olho:'Paula'},
+  {n:8517, est:'Aberto', cls:'e-aberto', ass:'Impressora do RH sem toner', sol:'Diana Prado', resp:'—', unid:'Gávea', sla:['alerta','45 min'], ab:'20/10 16:20', at:'há 5 h', prev:'Toner acabou e há documentos urgentes.', canal:'E-mail'},
+  {n:8509, est:'Pendente', cls:'e-pendente', ass:'Acesso ao sistema administrativo', sol:'João Lemos', resp:'André Souza', unid:'Entre unidades', sla:['pausa','⏸'], ab:'19/10 11:00', at:'há 1 d', prev:'Pedimos a aprovação do gestor.', canal:'Formulário'},
+  {n:8501, est:'Em espera', cls:'e-espera', ass:'Soundbar da sala 21 com chiado', sol:'Carla Nunes', resp:'—', unid:'Barra', sla:['pausa','⏸'], ab:'18/10 14:30', at:'há 3 h', prev:'Encaminhado por você para Eventos Barra.', canal:'Formulário', enc:true}
+];
+const filasComp = [
+  ['Não resolvidos', 31, '#00B050'], ['Triagem (novos)', 0, '#F2B400'], ['Meus tickets', 5, '#E4051F'],
+  ['Abertos por responsável', 8, '#27348B'], ['Pendentes por responsável', 23, '#5B8CFF'], ['Em espera nos meus grupos', 0, '#1A1A1A'],
+  ['Sem responsável', 4, '#8E6CE8'], ['Resolvidos nas últimas 12 h', 10, '#8B5A2B'], ['Avaliados nos últimos 7 dias', 12, '#9AA0B5']
+];
+const filasPess = [['Impressoras Gávea', 3, '#00B050'], ['Meus eventos', 2, '#E4051F']];
+const mensagens = [
+  {tipo:'paralela', quem:'Conversa paralela com o fornecedor AV', meta:'assistencia@fornecedor.exemplo · 08:55 · só a equipe vê', txt:'Precisamos de uma lâmpada para projetor modelo XG-300 na Barra. Qual o prazo de entrega?'},
+  {tipo:'sistema', txt:'Paula Lima passou a seguir este ticket · 08:57'},
+  {tipo:'interna', quem:'Rafael Duarte', ini:'RD', meta:'nota interna · 08:41', txt:'Lâmpada queimada. <b style="background:var(--nota-borda);border-radius:4px;padding:0 4px">@Paula Lima</b> temos lâmpada reserva no almoxarifado da Barra?'},
+  {tipo:'pub', quem:'Você', ini:'VC', meta:'resposta pública · 08:20 · Para: Beatriz Moura', txt:'Olá, Beatriz! Recebemos o seu pedido e um técnico vai até a sala 32 em alguns minutos.'},
+  {tipo:'pub', quem:'Beatriz Moura', ini:'BM', meta:'pelo formulário do portal · 08:12', txt:'Bom dia! O projetor da sala 32 não liga. Tenho aula às 10:30 e preciso dele para a apresentação dos alunos. <span class="tag">📎 foto-projetor.png</span>'}
+];
+const feed = [
+  ['Rafael Duarte mencionou você em #8561', 'há 12 min'], ['SLA: #8536 venceu há 2 horas úteis', 'há 25 min'],
+  ['Eventos Barra devolveu #8501 para você', 'há 1 h'], ['Carla Nunes avaliou #8488 com 5: “Rápido e gentil!”', 'ontem 16:40'],
+  ['#8517 entrou na fila do Suporte Gávea sem responsável', 'ontem 14:02']
+];
+const pessoas = [
+  ['Beatriz Moura','beatriz.moura@exemplo-escola.org','Professora · Upper School','Barra',14], ['Marcos Teixeira','marcos.teixeira@exemplo-escola.org','Professor · Matemática','Barra',6],
+  ['Clara Nogueira','clara.nogueira@exemplo-escola.org','Coordenação de eventos','Gávea',22], ['Diana Prado','diana.prado@exemplo-escola.org','Analista · RH','Gávea',9],
+  ['João Lemos','joao.lemos@exemplo-escola.org','Financeiro','Entre unidades',4], ['Helena Ribas','helena.ribas@exemplo-escola.org','Professora · Lower School','Barra',11]
+];
+const salas = {barra:['Sala 32','Sala 18','Sala 21','Ginásio','Front Desk','Enfermaria','Biblioteca'], gavea:['Prédio principal · térreo','Laboratório de ciências','Biblioteca','RH','Cafeteria'], ambas:['Evento entre unidades','Transporte']};
+const nomeUnid = {barra:'Barra', gavea:'Gávea', ambas:'entre unidades'};
+const subs = {hardware:['Equipamento',['Projetor','Impressora','Notebook / Chromebook','iPad','Soundbar','Document camera','Teclado / mouse','Monitor']], edu:['Sistema pedagógico',['Google Workspace','Plataforma de aulas','Biblioteca digital','Outro']], adm:['Sistema administrativo',['ERP','Ponto eletrônico','Financeiro','Outro']], rede:['Área de rede',['Wi-Fi','VPN','Internet','Pastas de rede','Cabeamento','Servidores']], av:['Equipamento audiovisual',['Projetor','Som de evento','Microfone','Tradução simultânea']], outros:null};
+const sintomas = {'Projetor':['Não liga','Liga sem imagem','Imagem fraca ou piscando'], 'Impressora':['Não imprime','Sem toner','Papel enroscado','Não liga'], 'Notebook / Chromebook':['Não liga','Muito lento','Tela quebrada'], 'Soundbar':['Sem som','Chiado','Volume baixo'], 'Wi-Fi':['Sem acesso','Esqueci a senha','Sem cobertura']};
+
+// ---------------- Utilidades ----------------
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const opts = (sel, lista) => { sel.innerHTML = lista.map(v => `<option>${v}</option>`).join(''); };
+
+// ---------------- Navegação ----------------
+function ir(tela){
+  $$('.tela').forEach(t => t.classList.toggle('ativa', t.id === 't-' + tela));
+  $$('.nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.ir === tela) || b.removeAttribute('aria-current'));
+  $$('.nav button').forEach(b => { if (b.dataset.ir === tela) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  $('#fab').classList.toggle('vis', tela === 'portal');
+  if (tela !== 'portal') $('#chat').classList.remove('aberto');
+  fecharPops(); window.scrollTo({top:0});
+}
+document.addEventListener('click', e => {
+  const alvo = e.target.closest('[data-ir]');
+  if (alvo) { e.preventDefault(); ir(alvo.dataset.ir); }
+});
+
+// ---------------- Menus flutuantes ----------------
+function fecharPops(exceto){ $$('.pop.aberto').forEach(p => { if (p !== exceto) p.classList.remove('aberto'); }); }
+function ligarPop(botao, pop){
+  $(botao).addEventListener('click', e => { e.stopPropagation(); const p = $(pop); const abre = !p.classList.contains('aberto'); fecharPops(); p.classList.toggle('aberto', abre); $(botao).setAttribute('aria-expanded', abre); });
+}
+ligarPop('#btn-novo','#pop-novo'); ligarPop('#btn-notif','#pop-notif'); ligarPop('#btn-perfil','#pop-perfil');
+ligarPop('#btn-acoes','#pop-acoes'); ligarPop('#btn-mais','#pop-mais'); ligarPop('#btn-estado','#pop-estado');
+$('#busca').addEventListener('focus', () => { fecharPops(); $('#pop-busca').classList.add('aberto'); });
+$$('.pop').forEach(p => p.addEventListener('click', e => e.stopPropagation()));
+document.addEventListener('click', () => fecharPops());
+$$('.chips').forEach(g => g.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c || g.closest('.gaveta')) { if (c) c.classList.toggle('on'); return; } $$('.chip', g).forEach(x => x.classList.toggle('on', x === c)); }));
+
+// ---------------- Tema ----------------
+const mq = matchMedia('(prefers-color-scheme: dark)');
+let temaEscolhido = 'light';
+try { temaEscolhido = localStorage.getItem('pd-tema') || 'light'; } catch (e) {}
+function aplicarTema(){ const t = temaEscolhido === 'sistema' ? (mq.matches ? 'dark' : 'light') : temaEscolhido; document.documentElement.dataset.theme = t; $$('#temas .chip').forEach(c => c.classList.toggle('on', c.dataset.tema === temaEscolhido)); }
+$('#temas').addEventListener('click', e => { const c = e.target.closest('[data-tema]'); if (!c) return; temaEscolhido = c.dataset.tema; try { localStorage.setItem('pd-tema', temaEscolhido); } catch (e) {} aplicarTema(); });
+mq.addEventListener('change', aplicarTema); aplicarTema();
+
+// ---------------- Início ----------------
+$('#lista-inicio').innerHTML = tickets.filter(t => t.resp === 'Você').map(t => `
+  <button class="tcard" data-ir="ticket">
+    <span class="estado ${t.cls}">${t.est}</span>
+    <span style="min-width:0"><span class="tit">${t.sol} · ${t.ass}</span><div class="prev">${t.prev}</div></span>
+    <span style="text-align:right;font-size:12px" class="muted"><span class="sla ${t.sla[0]}">${t.sla[1]}</span><div style="margin-top:6px">#${t.n} · ${t.at}</div></span>
+  </button>`).join('');
+$('#feed').innerHTML = feed.map(f => `<a href="#" data-ir="ticket">${f[0]}<span>${f[1]}</span></a>`).join('');
+
+// ---------------- Filas ----------------
+const linhaFila = (lista, alvo) => { $(alvo).innerHTML = lista.map((f, i) => `<button class="${alvo === '#filas-comp' && i === 0 ? 'on' : ''}"><span><span class="ponto" style="background:${f[2]}"></span>${f[0]}</span><span>${f[1]}</span></button>`).join(''); };
+linhaFila(filasComp, '#filas-comp'); linhaFila(filasPess, '#filas-pess');
+$$('.filas-lista').forEach(n => n.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || !b.querySelector('.ponto')) return; $$('button', n).forEach(x => x.classList.remove('on')); b.classList.add('on'); $('#h-filas').textContent = b.querySelector('span').textContent; }));
+const grupos = ['Aberto','Pendente','Em espera'];
+$('#corpo-fila').innerHTML = grupos.map(g => {
+  const ts = tickets.filter(t => t.est === g);
+  return `<tr class="grupo"><td colspan="10">Estado: ${g} · ${ts.length}</td></tr>` + ts.map(t => `
+    <tr data-n="${t.n}">
+      <td><input type="checkbox" class="sel" aria-label="Selecionar #${t.n}"></td>
+      <td><span class="estado ${t.cls}">${t.est}</span></td>
+      <td class="muted">#${t.n}</td><td>${t.ab}</td><td>${t.unid}</td>
+      <td><span class="sla ${t.sla[0]}">${t.sla[1]}</span></td>
+      <td><b>${t.ass}</b>${t.olho ? ` <span class="olho" title="${t.olho} está com este ticket aberto">👁 ${t.olho}</span>` : ''}${t.enc ? ' <span class="estado e-espera" style="font-size:10px">encaminhado → Eventos</span>' : ''}</td>
+      <td>${t.sol}</td><td>${t.resp}</td><td class="muted">${t.at}</td>
+    </tr>`).join('');
+}).join('');
+function atualizarSel(){ const n = $$('.sel:checked').length; $('#barra-massa').classList.toggle('vis', n > 0); $('#qtd-sel').textContent = n + (n === 1 ? ' ticket selecionado' : ' tickets selecionados'); $$('#corpo-fila tr[data-n]').forEach(tr => tr.classList.toggle('sel', $('.sel', tr).checked)); }
+$('#corpo-fila').addEventListener('click', e => { if (e.target.classList.contains('sel')) { atualizarSel(); return; } if (e.target.closest('tr[data-n]')) ir('ticket'); });
+$('#sel-todos').addEventListener('change', e => { $$('.sel').forEach(c => c.checked = e.target.checked); atualizarSel(); });
+$('#cancelar-sel').addEventListener('click', () => { $$('.sel').forEach(c => c.checked = false); $('#sel-todos').checked = false; atualizarSel(); });
+const gaveta = $('#gaveta');
+$('#btn-filtro').addEventListener('click', e => { e.stopPropagation(); gaveta.classList.add('aberta'); });
+['#fechar-gaveta','#cancelar-gaveta'].forEach(s => $(s).addEventListener('click', () => gaveta.classList.remove('aberta')));
+
+// ---------------- Ticket ----------------
+let novasPrimeiro = true;
+function desenharMsgs(){
+  const lista = novasPrimeiro ? mensagens : [...mensagens].reverse();
+  $('#mensagens').innerHTML = lista.map(m => m.tipo === 'sistema' ? `<div class="msg sistema">${m.txt}</div>` : `
+    <article class="msg ${m.tipo === 'interna' ? 'interna' : m.tipo === 'paralela' ? 'paralela' : ''}">
+      <div class="quem">${m.ini ? `<span class="ini">${m.ini}</span>` : ''}<b>${m.quem}</b><span class="muted">${m.meta}</span></div>
+      <p>${m.txt}</p>
+    </article>`).join('');
+}
+desenharMsgs();
+$('#ordem').addEventListener('click', () => { novasPrimeiro = !novasPrimeiro; $('#ordem').textContent = (novasPrimeiro ? 'Mais novas primeiro' : 'Mais antigas primeiro') + ' ⇅'; desenharMsgs(); });
+function modoEditor(interna){ $('#editor').classList.toggle('interna', interna); $('#ed-pub').classList.toggle('on', !interna); $('#ed-int').classList.toggle('on', interna); $('#ed-para').innerHTML = interna ? 'Só a equipe vê · use @ para mencionar' : 'Para: Beatriz Moura · <a href="#">+ Cc</a>'; }
+$('#ed-pub').addEventListener('click', () => modoEditor(false)); $('#ed-int').addEventListener('click', () => modoEditor(true));
+$('#pop-estado').addEventListener('click', e => { const b = e.target.closest('[data-est]'); if (!b) return; $('#enviar').textContent = 'Enviar como ' + b.dataset.est; fecharPops(); });
+$$('.painel-abas button').forEach(b => b.addEventListener('click', () => { $$('.painel-abas button').forEach(x => x.classList.toggle('on', x === b)); $$('.painel').forEach(p => p.classList.toggle('on', p.id === b.dataset.painel)); }));
+function condicionais(unidSel, salaSel, salaLabel, salaWrap, motSel, subSel, subLabel, subWrap, sintSel, sintWrap){
+  const u = unidSel.value, m = motSel.value;
+  salaWrap.style.display = salas[u] ? '' : 'none';
+  if (salas[u]) { opts(salaSel, salas[u]); salaLabel.textContent = 'Sala ou setor · ' + nomeUnid[u] + ' *'; }
+  const s = subs[m];
+  subWrap.style.display = s ? '' : 'none';
+  if (s) { subLabel.textContent = s[0] + ' *'; opts(subSel, s[1]); }
+  if (sintSel) { const x = s && sintomas[subSel.value]; sintWrap.style.display = x ? '' : 'none'; if (x) opts(sintSel, x); }
+}
+const condTicket = () => condicionais($('#f-unid'), $('#f-sala'), $('#l-sala'), $('#w-sala'), $('#f-mot'), $('#f-sub'), $('#l-sub'), $('#w-sub'));
+['#f-unid','#f-mot'].forEach(s => $(s).addEventListener('change', condTicket)); condTicket();
+
+// ---------------- Pessoas ----------------
+$('#corpo-cli').innerHTML = pessoas.map(p => `<tr data-ir="ticket"><td><span class="linha" style="gap:8px"><span class="ini">${p[0].split(' ').map(x => x[0]).join('')}</span><b>${p[0]}</b></span></td><td>${p[1]}</td><td>${p[2]}</td><td>${p[3]}</td><td>${p[4]}</td></tr>`).join('');
+
+// ---------------- Portal ----------------
+const condPortal = () => condicionais($('#p-unid'), $('#p-sala'), $('#pl-sala'), $('#pw-sala'), $('#p-mot'), $('#p-sub'), $('#pl-sub'), $('#pw-sub'), $('#p-sint'), $('#pw-sint'));
+['#p-unid','#p-mot','#p-sub'].forEach(s => $(s).addEventListener('change', condPortal)); condPortal();
+$('#fab').addEventListener('click', () => { const c = $('#chat'); c.classList.toggle('aberto'); $('#fab').setAttribute('aria-expanded', c.classList.contains('aberto')); });
+$('#fechar-chat').addEventListener('click', () => $('#chat').classList.remove('aberto'));
+$('#notas').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#notas button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); }); });
+
+// ---------------- Atalhos ----------------
+const dlg = $('#dlg-atalhos');
+$('#abrir-atalhos').addEventListener('click', () => { fecharPops(); dlg.showModal(); });
+$('#fechar-atalhos').addEventListener('click', () => dlg.close());
+let prefixoG = false;
+document.addEventListener('keydown', e => {
+  const emCampo = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (e.key === 'Escape') { fecharPops(); gaveta.classList.remove('aberta'); return; }
+  if (emCampo || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === '?') { dlg.showModal(); e.preventDefault(); }
+  else if (e.key === '/') { $('#busca').focus(); e.preventDefault(); }
+  else if (prefixoG) { prefixoG = false; const m = {i:'inicio', f:'filas', p:'clientes'}[e.key.toLowerCase()]; if (m) ir(m); }
+  else if (e.key.toLowerCase() === 'g') { prefixoG = true; setTimeout(() => prefixoG = false, 1200); }
+  else if (e.key.toLowerCase() === 'r' && $('#t-ticket').classList.contains('ativa')) { modoEditor(false); $('#texto').focus(); e.preventDefault(); }
+  else if (e.key.toLowerCase() === 'i' && $('#t-ticket').classList.contains('ativa')) { modoEditor(true); $('#texto').focus(); e.preventDefault(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# Applied on top of the official zammad-docker-compose file (tag v17.5.3), which
+# observation/tools/fetch-upstream.ps1 downloads to ./upstream/docker-compose.yml.
+# Effect: every service only on the internal lab network, no host ports, UTC clock,
+# Elasticsearch on (needed for the search spec) with a smaller heap.
+x-lab: &lab
+  networks: [lab]
+  environment: &env
+    TZ: UTC
+    ELASTICSEARCH_ENABLED: "true"
+    ELASTICSEARCH_HOST: zammad-elasticsearch
+    ELASTICSEARCH_PORT: "9200"
+    ELASTICSEARCH_SCHEMA: http
+
+networks:
+  lab:
+    external: true
+    name: obslab_lab
+
+services:
+  zammad-backup:
+    profiles: [disabled]
+  zammad-init: *lab
+  zammad-railsserver: *lab
+  zammad-scheduler: *lab
+  zammad-websocket: *lab
+  zammad-nginx:
+    <<: *lab
+    ports: !reset []
+    networks:
+      lab:
+        aliases: [zammad.lab.test]
+  zammad-memcached:
+    networks: [lab]
+  zammad-redis:
+    networks: [lab]
+  zammad-postgresql:
+    networks: [lab]
+  zammad-elasticsearch:
+    networks: [lab]
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m

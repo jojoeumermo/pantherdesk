@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PantherDesk — protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Paleta Panthers (Δ30): azul-marinho na moldura, royal nas ações, vermelho na atenção */
+:root{
+  --bg:#F5F7FC; --surface:#FFFFFF; --surface-2:#EEF2FA; --line:#DCE2EF; --line-2:#EDF0F7;
+  --ink:#0A1633; --ink-2:#34415F; --muted:#5A6684; --faint:#8D98B3;
+  --side:#0B1F4B; --side-hover:#13306E; --side-ink:#B9C5E8; --side-line:#1C3270;
+  --marinho:#0B1F4B;
+  --btn:#1F4FD6; --btn-ink:#FFFFFF;
+  --royal:#1F4FD6; --royal-txt:#1F4FD6; --royal-claro:#E8EEFD; --royal-borda:#BCCBF5;
+  --verm:#D62839; --verm-txt:#C42132; --verm-claro:#FDECEE; --verm-borda:#F5BDC3;
+  --nota-claro:#FFFBEB; --nota-borda:#FDE68A; --nota-txt:#78350F;
+  --roxo-claro:#EDE9FE; --roxo-txt:#5B21B6; --roxo-borda:#C4B5FD;
+  --verde-claro:#E7F8EC; --verde-borda:#BBF7D0; --verde-txt:#166534; --verde-forte:#16A34A;
+  --ev-gavea:#0B1F4B; --ev-barra:#1F4FD6;
+  --toast:#0B1F4B; --toast-ink:#FFFFFF;
+  --sombra:0 12px 32px rgba(11,31,75,.14);
+}
+:root[data-theme="dark"]{
+  --bg:#070D1F; --surface:#0E1730; --surface-2:#16213F; --line:#24325A; --line-2:#1A2547;
+  --ink:#EEF2FF; --ink-2:#C9D2EC; --muted:#97A3C4; --faint:#68769C;
+  --side:#06112E; --side-hover:#13306E; --side-line:#1C3270;
+  --btn:#3F63E6; --btn-ink:#FFFFFF;
+  --royal:#3F63E6; --royal-txt:#7090FF; --royal-claro:#16224A; --royal-borda:#2E4590;
+  --verm:#E0384A; --verm-txt:#FF5C6C; --verm-claro:#2E1018; --verm-borda:#6B2230;
+  --nota-claro:#2A1F0A; --nota-borda:#5C4413; --nota-txt:#FCD34D;
+  --roxo-claro:#24193F; --roxo-txt:#C4B5FD; --roxo-borda:#4C3A86;
+  --verde-claro:#0F2417; --verde-borda:#1F5133; --verde-txt:#86EFAC; --verde-forte:#22C55E;
+  --ev-gavea:#22397A; --ev-barra:#3F63E6;
+  --toast:#1C3270;
+  --sombra:0 12px 32px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.sr{position:absolute;left:-9999px}
+:focus-visible{outline:2px solid var(--royal);outline-offset:2px}
+a,button,tr,.cartao-lista{transition:background-color .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease}
+
+/* ---------- Moldura ---------- */
+.app{display:flex;min-height:100vh}
+.app.sem-lateral .lateral{display:none}
+.lateral{flex:0 0 236px;background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;gap:2px;padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+.logo .selo{width:34px;height:34px;border-radius:9px;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
+.logo strong{color:#FFFFFF;font-size:15px;letter-spacing:-.01em;display:block}
+.logo span{font-size:12px}
+.lateral a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--side-ink);text-decoration:none}
+.lateral a:hover{background:var(--side-hover);color:#FFFFFF}
+.lateral a[aria-current="page"]{background:var(--side-hover);color:#FFFFFF;font-weight:500;box-shadow:inset 3px 0 0 #7090FF}
+.lateral a.fila{padding:7px 10px;justify-content:space-between}
+.lateral a.fila .v{background:var(--verm);color:#fff;border-radius:999px;padding:0 7px;font-size:11px;font-weight:600}
+.lateral .sec{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8EA0D6;padding:18px 10px 6px}
+.lateral .num{margin-left:auto;font-size:11px;font-weight:600;background:var(--verm);color:#FFFFFF;border-radius:999px;padding:1px 7px}
+.lateral kbd{margin-left:auto;font-size:11px;border:1px solid var(--side-line);border-radius:4px;padding:0 5px;font-family:inherit}
+.perfil{margin-top:auto;border-top:1px solid var(--side-line);padding:14px 4px 2px;display:flex;align-items:center;gap:8px;position:relative}
+.avatar{width:32px;height:32px;border-radius:50%;background:#1C3270;color:#FFFFFF;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;position:relative;flex:0 0 32px}
+.avatar .on{position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;background:#22C55E;border:2px solid var(--side)}
+.perfil strong{color:#FFFFFF;font-size:13px;display:block}
+.perfil .quem{display:flex;align-items:center;gap:10px;border:0;background:transparent;color:var(--side-ink);text-align:left;padding:4px;border-radius:8px;flex:1;min-width:0}
+.perfil .quem:hover{background:var(--side-hover)}
+.perfil .ic{border:1px solid var(--side-line);background:transparent;color:var(--side-ink);border-radius:8px;width:32px;height:32px;flex:0 0 32px}
+.perfil .ic:hover{color:#FFFFFF;border-color:#5570B8}
+#pop-perfil{left:0;right:0;bottom:56px}
+
+.conteudo{flex:1;min-width:0;display:flex;flex-direction:column;overflow-x:clip}
+.topo{height:56px;padding:0 24px;border-bottom:1px solid var(--line);background:var(--surface);display:flex;align-items:center;gap:10px;font-size:13px;position:sticky;top:0;z-index:5;min-width:0}
+.topo .sep{color:var(--faint)}
+.topo .muted{color:var(--muted)}
+.icone{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;position:relative;color:var(--ink-2);flex:0 0 34px}
+.icone:hover{background:var(--surface-2)}
+.icone .ponto{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--verm)}
+.btn{height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.prim{background:var(--btn);color:var(--btn-ink);border-color:var(--btn);font-weight:600}
+.btn.prim:hover{opacity:.9}
+.btn.atencao{border-color:var(--verm-borda);background:var(--verm-claro);color:var(--verm-txt);font-weight:600;text-decoration:none}
+
+/* ---------- Transições ---------- */
+@keyframes entra{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes campo{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes sobe{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pop{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes msg{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes desliza{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes digita{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.tela{display:none}
+.tela.ativa{display:block}
+.tela.ativa .anima{animation:entra .32s cubic-bezier(.2,.7,.2,1) both}
+.tela.ativa .anima.d1{animation-delay:.05s}
+.tela.ativa .anima.d2{animation-delay:.1s}
+.tela.ativa .anima.d3{animation-delay:.15s}
+::view-transition-old(conteudo){animation:.18s ease both sai}
+::view-transition-new(conteudo){animation:.32s cubic-bezier(.2,.7,.2,1) both entra}
+@keyframes sai{to{opacity:0;transform:translateY(-6px)}}
+.conteudo{view-transition-name:conteudo}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after,::view-transition-old(conteudo),::view-transition-new(conteudo){animation:none!important;transition:none!important}
+}
+
+/* ---------- Componentes ---------- */
+.cartao{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.rot{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.sla{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.sla.alerta{background:var(--verm-claro);color:var(--verm-txt)}
+.sla.ok{background:var(--verde-claro);color:var(--verde-txt)}
+.sla.venc{background:var(--verm);color:#fff}
+.sla.pausa{background:var(--surface-2);color:var(--muted)}
+.sla.evt{background:var(--royal-claro);color:var(--royal-txt)}
+.selo-inc{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--verm-claro);color:var(--verm-txt);border:1px solid var(--verm-borda);white-space:nowrap}
+.lng{font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--muted)}
+.ini{width:34px;height:34px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 34px}
+.i-azul{background:#DBE4FD;color:#1A3FA8}.i-roxo{background:#E9D5FF;color:#6B21A8}.i-verde{background:#DCFCE7;color:#166534}.i-verm{background:#FDE0E3;color:#9F1B2A}.i-esc{background:var(--marinho);color:#fff}
+:root[data-theme="dark"] .i-esc{background:var(--btn)}
+.seg{display:flex;gap:4px;background:var(--surface-2);padding:3px;border-radius:9px}
+.seg button{flex:1;height:30px;padding:0 12px;border-radius:7px;border:0;background:transparent;color:var(--muted);font-size:12px;white-space:nowrap}
+.seg button.on{background:var(--surface);color:var(--royal-txt);font-weight:600;box-shadow:0 1px 2px rgba(11,31,75,.12)}
+.seg.mini button{height:24px;padding:0 10px;font-size:11px}
+.pop{position:absolute;z-index:20;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sombra);padding:6px;min-width:220px;display:none}
+.pop.aberto{display:block;animation:pop .16s ease both}
+.pop button{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:none;text-align:left;padding:8px 10px;border-radius:8px;font-size:13px;gap:10px;color:var(--ink)}
+.pop button:hover{background:var(--surface-2)}
+.pop kbd{font-family:inherit;font-size:11px;color:var(--muted)}
+.pop input{width:100%;height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--surface);margin-bottom:4px;outline:none}
+.pop input:focus{border-color:var(--royal)}
+.pop .var{font-size:10px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:999px;background:var(--royal-claro);color:var(--royal-txt);white-space:nowrap}
+
+/* ---------- Entrar ---------- */
+.tela.entrar.ativa{display:flex}
+.entrar{min-height:100vh;align-items:center;justify-content:center;padding:32px 16px;background:radial-gradient(900px 520px at 15% -10%,rgba(31,79,214,.55),transparent 60%),radial-gradient(700px 420px at 110% 110%,rgba(214,40,57,.22),transparent 60%),#0B1F4B}
+.cartao-entrar{width:100%;max-width:420px;padding:30px;border-radius:20px;background:var(--surface);box-shadow:0 30px 80px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:18px}
+.endereco{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+.marca-entrar{display:flex;align-items:center;gap:12px}
+.marca-entrar .selo{width:44px;height:44px;border-radius:12px;background:var(--marinho);display:flex;align-items:center;justify-content:center;flex:0 0 44px}
+.marca-entrar strong{font-size:18px;display:block;letter-spacing:-.01em}
+.marca-entrar span{font-size:13px;color:var(--muted)}
+.cartao-entrar h1{margin:0 0 4px;font-size:24px;letter-spacing:-.02em}
+.btn-google{height:50px;border-radius:12px;border:0;background:var(--btn);color:var(--btn-ink);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-google:hover{opacity:.92}
+.btn-google .g{width:28px;height:28px;border-radius:50%;background:#fff;color:#1F4FD6;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+.ou{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+.ou::before,.ou::after{content:"";flex:1;border-top:1px solid var(--line)}
+.btn-sec{min-height:46px;border:1px solid var(--line);background:var(--surface);border-radius:12px;font-size:13px;color:var(--ink-2);padding:8px 14px}
+.btn-sec:hover{background:var(--surface-2)}
+.btn-sec b{color:var(--royal-txt)}
+.rodape-entrar{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ---------- Início ---------- */
+.pad{padding:24px 28px;display:flex;flex-direction:column;gap:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.stat{padding:20px;display:flex;flex-direction:column;gap:10px}
+.stat .cab{display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+.stat b{font-size:32px;font-weight:700;letter-spacing:-.02em}
+.stat span{font-size:12px;color:var(--muted)}
+.duas{display:flex;flex-wrap:wrap;gap:20px}
+.barra-prog{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.barra-prog div{height:8px;border-radius:999px}
+.feed a{display:flex;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line-2);text-decoration:none}
+.feed a:hover{background:var(--surface-2)}
+.feed a.nova{background:var(--bg)}
+.feed .txt{flex:1;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.feed .meta{color:var(--muted);font-size:12px}
+.feed .cit{background:var(--surface-2);border-radius:8px;padding:8px 10px;color:var(--ink-2)}
+.nao-lida{width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--verm);flex:0 0 8px}
+.abas{display:flex;gap:18px;padding:12px 22px 0;border-bottom:1px solid var(--line-2);font-size:13px;overflow-x:auto}
+.abas button{border:0;background:none;padding:0 0 10px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.abas button.on{color:var(--royal-txt);font-weight:600;border-bottom-color:var(--royal)}
+.abas .cont{font-size:11px;border-radius:999px;padding:1px 6px;font-weight:600;background:var(--surface-2)}
+.abas .cont.v{background:var(--verm);color:#fff}
+
+/* ---------- Ticket ---------- */
+.ticket{display:flex;min-height:calc(100vh - 56px)}
+.lista{flex:0 0 330px;width:330px;min-width:0;overflow:hidden;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.cartao-lista,.cartao-lista > span{min-width:0;max-width:100%}
+.lista .cab{padding:16px 16px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.lista .grupo{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:14px 16px 6px}
+.cartao-lista{display:flex;flex-direction:column;gap:5px;padding:12px 14px;margin:0 8px;border-radius:10px;text-decoration:none;border:0;background:none;text-align:left;width:calc(100% - 16px)}
+.cartao-lista:hover{background:var(--surface-2)}
+.cartao-lista.on{background:var(--royal-claro);box-shadow:inset 3px 0 0 var(--royal)}
+.cartao-lista .l1{display:flex;align-items:center;gap:8px}
+.cartao-lista .l1 > span:last-child{margin-left:auto;font-size:12px;color:var(--muted)}
+.cartao-lista .ass{font-size:13px;font-weight:500}
+.cartao-lista .prev{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cartao-lista .l4{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;color:var(--muted)}
+.centro{flex:1;min-width:0;display:flex;flex-direction:column}
+.conversa{flex:1;padding:4px 24px 16px;display:flex;flex-direction:column;gap:12px}
+.msg{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(11,31,75,.05)}
+.msg .cab{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-2)}
+.msg .cab small{display:block;font-size:12px;color:var(--muted)}
+.msg .cab .hora{margin-left:auto;font-size:12px;color:var(--muted)}
+.msg p{margin:0;padding:14px 16px;font-size:14px;line-height:1.6}
+.msg.interna{background:var(--nota-claro);border-color:var(--nota-borda);box-shadow:none}
+.msg.interna .cab{border:0;padding-bottom:0}
+.msg.paralela{border-style:dashed;border-color:var(--roxo-borda);box-shadow:none}
+.etq{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+.etq.int{background:var(--nota-borda);color:var(--nota-txt)}
+.etq.par{background:var(--roxo-claro);color:var(--roxo-txt)}
+.mencao{font-weight:600;color:var(--royal-txt)}
+.resumo{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:linear-gradient(180deg,var(--royal-claro),var(--surface))}
+.editor{margin:0 24px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px rgba(11,31,75,.08);position:sticky;bottom:16px}
+.editor.interna{background:var(--nota-claro);border-color:var(--nota-borda)}
+.editor textarea{display:block;width:100%;border:0;resize:none;min-height:76px;padding:12px 16px;line-height:1.55;outline:none;background:transparent}
+.editor .rod{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line-2)}
+.aviso-inc{margin:10px 12px 0;padding:8px 12px;border-radius:10px;background:var(--verm-claro);border:1px solid var(--verm-borda);color:var(--verm-txt);font-size:12px;font-weight:500}
+.previa{margin:10px 12px 0;padding:8px 10px;border-radius:10px;background:var(--royal-claro);border:1px solid var(--royal-borda);display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px}
+.previa .x{margin-left:auto;border:0;background:none;color:var(--muted);width:24px;height:24px;border-radius:6px}
+.previa .x:hover{background:var(--surface)}
+.split{margin-left:auto;display:flex;position:relative}
+.split .a{height:38px;padding:0 16px;border-radius:9px 0 0 9px;border:0;background:var(--btn);color:var(--btn-ink);font-weight:600;font-size:13px}
+.split .b{height:38px;width:34px;border-radius:0 9px 9px 0;border:0;border-left:1px solid rgba(255,255,255,.35);background:var(--btn);color:var(--btn-ink)}
+.split .pop{bottom:44px;right:0}
+.detalhes{flex:0 0 300px;background:var(--surface);border-left:1px solid var(--line);padding:20px;display:flex;flex-direction:column;gap:18px}
+.detalhes section{display:flex;flex-direction:column;gap:10px}
+.detalhes section+section{border-top:1px solid var(--line-2);padding-top:16px}
+.par{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.par > span:first-child{color:var(--muted)}
+.par > span:last-child{text-align:right}
+.tag{font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
+.filho{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 8px;border-radius:8px;background:var(--surface-2)}
+.filho b{font-size:12px;color:var(--verm-txt)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--toast);color:var(--toast-ink);padding:10px 16px;border-radius:12px;font-size:13px;box-shadow:var(--sombra);display:none;z-index:70;max-width:calc(100vw - 32px)}
+.toast.vis{display:block;animation:sobe .3s cubic-bezier(.2,.7,.2,1) both}
+
+/* ---------- Gaveta (rascunho de artigo) ---------- */
+.veu{position:fixed;inset:0;background:rgba(11,31,75,.35);z-index:59;display:none}
+.veu.vis{display:block}
+.gaveta{position:fixed;top:0;right:0;height:100vh;width:460px;max-width:100vw;background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--sombra);z-index:60;display:none;flex-direction:column}
+.gaveta.aberta{display:flex;animation:desliza .28s cubic-bezier(.2,.7,.2,1) both}
+.gaveta header{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.gaveta .corpo-g{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.gaveta footer{display:flex;flex-wrap:wrap;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
+
+/* ---------- Filas ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px dashed var(--line);border-radius:8px;font-size:12px;color:var(--ink-2);background:var(--surface)}
+.chip.on{border:1px solid var(--royal);font-weight:500;color:var(--royal-txt)}
+.chip select{border:0;background:transparent;font-size:12px;font-weight:600;color:var(--ink);outline:none}
+.filas-abas{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.fa{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
+.fa:hover{background:var(--surface-2)}
+.fa.on{background:var(--btn);color:var(--btn-ink);border-color:var(--btn);font-weight:600}
+.fa .c{font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;background:var(--surface-2);color:var(--ink-2)}
+.fa .c.v{background:var(--verm);color:#fff}
+.tabela{width:100%;min-width:860px;border-collapse:collapse;font-size:13px}
+.tabela th{text-align:left;color:var(--muted);font-size:12px;font-weight:500;padding:12px 8px;border-bottom:1px solid var(--line)}
+.tabela td{padding:14px 8px;border-bottom:1px solid var(--line-2)}
+.tabela th:first-child,.tabela td:first-child{padding-left:16px;width:28px}
+.tabela tbody tr:hover{background:var(--bg);cursor:pointer}
+.tabela tr.sel{background:var(--royal-claro)}
+.tabela .t strong{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tabela .t span{font-size:12px;color:var(--muted)}
+.massa{position:fixed;left:calc(50% + 118px);bottom:28px;transform:translateX(-50%);display:none;align-items:center;gap:6px;padding:8px 8px 8px 16px;border-radius:14px;background:#0B1F4B;color:#FFFFFF;font-size:13px;box-shadow:0 12px 32px rgba(0,0,0,.25);z-index:30}
+.massa.vis{display:flex;animation:sobe .3s cubic-bezier(.2,.7,.2,1) both}
+.massa button{height:34px;padding:0 12px;border-radius:9px;border:0;background:#13306E;color:#FFFFFF;font-size:13px}
+.massa button:hover{background:#1C3F8F}
+
+/* ---------- Eventos ---------- */
+.ev-grade{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.cal-wrap{flex:999 1 560px;min-width:0;overflow:hidden}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal .dow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--line)}
+.cal .dia{min-height:108px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:6px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cal .dia:nth-child(7n){border-right:0}
+.cal .dia.fds{background:var(--bg)}
+.cal .dia.fora{background:var(--bg);color:var(--faint)}
+.cal .dia .n{font-size:12px;font-weight:600;padding:2px 4px}
+.ev{display:block;width:100%;text-align:left;border:0;border-radius:6px;padding:3px 6px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;line-height:1.35}
+.ev:hover{filter:brightness(1.15)}
+.ev.gavea{background:var(--ev-gavea)}
+.ev.barra{background:var(--ev-barra)}
+.ev.entre{background:var(--surface);color:var(--royal-txt);box-shadow:inset 0 0 0 1.5px var(--royal-txt)}
+.ev.mont{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);font-weight:500}
+.legenda{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink-2);align-items:center}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
+.sw.gavea{background:var(--ev-gavea)}.sw.barra{background:var(--ev-barra)}.sw.entre{box-shadow:inset 0 0 0 1.5px var(--royal-txt)}
+.proximos{flex:1 1 300px;min-width:0}
+.prox{display:flex;gap:12px;padding:12px;margin:0 6px;border-radius:10px;text-align:left;border:0;background:none;width:calc(100% - 12px)}
+.prox:hover{background:var(--surface-2)}
+.prox .data-ev{flex:0 0 48px;height:52px;border-radius:10px;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:4px solid var(--ev-barra)}
+.prox .data-ev.gavea{border-left-color:var(--ev-gavea)}
+.prox .data-ev.entre{border-left:4px dashed var(--royal-txt)}
+:root[data-theme="dark"] .prox .data-ev.gavea{border-left-color:#5570B8}
+.prox .data-ev b{font-size:18px;line-height:1}
+.prox .data-ev small{font-size:11px;color:var(--muted);text-transform:uppercase}
+.prox .txt{display:flex;flex-direction:column;gap:4px;font-size:13px;min-width:0}
+.prox .txt .muted{font-size:12px;color:var(--muted)}
+
+/* ---------- QR da sala ---------- */
+.qr-grade{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;align-items:flex-start;padding:28px 16px 48px}
+.fone{width:360px;max-width:100%;border-radius:44px;background:#0B1F4B;padding:12px;box-shadow:var(--sombra)}
+.tela-fone{border-radius:34px;background:var(--bg);overflow:hidden;min-height:690px;display:flex;flex-direction:column}
+.tela-fone .status{display:flex;justify-content:space-between;padding:12px 24px 4px;font-size:12px;font-weight:600}
+.tela-fone .url{margin:4px 14px 10px;height:34px;border-radius:10px;background:var(--surface-2);font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--ink-2)}
+.qr-local{background:var(--marinho);color:#fff;margin:0 14px;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}
+:root[data-theme="dark"] .qr-local{background:#13306E}
+.qr-local h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.qr-local span{font-size:12px;color:#B9C5E8}
+.qr-local .pill-qr{align-self:flex-start;font-size:11px;font-weight:700;background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:3px 9px}
+.qr-lista{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.qr-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qr-item .l1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qr-item .tit{border:0;background:none;padding:0;text-align:left;font-size:14px;font-weight:600}
+.qr-item .tit:hover{color:var(--royal-txt)}
+.qr-item .l3{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.qr-item .l3 .btn{margin-left:auto;height:30px}
+.qr-rod{padding:4px 14px 18px}
+.qr-rod .btn{width:100%;height:46px;justify-content:center;font-size:14px}
+.folha-qr{flex:0 1 300px;padding:22px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+
+/* ---------- Portal ---------- */
+.portal{background:var(--bg);min-height:100vh}
+.barra-url{background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;justify-content:center;padding:6px 16px}
+.barra-url span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 14px}
+.portal-topo{background:var(--surface);border-bottom:1px solid var(--line)}
+.portal-topo .in{max-width:1160px;margin:0 auto;padding:0 28px;height:64px;display:flex;align-items:center;gap:12px}
+.marca-portal{display:flex;align-items:center;gap:8px;font-size:15px;white-space:nowrap}
+.marca-portal strong{color:var(--marinho);font-weight:700;letter-spacing:.02em}
+:root[data-theme="dark"] .marca-portal strong{color:#FFFFFF}
+.marca-portal .ps{color:var(--verm)}
+.portal-topo nav{margin-left:auto;display:flex;gap:4px;align-items:center;font-size:13px}
+.portal-topo nav a{padding:8px 10px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.portal-topo nav a:hover{background:var(--surface-2)}
+.portal-topo .idioma{width:96px}
+.heroi{max-width:1160px;margin:0 auto;padding:48px 28px 28px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.heroi h1{margin:0;font-size:40px;font-weight:700;letter-spacing:-.03em}
+.busca-portal{display:flex;align-items:center;gap:10px;width:100%;max-width:620px;height:52px;padding:0 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:0 4px 16px rgba(11,31,75,.06)}
+.busca-portal input{border:0;outline:none;font-size:15px;width:100%;background:transparent}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;width:100%;max-width:860px;margin-top:8px}
+.cats a{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);text-decoration:none;text-align:left}
+.cats a:hover{border-color:var(--royal);transform:translateY(-2px)}
+.cats span{font-size:12px;color:var(--muted)}
+.portal-corpo{max-width:1160px;margin:0 auto;padding:8px 28px 48px;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.col-form{flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.abas-portal{max-width:340px}
+.form{padding:26px;display:flex;flex-direction:column;gap:18px}
+.campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.campo label,.campo .lbl{font-size:13px;font-weight:500}
+.campo select,.campo input,.campo textarea{height:42px;border-radius:10px;border:1px solid var(--line);padding:0 12px;background:var(--surface);min-width:0;width:100%}
+.campo textarea{height:auto;min-height:96px;padding:10px 12px;resize:vertical}
+.campo select:focus,.campo input:focus,.campo textarea:focus{outline:none;border-color:var(--royal);box-shadow:0 0 0 3px var(--royal-claro)}
+.campo select:disabled{background:var(--surface-2);opacity:1;cursor:not-allowed;color:var(--ink)}
+.grade2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grade3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.cond{animation:campo .24s cubic-bezier(.2,.7,.2,1) both}
+.oculto{display:none!important}
+.motivos{display:flex;flex-wrap:wrap;gap:8px}
+.motivos button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500}
+.motivos button[aria-checked="true"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.deflexao{border-radius:12px;border:1px solid var(--verde-borda);background:var(--verde-claro);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.deflexao b{font-size:13px;color:var(--verde-txt)}
+.deflexao a{font-size:14px;display:flex;justify-content:space-between;text-decoration:none}
+.link-qr{align-self:flex-start;border:1px dashed var(--royal-borda);background:var(--royal-claro);color:var(--royal-txt);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+.link-qr:hover{border-style:solid}
+.local-box{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;border:1px solid var(--line-2);background:var(--bg)}
+.local-box.qr{border-color:var(--royal-borda);background:var(--royal-claro)}
+.local-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;font-weight:600}
+.selo-qr{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--btn);color:var(--btn-ink)}
+.btn-link{border:0;background:none;color:var(--royal-txt);font-weight:600;font-size:13px;text-decoration:underline;padding:0;margin-left:auto}
+.aviso-verm{border:1px solid var(--verm-borda);background:var(--verm-claro);color:var(--verm-txt);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5}
+fieldset.equip{border:0;padding:0;margin:0;min-width:0}
+fieldset.equip legend{font-size:13px;font-weight:500;padding:0;margin-bottom:8px}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.checks input{accent-color:var(--royal);width:16px;height:16px;margin:0}
+.lado{flex:1 1 320px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.pedido{display:flex;flex-direction:column;gap:6px;padding:12px;margin:0 -8px;border-radius:10px;text-decoration:none}
+.pedido:hover{background:var(--surface-2)}
+
+/* ---------- Chat ---------- */
+.fab{position:fixed;right:24px;bottom:24px;height:52px;border-radius:26px;border:0;background:var(--btn);color:var(--btn-ink);font-weight:600;padding:0 20px;box-shadow:var(--sombra);z-index:35;display:flex;align-items:center;gap:8px}
+.fab:hover{transform:translateY(-2px)}
+.chat{position:fixed;right:24px;bottom:88px;width:380px;max-width:calc(100vw - 32px);height:600px;max-height:calc(100vh - 110px);background:var(--surface);border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 48px rgba(11,31,75,.2);display:none;flex-direction:column;z-index:36;transform-origin:bottom right}
+.chat.aberto{display:flex;animation:pop .22s cubic-bezier(.2,.7,.2,1) both}
+.chat header{padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line-2)}
+.chat .corpo{flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg);overflow:auto}
+.bal{max-width:80%;padding:10px 13px;line-height:1.45;font-size:14px}
+.bal.eu{align-self:flex-end;background:var(--btn);color:var(--btn-ink);border-radius:16px 16px 4px 16px}
+.bal.eles{background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 16px 4px}
+.chat.aberto .m{animation:msg .3s cubic-bezier(.2,.7,.2,1) both}
+.chat.aberto .m:nth-child(2){animation-delay:.05s}.chat.aberto .m:nth-child(3){animation-delay:.12s}.chat.aberto .m:nth-child(4){animation-delay:.24s}.chat.aberto .m:nth-child(5){animation-delay:.36s}.chat.aberto .m:nth-child(6){animation-delay:.48s}
+.notas{display:flex;gap:6px}
+.notas button{flex:1;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:15px}
+.notas button:active{transform:scale(.96)}
+.notas button[aria-checked="true"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.digit{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--muted);animation:digita 1.2s infinite}
+.digit:nth-child(2){animation-delay:.15s}.digit:nth-child(3){animation-delay:.3s}
+
+@media (max-width:1100px){
+  .detalhes{display:none}
+  .lista{flex-basis:280px;width:280px}
+}
+@media (max-width:820px){
+  .lateral{display:none}
+  .lista{display:none}
+  .massa{left:50%}
+  .grade2,.grade3{grid-template-columns:minmax(0,1fr)}
+  .topo{padding:0 16px}
+  .pad{padding:16px}
+  .esconde-m{display:none!important}
+  .portal-topo .in{padding:0 16px}
+  .portal-topo nav a{display:none}
+  .heroi{padding:32px 16px 20px}
+  .heroi h1{font-size:30px}
+  .portal-corpo{padding:8px 16px 96px}
+  .form{padding:18px}
+  .conversa{padding:4px 16px 16px}
+  .editor{margin:0 12px 16px}
+  .cal .dia{min-height:72px;padding:3px}
+  .ev{font-size:10px;padding:2px 4px}
+  .cal .dow{padding:8px 4px;font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <nav class="lateral" aria-label="Navegação">
+    <div class="logo">
+      <span class="selo"><svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 9 L9 4 L14 8 L19 4 L24 9 L24 17 C24 22 19 25 14 25 C9 25 4 22 4 17 Z" fill="#0B1F4B"/><circle cx="10.5" cy="14.5" r="1.9" fill="#D62839"/><circle cx="17.5" cy="14.5" r="1.9" fill="#D62839"/></svg></span>
+      <span><strong>PantherDesk</strong><span>EARJ · TI</span></span>
+    </div>
+    <a href="#busca" data-acao="busca"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5 L14 14" stroke="currentColor" stroke-width="1.5"/></svg>Buscar<kbd>/</kbd></a>
+    <a href="#inicio" data-tela="inicio"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 L8 2.5 L13.5 7 V13.5 H2.5 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Início</a>
+    <a href="#ticket" data-tela="ticket"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 9 H5 L6 11 H10 L11 9 H14 V13 H2 Z M3.5 3 H12.5 L14 9 M3.5 3 L2 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Caixa de entrada<span class="num">5</span></a>
+    <a href="#eventos" data-tela="eventos"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7 H14 M5.5 2 V5 M10.5 2 V5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Eventos</a>
+    <a href="#qr" data-tela="qr"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5 H6.5 V6.5 H2.5 Z M9.5 2.5 H13.5 V6.5 H9.5 Z M2.5 9.5 H6.5 V13.5 H2.5 Z M9.5 9.5 H11 V11 H9.5 Z M12 12 H13.5 V13.5 H12 Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>QR da sala</a>
+    <a href="#inicio" data-tela="inicio" data-item="relatorios"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13 V9 M6 13 V5 M10 13 V7 M14 13 V3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Relatórios</a>
+    <span class="sec">Filas</span>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Quase escalando"><span>⚠ Quase escalando</span><span class="v">4</span></a>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Não resolvidos"><span>Não resolvidos</span><span>32</span></a>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Meus tickets"><span>Meus tickets</span><span>6</span></a>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Sem responsável"><span>Sem responsável</span><span>6</span></a>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Em espera"><span>Em espera</span><span>7</span></a>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Pendentes"><span>Pendentes</span><span>21</span></a>
+    <a href="#filas" class="fila" data-tela="filas" data-fila="Resolvidos hoje"><span>Resolvidos hoje</span><span>8</span></a>
+    <span class="sec">Solicitante</span>
+    <a href="#portal" data-tela="portal">Portal e chat</a>
+    <div class="perfil">
+      <button class="quem" id="btn-perfil" aria-haspopup="true" aria-label="Menu do perfil"><span class="avatar">VC<span class="on"></span></span><span style="font-size:12px"><strong>Você</strong>Disponível</span></button>
+      <button class="ic" id="tema" aria-label="Alternar modo escuro" title="Modo claro / escuro">◐</button>
+      <div class="pop" id="pop-perfil"><button type="button" id="perfil-status">Status: Disponível <kbd>●</kbd></button><button type="button" id="perfil-pref">Preferências</button><button type="button" data-tela="entrar" id="sair">Sair <kbd>⎋</kbd></button></div>
+    </div>
+  </nav>
+
+  <div class="conteudo" id="conteudo">
+
+    <!-- ================= ENTRAR ================= -->
+    <section class="tela entrar" id="t-entrar" aria-label="Entrar">
+      <div class="cartao-entrar anima">
+        <span class="endereco"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1.5" fill="currentColor"/><path d="M4 5 V3.5 A2 2 0 0 1 8 3.5 V5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>help.earj.com.br/agente</span>
+        <div class="marca-entrar">
+          <span class="selo"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 9 L9 4 L14 8 L19 4 L24 9 L24 17 C24 22 19 25 14 25 C9 25 4 22 4 17 Z" fill="#FFFFFF"/><circle cx="10.5" cy="14.5" r="1.9" fill="#D62839"/><circle cx="17.5" cy="14.5" r="1.9" fill="#D62839"/></svg></span>
+          <div><strong>PantherDesk</strong><span>Help Desk de TI · EARJ</span></div>
+        </div>
+        <div><h1>Entrar</h1><span style="font-size:14px;color:var(--muted)">Use a sua conta Google da escola (<b style="color:var(--ink)">@earj.com.br</b>).</span></div>
+        <button class="btn-google" id="entrar-google"><span class="g" aria-hidden="true">G</span>Entrar com Google</button>
+        <div class="ou">ou</div>
+        <button class="btn-sec" id="entrar-link" aria-expanded="false">Não tem conta da escola? <b>Receber link por e-mail</b></button>
+        <form class="campo oculto" id="form-link" onsubmit="return false">
+          <label for="e-link">Seu e-mail</label>
+          <div style="display:flex;gap:8px"><input id="e-link" type="email" placeholder="nome@exemplo.com" style="flex:1"><button type="submit" class="btn prim" style="height:42px">Enviar link</button></div>
+        </form>
+        <p class="rodape-entrar">Pais e visitantes recebem um link de acesso por e-mail. Agentes e equipe entram só com a conta Google do domínio; depois de entrar, você volta à página que tinha aberto.</p>
+      </div>
+    </section>
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="tela" id="t-inicio" aria-label="Início">
+      <header class="topo">
+        <h1 style="margin:0;font-size:17px;font-weight:600;white-space:nowrap">Bom dia, Você</h1>
+        <span class="muted esconde-m">quinta, 29 de outubro</span>
+        <a href="#filas" data-tela="filas" data-fila="Quase escalando" class="btn atencao esconde-m" style="margin-left:auto">⚠ 4 quase escalando</a>
+        <a href="#filas" data-tela="filas" data-fila="Meus tickets" class="btn prim" style="text-decoration:none">▶ Começar pela minha fila</a>
+      </header>
+      <div class="pad">
+        <div class="stats anima">
+          <div class="cartao stat"><div class="cab"><span>Resolvidos na semana</span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 9.5 L7.5 13 L14 5.5" fill="none" stroke="var(--muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><b>23</b><span>+5 em relação à semana passada</span></div>
+          <div class="cartao stat"><div class="cab"><span>1ª resposta (mediana)</span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M9 5.5 V9 L11.5 10.5" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/></svg></div><b>18 min</b><span>em horário útil · meta 30 min</span></div>
+          <div class="cartao stat"><div class="cab"><span>Satisfação · 60 dias</span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2.5 L10.9 6.6 L15.4 7.1 L12 10.1 L13 14.5 L9 12.2 L5 14.5 L6 10.1 L2.6 7.1 L7.1 6.6 Z" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-linejoin="round"/></svg></div><b>100%</b><span>EARJ: 99% · 9 avaliações suas</span></div>
+          <div class="cartao stat"><div class="cab"><span>SLA cumprido · semana</span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 14 V9 M7 14 V5 M11 14 V8 M15 14 V3" stroke="var(--muted)" stroke-width="1.6" stroke-linecap="round"/></svg></div><b>94%</b><span style="color:var(--verm-txt);font-weight:600">1 vencido nos seus tickets</span></div>
+        </div>
+        <section class="cartao anima d1" style="padding:22px">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:14px">
+            <div><h2 style="margin:0;font-size:16px;font-weight:600">Criados × resolvidos</h2><span style="font-size:13px;color:var(--muted)">Últimas 8 semanas · seus grupos</span></div>
+            <div style="display:flex;gap:14px;font-size:12px;color:var(--ink-2);align-items:center"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;border-top:2px dashed var(--faint)"></span>Criados</span><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;border-top:2px solid var(--royal)"></span>Resolvidos</span></div>
+          </div>
+          <svg role="img" aria-label="Gráfico: criados e resolvidos por semana; os resolvidos acompanham os criados, entre 35 e 51 por semana" viewBox="0 0 800 200" style="width:100%;height:200px">
+            <g stroke="var(--line-2)" stroke-width="1"><path d="M40 20 H790 M40 70 H790 M40 120 H790 M40 170 H790"/></g>
+            <g fill="var(--faint)" font-size="11"><text x="8" y="24">60</text><text x="8" y="74">40</text><text x="8" y="124">20</text><text x="14" y="174">0</text></g>
+            <path id="linha-criados" d="M40 75 L147 65 L254 82.5 L361 52.5 L468 60 L575 70 L682 42.5 L790 55" fill="none" stroke="var(--faint)" stroke-width="2" stroke-dasharray="5 5"/>
+            <path d="M40 82.5 L147 70 L254 77.5 L361 60 L468 57.5 L575 67.5 L682 50 L790 52.5 L790 170 L40 170 Z" fill="var(--royal)" fill-opacity=".10"/>
+            <path id="linha-resolvidos" d="M40 82.5 L147 70 L254 77.5 L361 60 L468 57.5 L575 67.5 L682 50 L790 52.5" fill="none" stroke="var(--royal)" stroke-width="2.4"/>
+            <g fill="var(--muted)" font-size="11"><text x="30" y="194">S1</text><text x="137" y="194">S2</text><text x="244" y="194">S3</text><text x="351" y="194">S4</text><text x="458" y="194">S5</text><text x="565" y="194">S6</text><text x="672" y="194">S7</text><text x="770" y="194">S8</text></g>
+          </svg>
+        </section>
+        <div class="duas anima d2">
+          <section class="cartao" style="flex:1 1 380px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0">
+            <div><h2 style="margin:0;font-size:16px;font-weight:600">Abertos nos meus grupos</h2><span style="font-size:13px;color:var(--muted)">Suporte Barra e Eventos</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:13px" id="barras"></div>
+          </section>
+          <section class="cartao" style="flex:1 1 460px;display:flex;flex-direction:column;min-width:0">
+            <div style="padding:20px 22px 0;display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-size:16px;font-weight:600">Atividade</h2><button class="btn" style="border:0;background:transparent" id="ler-tudo">✓✓ Marcar tudo como lido</button></div>
+            <div class="abas" role="tablist" id="abas-feed">
+              <button role="tab" class="on" data-f="tudo">Tudo</button>
+              <button role="tab" data-f="mencao">Menções <span class="cont v">1</span></button>
+              <button role="tab" data-f="atrib">Atribuições <span class="cont">2</span></button>
+              <button role="tab" data-f="sla">Prazos</button>
+            </div>
+            <div class="feed" id="feed"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FILAS ================= -->
+    <section class="tela" id="t-filas" aria-label="Filas">
+      <header class="topo">
+        <span class="muted">Filas</span><span class="sep">/</span><strong id="fila-nome-topo">Quase escalando</strong>
+        <span class="muted" style="margin-left:auto" id="atualizada">atualizada agora</span>
+        <button class="icone" id="atualizar" aria-label="Atualizar">↻</button>
+      </header>
+      <div class="pad">
+        <div class="filas-abas anima" id="filas-abas" aria-label="Filas compartilhadas"></div>
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px" class="anima">
+          <div style="flex:1 1 320px;display:flex;flex-direction:column;gap:4px">
+            <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em" id="fila-nome">Quase escalando</h1>
+            <span style="color:var(--muted);font-size:13px" id="fila-desc"></span>
+          </div>
+          <button class="btn">Filtrar</button>
+          <button class="btn" id="exportar">Exportar CSV</button>
+          <a href="#ticket" data-tela="ticket" class="btn prim" style="text-decoration:none">▶ Trabalhar em sequência</a>
+        </div>
+        <div class="chips anima d1">
+          <button class="chip">Campus: todos ▾</button><button class="chip">Responsável: qualquer ▾</button><button class="chip on" id="chip-sla">Prazo: vencido ou &lt; 1 h ✕</button>
+        </div>
+        <div class="cartao anima d2" style="overflow-x:auto">
+          <table class="tabela">
+            <thead><tr><th><input type="checkbox" id="sel-todos" aria-label="Selecionar todos"></th><th>Ticket</th><th>Solicitante</th><th>Grupo</th><th>Responsável</th><th>Prazo</th><th style="text-align:right;padding-right:16px">Na fila há</th></tr></thead>
+            <tbody id="corpo-fila"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TICKET ================= -->
+    <section class="tela" id="t-ticket" aria-label="Ticket">
+      <header class="topo">
+        <span class="muted esconde-m">Caixa de entrada</span><span class="sep esconde-m">/</span><span class="muted">Meus tickets</span><span class="sep">/</span><strong id="t-num">#8412</strong>
+        <span class="esconde-m" style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);font-size:12px"><span class="ini i-roxo" style="width:18px;height:18px;flex-basis:18px;font-size:9px">RT</span>Rafael também está aqui</span>
+        <span style="position:relative;margin-left:auto"><button class="icone" id="btn-notif" aria-label="Notificações"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 11.5 V7 A4.5 4.5 0 0 1 12.5 7 V11.5 L13.5 12.5 H2.5 Z M6.5 14 H9.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="ponto"></span></button>
+          <div class="pop" id="pop-notif" style="right:0;top:42px;width:300px"><button><span><b>Rafael</b> mencionou você em #8412</span><kbd>12 min</kbd></button><button><span><b>Prazo</b> #8398 vencido</span><kbd>25 min</kbd></button><button><span><b>Eventos</b> devolveu #8380</span><kbd>1 h</kbd></button></div></span>
+      </header>
+      <div class="ticket">
+        <aside class="lista" aria-label="Lista de tickets">
+          <div class="cab">
+            <div style="display:flex;align-items:center;justify-content:space-between"><h2 style="margin:0;font-size:16px;font-weight:600">Meus tickets</h2><button class="btn" style="height:30px;font-size:12px">Mais urgentes ▾</button></div>
+            <div class="seg" role="tablist" id="seg-lista"><button class="on">Abertos 5</button><button>Aguardando 2</button><button>Seguindo 1</button></div>
+          </div>
+          <div id="lista-tickets"></div>
+        </aside>
+        <div class="centro">
+          <div style="padding:20px 24px 12px;display:flex;flex-direction:column;gap:10px" class="anima" id="cab-ticket"></div>
+          <div class="conversa anima d1" id="conversa"></div>
+          <form class="editor" id="editor" onsubmit="return false" aria-label="Responder">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px 0">
+              <div class="seg" role="tablist" style="flex:0 0 auto"><button type="button" class="on" id="ed-pub">Responder</button><button type="button" id="ed-int">Nota interna</button></div>
+              <span style="font-size:12px;color:var(--muted)" id="ed-para">para Mariana Costa · + Cc</span>
+              <button type="button" class="btn" style="margin-left:auto;height:28px;font-size:12px" id="melhorar">✦ Melhorar texto</button>
+            </div>
+            <div class="aviso-inc oculto" id="aviso-inc"></div>
+            <div class="previa oculto" id="previa"></div>
+            <label for="texto" class="sr">Mensagem</label>
+            <textarea id="texto"></textarea>
+            <div class="rod">
+              <span style="position:relative"><button type="button" class="btn" id="btn-macro">⚡ Macro</button>
+                <div class="pop" id="pop-macro" style="bottom:42px;left:0;width:330px"><input id="busca-macro" placeholder="Buscar intenção (PT ou EN)" aria-label="Buscar macro"><div id="lista-macro"></div></div></span>
+              <button type="button" class="icone" aria-label="Anexar arquivo">📎</button>
+              <span style="font-size:12px;color:var(--muted)" id="rascunho" class="esconde-m">Rascunho salvo · depois de enviar: próximo da fila</span>
+              <div class="split">
+                <button type="submit" class="a" id="enviar">Enviar · Em espera</button>
+                <button type="button" class="b" id="btn-estado" aria-label="Escolher o estado do envio">▾</button>
+                <div class="pop" id="pop-estado"><button type="button" data-est="Aberto">Aberto <kbd>Ctrl ⇧ A</kbd></button><button type="button" data-est="Pendente">Pendente <kbd>Ctrl ⇧ P</kbd></button><button type="button" data-est="Em espera">Em espera <kbd>Ctrl ⇧ E</kbd></button><button type="button" data-est="Resolvido">Resolvido <kbd>Ctrl ⇧ R</kbd></button></div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <aside class="detalhes anima d2" aria-label="Detalhes do ticket" id="detalhes"></aside>
+      </div>
+    </section>
+
+    <!-- ================= EVENTOS ================= -->
+    <section class="tela" id="t-eventos" aria-label="Eventos de AV">
+      <header class="topo">
+        <span class="muted">Eventos de AV</span><span class="sep">/</span><strong>Calendário</strong>
+        <span class="muted esconde-m" style="margin-left:auto">prazo = início da montagem · mínimo de 5 dias úteis</span>
+      </header>
+      <div class="pad">
+        <div class="anima" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+          <div style="display:flex;align-items:center;gap:8px"><button class="icone" id="cal-ant" aria-label="Mês anterior">‹</button><h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em">Novembro de 2026</h1><button class="icone" id="cal-prox" aria-label="Próximo mês">›</button></div>
+          <div class="seg" id="cal-visao" style="margin-left:auto"><button class="on">Mês</button><button>Semana</button></div>
+          <a href="#portal" data-tela="portal" class="btn prim" id="novo-evento" style="text-decoration:none">＋ Novo evento</a>
+        </div>
+        <div class="chips anima d1">
+          <div class="seg" id="f-campus" role="group" aria-label="Filtrar por campus"><button class="on" data-c="todos">Todos</button><button data-c="barra">Barra</button><button data-c="gavea">Gávea</button><button data-c="entre">Entre campi</button></div>
+          <label class="chip on">Tipo <select id="f-tipo" aria-label="Filtrar por tipo"><option value="">todos</option></select></label>
+          <span class="legenda" style="margin-left:auto"><span><span class="sw gavea"></span>Gávea</span><span><span class="sw barra"></span>Barra</span><span><span class="sw entre"></span>Entre campi</span><span style="color:var(--muted)">⚒ montagem</span></span>
+        </div>
+        <div class="ev-grade anima d2">
+          <section class="cartao cal-wrap" aria-label="Calendário de novembro de 2026"><div class="cal" id="cal"></div></section>
+          <aside class="cartao proximos" aria-label="Próximos eventos">
+            <div style="padding:18px 18px 8px"><h2 style="margin:0;font-size:16px;font-weight:600">Próximos</h2><span style="font-size:12px;color:var(--muted)">ordenados pelo início da montagem</span></div>
+            <div id="prox" style="padding-bottom:10px"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= QR DA SALA (visão do técnico) ================= -->
+    <section class="tela" id="t-qr" aria-label="QR da sala">
+      <header class="topo">
+        <span class="muted">QR da sala</span><span class="sep">/</span><strong>Visão do técnico</strong>
+        <span class="muted esconde-m" style="margin-left:auto">o que aparece ao escanear o QR com o login de agente</span>
+      </header>
+      <div class="qr-grade">
+        <div class="fone anima">
+          <div class="tela-fone">
+            <div class="status"><span>10:04</span><span>5G ▮▮▮</span></div>
+            <div class="url"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1.5" fill="currentColor"/><path d="M4 5 V3.5 A2 2 0 0 1 8 3.5 V5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>help.earj.com.br/s/BAR-2-214</div>
+            <div class="qr-local"><span class="pill-qr">▣ QR · BAR-2-214</span><h2>Barra · 2º andar · Sala 214</h2><span>Prédio principal · <b id="qr-cont">4</b> tickets abertos nesta sala</span></div>
+            <div class="qr-lista" id="qr-lista"></div>
+            <div class="qr-rod"><button class="btn prim" id="qr-novo">＋ Abrir ticket aqui</button></div>
+          </div>
+        </div>
+        <aside class="cartao folha-qr anima d1">
+          <span class="rot">Folha para imprimir</span>
+          <div id="qr-svg"></div>
+          <strong style="font-size:18px">Sala 214</strong>
+          <span style="font-size:13px;color:var(--muted)">Barra · 2º andar · código <b style="color:var(--ink)">BAR-2-214</b></span>
+          <span style="font-size:12px;color:var(--muted)">Trocar o nome da sala não muda o QR. O local do ticket vem do QR ou do formulário.</span>
+          <button class="btn" id="imprimir-qr" style="width:100%;justify-content:center">Imprimir QR do 2º andar (5 salas)</button>
+          <button class="btn" id="qr-sol" style="width:100%;justify-content:center">Ver como solicitante →</button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= PORTAL ================= -->
+    <section class="tela portal" id="t-portal" aria-label="Portal do solicitante">
+      <div class="barra-url"><span><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1.5" fill="currentColor"/><path d="M4 5 V3.5 A2 2 0 0 1 8 3.5 V5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>help.earj.com.br</span></div>
+      <header class="portal-topo"><div class="in">
+        <span class="marca-portal"><strong>EARJ</strong><span class="ps">·</span><span data-i18n="p-marca">Central de ajuda de TI</span></span>
+        <nav aria-label="Portal"><a href="#portal" data-i18n="p-artigos">Artigos</a><a href="#portal" data-i18n="p-pedidos">Meus pedidos</a>
+          <div class="seg idioma" id="seg-idioma" role="group" aria-label="Idioma"><button class="on" data-l="pt">PT</button><button data-l="en">EN</button></div>
+          <a href="#inicio" data-tela="inicio" style="color:var(--muted)" data-i18n="p-agente">← Área do agente</a><span class="ini i-azul" style="width:32px;height:32px;flex-basis:32px">MC</span></nav>
+      </div></header>
+      <div class="heroi anima">
+        <span class="pill" style="background:var(--surface)" data-i18n="p-pill">TI da EARJ · respondemos em horário escolar</span>
+        <h1 data-i18n="p-h1">Como podemos ajudar?</h1>
+        <p style="margin:0;color:var(--muted);font-size:16px;max-width:520px" data-i18n="p-sub">Procure uma resposta pronta ou abra um pedido. Você acompanha tudo por aqui e pelo e-mail.</p>
+        <label class="busca-portal"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="var(--muted)" stroke-width="1.5"/><path d="M10.5 10.5 L14 14" stroke="var(--muted)" stroke-width="1.5"/></svg><span class="sr">Buscar</span><input type="search" data-i18n-ph="p-busca" placeholder="Senha do Wi-Fi, impressora, projetor, VPN…"></label>
+        <div class="cats"><a href="#portal"><strong data-i18n="c-wifi">Wi-Fi e rede</strong><span data-i18n="c-wifi2">8 artigos</span></a><a href="#portal"><strong data-i18n="c-imp">Impressoras</strong><span data-i18n="c-imp2">6 artigos</span></a><a href="#portal"><strong data-i18n="c-sala">Sala de aula</strong><span data-i18n="c-sala2">projetor, som, câmera</span></a><a href="#portal"><strong data-i18n="c-contas">Contas e senhas</strong><span data-i18n="c-contas2">Google, sistemas</span></a></div>
+      </div>
+      <div class="portal-corpo">
+        <div class="col-form anima d1">
+          <div class="seg abas-portal" role="tablist" id="abas-portal"><button role="tab" class="on" data-p="sup" data-i18n="tab-sup">Suporte</button><button role="tab" data-p="ev" data-i18n="tab-ev">Evento de AV</button></div>
+
+          <form class="cartao form" id="form-sup" onsubmit="return false" aria-label="Abrir um pedido">
+            <div><h2 style="margin:0;font-size:19px;font-weight:600" data-i18n="f-tit">Abrir um pedido</h2><span style="font-size:13px;color:var(--muted)" data-i18n="f-sub">Os próximos campos aparecem conforme as suas escolhas.</span></div>
+            <button type="button" class="link-qr" id="sim-qr">▣ <span data-i18n="qr-sim">Simular QR da Sala 214 · Barra · 2º andar</span></button>
+            <div class="campo"><label for="p-tipo" data-i18n="l-tipo">Você é</label><select id="p-tipo"><option>Funcionário(a) da escola</option><option>Responsável por aluno</option></select></div>
+            <div class="local-box" id="local-sup">
+              <div class="local-cab"><span data-i18n="l-onde">Onde é o problema?</span><span class="selo-qr oculto" id="selo-qr">▣ <span data-i18n="via-qr">via QR</span> · BAR-2-214</span><button type="button" class="btn-link oculto" id="nao-estou" data-i18n="nao-estou">Não estou nesta sala</button></div>
+              <div class="grade3">
+                <div class="campo"><label for="p-campus" data-i18n="l-campus">Campus</label><select id="p-campus"></select></div>
+                <div class="campo" id="w-p-andar"><label for="p-andar" data-i18n="l-andar">Andar</label><select id="p-andar"></select></div>
+                <div class="campo" id="w-p-sala"><label for="p-sala" data-i18n="l-sala">Sala</label><select id="p-sala"></select></div>
+              </div>
+            </div>
+            <div class="campo"><span class="lbl" data-i18n="l-motivo">Motivo do contato</span><div class="motivos" role="radiogroup" aria-label="Motivo do contato" id="motivos"></div></div>
+            <div class="grade2" id="w-equip">
+              <div class="campo"><label for="p-equip" data-i18n="l-equip">Equipamento</label><select id="p-equip"><option value="">Escolha…</option><option value="projetor" selected>Projetor</option><option value="impressora">Impressora</option><option value="notebook">Notebook / Chromebook</option><option value="som">Caixa de som</option></select></div>
+              <div class="campo" id="w-sint"><label for="p-sint" data-i18n="l-sint">O que está acontecendo?</label><select id="p-sint"></select></div>
+            </div>
+            <div class="campo"><label for="p-ass" data-i18n="l-ass">Assunto</label><input id="p-ass" value="Projetor da sala 204 não liga"></div>
+            <section class="deflexao" aria-live="polite"><b data-i18n="defl">Talvez isto resolva agora</b><a href="#portal">Projetor não liga: o que verificar <span aria-hidden="true">→</span></a><a href="#portal">Conectar o notebook ao projetor da sala <span aria-hidden="true">→</span></a></section>
+            <div class="campo"><label for="p-desc" data-i18n="l-desc">Descrição</label><textarea id="p-desc">Tenho aula às 10:30 e preciso do projetor.</textarea></div>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px"><button type="button" class="btn" style="height:42px;border-style:dashed" data-i18n="anexar">Anexar foto ou arquivo</button><button type="submit" class="btn prim" style="margin-left:auto;height:44px;padding:0 22px;font-size:14px" id="enviar-pedido" data-i18n="enviar">Enviar pedido</button></div>
+          </form>
+
+          <form class="cartao form oculto" id="form-ev" onsubmit="return false" aria-label="Pedir suporte de AV para um evento">
+            <div><h2 style="margin:0;font-size:19px;font-weight:600" data-i18n="ev-tit">Pedir suporte de AV para um evento</h2><span style="font-size:13px;color:var(--muted)" data-i18n="ev-sub">Peça com pelo menos 5 dias úteis de antecedência. O prazo da equipe é o início da montagem.</span></div>
+            <div class="grade2">
+              <div class="campo"><label for="e-nome" data-i18n="e-nome">Nome do evento</label><input id="e-nome" placeholder="Ex.: Assembly do Ensino Fundamental"></div>
+              <div class="campo"><label for="e-tipo" data-i18n="e-tipo">Tipo</label><select id="e-tipo"></select></div>
+            </div>
+            <div class="grade3">
+              <div class="campo"><label for="e-data" data-i18n="e-data">Data</label><input id="e-data" type="date" value="2026-11-03"></div>
+              <div class="campo"><label for="e-ini" data-i18n="e-ini">Início</label><input id="e-ini" type="time" value="08:00"></div>
+              <div class="campo"><label for="e-fim" data-i18n="e-fim">Fim</label><input id="e-fim" type="time" value="09:30"></div>
+            </div>
+            <div class="aviso-verm oculto" id="e-aviso" role="status"></div>
+            <div class="grade2">
+              <div class="campo"><label for="e-mont" data-i18n="e-mont">Início da montagem</label><input id="e-mont" type="datetime-local" value="2026-11-03T07:00"></div>
+              <div class="campo"><label for="e-pub" data-i18n="e-pub">Público estimado</label><input id="e-pub" type="number" min="1" value="120"></div>
+            </div>
+            <div class="local-box">
+              <div class="local-cab"><span data-i18n="e-local">Local do evento</span></div>
+              <div class="grade3">
+                <div class="campo"><label for="e-campus" data-i18n="l-campus">Campus</label><select id="e-campus"></select></div>
+                <div class="campo" id="w-e-andar"><label for="e-andar" data-i18n="l-andar">Andar</label><select id="e-andar"></select></div>
+                <div class="campo" id="w-e-sala"><label for="e-sala" data-i18n="l-sala">Sala</label><select id="e-sala"></select></div>
+              </div>
+            </div>
+            <fieldset class="equip"><legend data-i18n="e-equip">Equipamentos pedidos</legend><div class="checks" id="e-equip"></div></fieldset>
+            <div class="campo"><label for="e-obs" data-i18n="e-obs">Observações</label><textarea id="e-obs" placeholder="Roteiro, quem fala, se precisa de gravação…"></textarea></div>
+            <div style="display:flex;justify-content:flex-end"><button type="submit" class="btn prim" style="height:44px;padding:0 22px;font-size:14px" id="enviar-evento" data-i18n="e-enviar">Enviar pedido de evento</button></div>
+          </form>
+        </div>
+        <aside class="lado anima d2">
+          <section class="cartao" style="padding:20px;display:flex;flex-direction:column;gap:4px">
+            <h2 style="margin:0 0 8px;font-size:16px;font-weight:600" data-i18n="p-pedidos2">Meus pedidos</h2>
+            <a class="pedido" href="#portal"><span style="font-size:14px;font-weight:500">Projetor da sala 204 não liga</span><span style="display:flex;gap:8px;align-items:center;font-size:12px"><span class="pill" style="padding:2px 8px;border-color:var(--royal-borda);background:var(--royal-claro);color:var(--royal-txt)"><i style="background:var(--royal)"></i>Em andamento</span><span style="color:var(--muted)">#8412 · hoje</span></span></a>
+            <a class="pedido" href="#portal"><span style="font-size:14px;font-weight:500">Som da sala 204 muito baixo</span><span style="display:flex;gap:8px;align-items:center;font-size:12px"><span class="pill" style="padding:2px 8px;border-color:var(--verm-borda);background:var(--verm-claro);color:var(--verm-txt)"><i style="background:var(--verm)"></i>Aguardando você</span><span style="color:var(--muted)">#8233 · 3 dias</span></span></a>
+            <a class="pedido" href="#portal"><span style="font-size:14px;font-weight:500">Senha do Wi-Fi para visitantes</span><span style="display:flex;gap:8px;align-items:center;font-size:12px"><span class="pill" style="padding:2px 8px;border-color:var(--verde-borda);background:var(--verde-claro);color:var(--verde-txt)"><i style="background:var(--verde-forte)"></i>Resolvido · avalie</span><span style="color:var(--muted)">#7980 · 2 semanas</span></span></a>
+          </section>
+          <section class="cartao" style="padding:20px;display:flex;flex-direction:column;gap:10px"><h2 style="margin:0 0 4px;font-size:16px;font-weight:600" data-i18n="mais">Mais procurados</h2><a href="#portal" style="text-decoration:none">Conectar ao Wi-Fi da escola</a><a href="#portal" style="text-decoration:none">Instalar a impressora do seu setor</a><a href="#portal" style="text-decoration:none">Acessar a VPN de casa</a><a href="#portal" style="text-decoration:none">Recuperar a senha do Google</a></section>
+        </aside>
+      </div>
+      <button class="fab" id="fab" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 4 H15 V12 H8 L5 15 V12 H3 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span data-i18n="fab">Fale com a TI</span></button>
+      <div class="chat" id="chat" role="dialog" aria-label="Chat com a TI">
+        <header>
+          <span style="position:relative;width:38px;height:38px;border-radius:12px;background:var(--marinho);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">TI<span style="position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:#22C55E;border:2px solid var(--surface)"></span></span>
+          <div style="flex:1"><strong style="font-size:15px;display:block">TI · EARJ</strong><span style="font-size:12px;color:var(--muted)">Online · costuma responder em minutos</span></div>
+          <button class="icone" id="fechar-chat" aria-label="Fechar chat" style="border:0;background:var(--surface-2)">✕</button>
+        </header>
+        <div class="corpo" id="corpo-chat">
+          <span class="m pill" style="align-self:center;font-size:11px;background:var(--surface)">Hoje · pedido #8431</span>
+          <div class="m bal eu">Oi! O som do ginásio não está funcionando e o evento começa às 14h.</div>
+          <div class="m" style="display:flex;gap:8px;align-items:flex-end"><span class="ini i-roxo" style="width:28px;height:28px;flex-basis:28px;font-size:11px">RT</span><div class="bal eles">Olá, Bruna! Sou o Rafael, do suporte. Já estou indo ao ginásio verificar a mesa de som.</div></div>
+          <div class="m" style="display:flex;gap:8px;align-items:flex-end"><span style="width:28px;flex:0 0 28px"></span><div class="bal eles">Resolvido: era o cabo da caixa principal. Pode testar?</div></div>
+          <section class="m cartao" style="padding:14px;display:flex;flex-direction:column;gap:10px;border-radius:16px"><strong style="font-size:14px">Como foi o atendimento?</strong><div class="notas" role="radiogroup" aria-label="Nota de 1 a 5" id="notas"><button role="radio" aria-checked="false">1</button><button role="radio" aria-checked="false">2</button><button role="radio" aria-checked="false">3</button><button role="radio" aria-checked="false">4</button><button role="radio" aria-checked="false">5</button></div><span style="font-size:12px;color:var(--muted)" id="legenda">1 = muito ruim · 5 = excelente</span></section>
+        </div>
+        <div style="padding:6px 16px;font-size:12px;color:var(--muted);background:var(--bg);display:flex;align-items:center;gap:6px" id="digitando">Rafael está escrevendo <span class="digit"></span><span class="digit"></span><span class="digit"></span></div>
+        <form style="display:flex;gap:8px;padding:12px;border-top:1px solid var(--line-2)" id="form-chat"><label for="m-chat" class="sr">Mensagem</label><input id="m-chat" placeholder="Escreva sua mensagem" style="flex:1;min-width:0;height:44px;border-radius:12px;border:1px solid var(--line);padding:0 12px;outline:none;background:var(--surface)"><button type="submit" class="btn prim" aria-label="Enviar" style="width:44px;height:44px;justify-content:center;border-radius:12px">➤</button></form>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="massa" id="massa" role="region" aria-label="Ações em massa"><strong style="margin-right:8px" id="qtd">0 selecionados</strong><button>Atribuir</button><button>Estado</button><button>Macro</button><button>Etiquetas</button><button id="cancelar-sel" aria-label="Cancelar seleção" style="background:transparent;color:#B9C5E8">✕</button></div>
+
+<div class="veu" id="veu"></div>
+<aside class="gaveta" id="gaveta" role="dialog" aria-label="Rascunho de artigo">
+  <header><span class="ini i-esc" style="width:30px;height:30px;flex-basis:30px;font-size:13px">📄</span><div style="flex:1"><strong style="display:block">Rascunho de artigo</strong><span style="font-size:12px;color:var(--muted)" id="art-origem">a partir do #8401 · sem dados do solicitante</span></div><button class="icone" id="fechar-gaveta" aria-label="Fechar rascunho">✕</button></header>
+  <div class="corpo-g">
+    <div class="grade2">
+      <div class="campo"><label for="art-cat">Categoria</label><select id="art-cat"><option>Impressoras</option><option>Wi-Fi e rede</option><option>Sala de aula</option><option>Contas e senhas</option></select></div>
+      <div class="campo"><span class="lbl">Idioma</span><div class="seg" id="art-idioma"><button type="button" class="on">PT</button><button type="button" id="art-en">EN (pedir)</button></div></div>
+    </div>
+    <div class="campo"><label for="art-tit">Título</label><input id="art-tit"></div>
+    <div class="campo"><label for="art-txt">Texto</label><textarea id="art-txt" style="min-height:260px;line-height:1.55"></textarea></div>
+    <span style="font-size:12px;color:var(--muted)">Só o admin publica. O rascunho registra de qual ticket veio e entra nas sugestões do portal depois de publicado.</span>
+  </div>
+  <footer><button class="btn" id="art-variante">Pedir variante EN</button><button class="btn prim" id="art-salvar" style="margin-left:auto">Salvar rascunho</button></footer>
+</aside>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// ---------- Datas de referência ----------
+const HOJE = new Date(2026, 9, 29); // quinta, 29/10/2026
+const pIso = iso => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
+const diasAte = iso => Math.round((pIso(iso) - HOJE) / 864e5);
+function diasUteis(iso){ const alvo = pIso(iso); const c = new Date(HOJE); let n = 0; while (c < alvo) { c.setDate(c.getDate() + 1); const w = c.getDay(); if (w && w < 6) n++; } return n; }
+const faltam = n => n <= 0 ? 'é hoje' : n === 1 ? 'falta 1 dia' : `faltam ${n} dias`;
+const ddmm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
+const iniciais = nome => nome.split(' ').map(p => p[0]).slice(0, 2).join('');
+
+// ---------- Cadastro de locais (Δ33) ----------
+const locais = {
+  barra:{nome:'Barra', andares:[
+    {id:'sub', nome:'Subsolo', salas:['Sala de servidores','Depósito de AV','Garagem']},
+    {id:'ter', nome:'Térreo', salas:['Recepção','Secretaria','Enfermaria','Ginásio','Refeitório']},
+    {id:'1', nome:'1º andar', salas:['Sala 101','Sala 104','Sala 110','Laboratório de informática']},
+    {id:'2', nome:'2º andar', salas:['Sala 201','Sala 204','Sala 210','Sala 214','Sala dos professores']},
+    {id:'cob', nome:'Cobertura', salas:['Auditório','Terraço','Estúdio de música']}]},
+  gavea:{nome:'Gávea', andares:[
+    {id:'a-t', nome:'Prédio A · Térreo', salas:['Recepção','Biblioteca','Sala A-02']},
+    {id:'a-1', nome:'Prédio A · 1º andar', salas:['Sala A-11','Sala A-12','Laboratório de ciências']},
+    {id:'b-t', nome:'Prédio B · Térreo', salas:['RH','Financeiro','Refeitório']},
+    {id:'b-2', nome:'Prédio B · 2º andar', salas:['Teatro','Sala B-21','Sala B-22']}]},
+  entre:{nome:'Entre campi', andares:[{id:'ambos', nome:'Barra + Gávea', salas:['Auditório (Barra) + Teatro (Gávea)','Ginásio (Barra) + Teatro (Gávea)','Transmissão para os dois campi']}]}
+};
+
+// ---------- Eventos de AV (Δ34) ----------
+const tipos = {assembly:'Assembly', homecoming:'Homecoming', traducao:'Tradução simultânea', entre:'Evento entre campi', pequeno:'Pequeno evento', outro:'Outro'};
+const eventos = [
+  {n:8426, nome:'Palestra para pais com tradução simultânea', tipo:'traducao', campus:'gavea', data:'2026-11-04', ini:'18:30', fim:'20:00', mont:'2026-11-04', montH:'14:00', local:'Prédio B · 2º andar · Teatro', pub:180, equip:['Cabines de tradução','Fones de tradução','Microfone sem fio','Projetor'], sol:'Lívia Prates', foraPrazo:true},
+  {n:8425, nome:'Assembly do Ensino Médio', tipo:'assembly', campus:'barra', data:'2026-11-06', ini:'08:00', fim:'09:30', mont:'2026-11-05', montH:'15:00', local:'Cobertura · Auditório', pub:420, equip:['Mesa de som','Microfone sem fio','Projetor','Telão'], sol:'Paula Mendes'},
+  {n:8428, nome:'Apresentação de música do 5º ano', tipo:'pequeno', campus:'gavea', data:'2026-11-10', ini:'10:00', fim:'11:00', mont:'2026-11-10', montH:'08:00', local:'Prédio A · Térreo · Biblioteca', pub:60, equip:['Caixas de som','Microfone sem fio'], sol:'Helena Ribas'},
+  {n:8439, nome:'Orientação do 9º ano', tipo:'pequeno', campus:'barra', data:'2026-11-11', ini:'13:30', fim:'14:30', mont:'2026-11-11', montH:'12:30', local:'1º andar · Sala 110', pub:45, equip:['Projetor'], sol:'Bruno Faria'},
+  {n:8430, nome:'Homecoming Panthers', tipo:'homecoming', campus:'barra', data:'2026-11-14', ini:'10:00', fim:'16:00', mont:'2026-11-13', montH:'13:00', local:'Térreo · Ginásio', pub:900, equip:['Mesa de som','Caixas de som','Microfone sem fio','Telão','Transmissão ao vivo'], sol:'Carla Nunes', espera:true},
+  {n:8431, nome:'Conselho de classe entre campi', tipo:'entre', campus:'entre', data:'2026-11-18', ini:'14:00', fim:'16:30', mont:'2026-11-18', montH:'12:00', local:'Auditório (Barra) + Teatro (Gávea)', pub:120, equip:['Transmissão ao vivo','Projetor','Microfone sem fio'], sol:'Diana Prado'},
+  {n:8433, nome:'Feira de ciências', tipo:'outro', campus:'gavea', data:'2026-11-20', ini:'09:00', fim:'15:00', mont:'2026-11-19', montH:'14:00', local:'Prédio A · 1º andar · Laboratório de ciências', pub:300, equip:['Projetor','Caixas de som'], sol:'Otávio Reis'},
+  {n:8436, nome:'Reunião de pais com tradução', tipo:'traducao', campus:'barra', data:'2026-11-24', ini:'19:00', fim:'20:30', mont:'2026-11-24', montH:'16:00', local:'Cobertura · Auditório', pub:250, equip:['Cabines de tradução','Fones de tradução','Mesa de som'], sol:'Paula Mendes'},
+  {n:8435, nome:'Thanksgiving Assembly', tipo:'assembly', campus:'barra', data:'2026-11-26', ini:'08:00', fim:'09:00', mont:'2026-11-25', montH:'15:00', local:'Cobertura · Auditório', pub:450, equip:['Mesa de som','Microfone sem fio','Projetor'], sol:'Daniel Brooks'},
+  {n:8438, nome:'Recital de fim de semestre', tipo:'entre', campus:'entre', data:'2026-11-28', ini:'17:00', fim:'19:00', mont:'2026-11-28', montH:'13:00', local:'Teatro (Gávea) + transmissão para a Barra', pub:350, equip:['Transmissão ao vivo','Gravação','Mesa de som'], sol:'Lívia Prates'}
+];
+
+// ---------- Tickets fictícios ----------
+const tickets = [
+  {n:8420, sol:'Lucas Andrade', ini:'LA', cor:'i-verm', email:'lucas.andrade@earj.example', lang:'PT', ass:'Wi-Fi fora no 2º andar da Barra', prev:'Desde 9h30 nenhuma sala do 2º andar conecta. 14 pedidos vinculados.', hora:'09:40', dia:'Hoje', sla:['alerta','vence em 30 min'], meta:'#8420 · Barra · 2º andar', estado:['Aberto','var(--verm)'], pri:['Urgente','var(--verm)'], canal:'Formulário do portal', grupo:'Suporte Barra', filhos:14,
+    det:{sla:['1ª resposta vence às 10:10','30 min',70,'alerta'], campus:'Barra', andar:'2º andar', sala:'Várias (ver filhos)', motivo:'Rede e internet', equip:'Access points', sint:'Sem conexão', tags:['wi-fi','incidente','barra-2'], cargo:'Coordenador', hl:'10:04', maq:'NB-BAR-0233', ant:1}},
+  {n:8412, sol:'Mariana Costa', ini:'MC', cor:'i-azul', email:'mariana.costa@earj.example', lang:'PT', ass:'Projetor da sala 204 não liga', prev:'Rafael: lâmpada queimada, @Paula temos reserva?', hora:'08:12', dia:'Hoje', sla:['alerta','vence em 1 h 20'], meta:'#8412 · Barra · 2º andar', estado:['Aberto','var(--verm)'], pri:['Alta','#EA580C'], canal:'Formulário do portal', grupo:'Suporte Barra',
+    det:{sla:['vence às 10:32','1 h 20 min',80,'alerta'], campus:'Barra', andar:'2º andar', sala:'Sala 204', motivo:'Audiovisual', equip:'Projetor', sint:'Não liga', tags:['projetor','barra','sala-de-aula'], cargo:'Professora', hl:'10:04', maq:'NB-BAR-0417', ant:3, seg:'Paula M.'}},
+  {n:8411, sol:'Daniel Brooks', ini:'DB', cor:'i-verde', email:'daniel.brooks@earj.example', lang:'EN', ass:'Smartboard in room 214 not responding to touch', prev:'The board turns on but ignores touch since this morning.', hora:'07:55', dia:'Hoje', sla:['ok','vence em 3 h'], meta:'#8411 · Barra · 2º andar', estado:['Aberto','var(--verm)'], pri:['Normal','#71717A'], canal:'E-mail', grupo:'Suporte Barra', novo:true,
+    det:{sla:['vence às 13:00','3 h',35,'ok'], campus:'Barra', andar:'2º andar', sala:'Sala 214', motivo:'Audiovisual', equip:'Lousa digital', sint:'Toque não responde', tags:['lousa','barra'], cargo:'Teacher', hl:'10:04', maq:'NB-BAR-0388', ant:2}},
+  {n:8409, sol:'Marcos Teixeira', ini:'MT', cor:'i-verde', email:'marcos.teixeira@earj.example', lang:'PT', ass:'Site bloqueado no laboratório', prev:'Preciso liberar um site de matemática para a turma.', hora:'07:40', dia:'Hoje', sla:['ok','vence em 2 d'], meta:'#8409 · e-mail', estado:['Aberto','var(--verm)'], pri:['Normal','#71717A'], canal:'E-mail', grupo:'Suporte Barra', novo:true,
+    det:{sla:['vence sáb. 11:40','2 d',20,'ok'], campus:'Barra', andar:'1º andar', sala:'Laboratório de informática', motivo:'Software educacional', equip:'—', sint:'Site bloqueado', tags:['filtro-web','barra'], cargo:'Professor', hl:'10:04', maq:'LAB-BAR-12', ant:5}},
+  {n:8401, sol:'Carla Nunes', ini:'CN', cor:'i-azul', email:'carla.nunes@earj.example', lang:'PT', ass:'Impressora da sala dos professores não imprime frente e verso', prev:'Resolvido: deixamos frente e verso como padrão.', hora:'14:30', dia:'Ontem', sla:['pausa','resolvido no prazo'], meta:'#8401 · resolvido', estado:['Resolvido','var(--verde-forte)'], pri:['Normal','#71717A'], canal:'Formulário do portal', grupo:'Suporte Barra', resolvido:true,
+    det:{sla:['resolvido ontem 15:20','no prazo',100,'ok'], campus:'Barra', andar:'2º andar', sala:'Sala dos professores', motivo:'Equipamento', equip:'Impressora', sint:'Não imprime frente e verso', tags:['impressora','barra'], cargo:'Coordenadora', hl:'10:04', maq:'PC-BAR-PROF-02', ant:4}},
+  {n:8398, sol:'Bruno Faria', ini:'BF', cor:'i-verm', email:'bruno.faria@earj.example', lang:'PT', ass:'Troca de notebook autorizada', prev:'Em espera: entrega do fornecedor em até 5 dias úteis.', hora:'16:05', dia:'Ontem', sla:['venc','vencido há 2 h'], meta:'#8398 · em espera', estado:['Em espera','#7C3AED'], pri:['Normal','#71717A'], canal:'Formulário do portal', grupo:'Suporte Barra',
+    det:{sla:['venceu às 08:04','vencido há 2 h',100,'venc'], campus:'Barra', andar:'Térreo', sala:'Secretaria', motivo:'Equipamento', equip:'Notebook', sint:'Troca autorizada', tags:['notebook','fornecedor'], cargo:'Secretário', hl:'10:04', maq:'NB-BAR-0102', ant:2}},
+  {n:8390, sol:'Helena Ribas', ini:'HR', cor:'i-roxo', email:'helena.ribas@earj.example', lang:'PT', ass:'Document camera sem imagem', prev:'Via chat · a câmera liga mas o projetor não mostra.', hora:'13:12', dia:'Ontem', sla:['ok','vence em 4 d'], meta:'#8390 · chat', estado:['Aberto','var(--verm)'], pri:['Normal','#71717A'], canal:'Chat', grupo:'Suporte Barra',
+    det:{sla:['vence seg. 13:12','4 d',15,'ok'], campus:'Barra', andar:'1º andar', sala:'Sala 104', motivo:'Audiovisual', equip:'Document camera', sint:'Sem imagem', tags:['av','barra'], cargo:'Professora', hl:'10:04', maq:'NB-BAR-0290', ant:1}}
+];
+eventos.forEach(e => tickets.push({n:e.n, sol:e.sol, ini:iniciais(e.sol), cor:'i-azul', email:e.sol.toLowerCase().replace(/ /g, '.').normalize('NFD').replace(/[̀-ͯ]/g, '') + '@earj.example', lang:e.sol === 'Daniel Brooks' ? 'EN' : 'PT', ass:e.nome, prev:`Pedido de evento: ${tipos[e.tipo]} em ${ddmm(e.data)}, ${e.ini}–${e.fim}. Público estimado: ${e.pub}. Equipamentos: ${e.equip.join(', ')}.`, hora:'09:00', dia:'Eventos', sla:['evt', faltam(diasAte(e.mont)) + ' p/ montagem'], meta:`#${e.n} · ${locais[e.campus].nome}`, estado:e.espera ? ['Em espera','#7C3AED'] : ['Aberto','var(--verm)'], pri:['Normal','#71717A'], canal:'Formulário de evento', grupo:'Eventos', evento:e, lista:e.n === 8425}));
+
+const conversas = {
+  8420: [
+    {t:'pub', quem:'Lucas Andrade', ini:'LA', cor:'i-verm', sub:'lucas.andrade@earj.example', hora:'hoje, 09:40', txt:'Desde as 9h30 nenhuma sala do 2º andar conecta no Wi-Fi. Os alunos estão sem acesso ao Classroom.'},
+    {t:'int', quem:'Você', ini:'VC', cor:'i-esc', hora:'hoje, 09:48', txt:'Marquei como <b>incidente</b> e vinculei 13 pedidos de outras salas do 2º andar (11 PT, 3 EN). Suspeita: switch do rack do 2º andar.'},
+    {t:'int', quem:'Rafael Torres', ini:'RT', cor:'i-roxo', hora:'hoje, 09:55', txt:'Switch reiniciando em loop. <span class="mencao">@Você</span> vou trocar pelo reserva do subsolo.'}
+  ],
+  8412: [
+    {t:'pub', quem:'Mariana Costa', ini:'MC', cor:'i-azul', sub:'mariana.costa@earj.example', hora:'hoje, 08:12', txt:'Bom dia! O projetor da sala 204 não liga. Tenho aula às 10:30 e preciso dele para a apresentação dos alunos.', anexo:'foto-projetor.png'},
+    {t:'pub', quem:'Você', ini:'VC', cor:'i-esc', sub:'resposta pública · para Mariana Costa', hora:'hoje, 08:20', txt:'Olá, Mariana! Recebemos o seu pedido e um técnico vai até a sala 204 nos próximos minutos.'},
+    {t:'int', quem:'Rafael Torres', ini:'RT', cor:'i-roxo', hora:'hoje, 08:41', txt:'Lâmpada queimada. <span class="mencao">@Paula Mendes</span> temos lâmpada reserva no almoxarifado da Barra?'},
+    {t:'par', hora:'08:55', txt:'Precisamos de uma lâmpada para projetor modelo XG-300 no campus Barra. Qual o prazo de entrega?'}
+  ],
+  8411: [
+    {t:'pub', quem:'Daniel Brooks', ini:'DB', cor:'i-verde', sub:'daniel.brooks@earj.example · idioma EN', hora:'hoje, 07:55', txt:'Good morning! The smartboard in room 214 turns on but does not respond to touch since this morning. I have a class at 11:00.'}
+  ],
+  8401: [
+    {t:'pub', quem:'Carla Nunes', ini:'CN', cor:'i-azul', sub:'carla.nunes@earj.example', hora:'ontem, 14:30', txt:'A impressora da sala dos professores só imprime de um lado. Preciso das provas em frente e verso.'},
+    {t:'pub', quem:'Você', ini:'VC', cor:'i-esc', sub:'resposta pública final · Resolvido', hora:'ontem, 15:20', txt:'Olá, Carla! Ajustamos o driver: em Imprimir › Propriedades › Acabamento, marque “Imprimir nos dois lados” e escolha “Virar na borda longa”. Deixamos essa opção como padrão em todos os computadores da sala dos professores.'}
+  ]
+};
+const rascunhos = {8412:'Mariana, a lâmpada queimou. Deixamos um projetor portátil na sala 204 para a sua aula das 10:30 e já pedimos a troca ao fornecedor.'};
+
+// ---------- Macros por intenção (Δ36) ----------
+const macros = [
+  {id:'local', nome:'Atendimento no local', en:'On-site visit', pt_:'Olá, {nome}! Um técnico vai até o local em alguns minutos.', en_:'Hi {nome}! A technician is on the way and will be there in a few minutes.'},
+  {id:'analise', nome:'Pendente — em análise', en:'Pending — investigating', pt_:'Olá, {nome}! Estamos analisando a causa e daremos retorno em breve.', en_:'Hi {nome}! We are looking into the cause and will get back to you shortly.'},
+  {id:'fornecedor', nome:'Em espera — fornecedor', en:'On hold — vendor', pt_:'Olá, {nome}! Já contatamos a empresa responsável e estamos acompanhando o prazo.', en_:'Hi {nome}! We have contacted the vendor and are tracking the timeline.'},
+  {id:'outra', nome:'Encaminhado a outra equipe', en:'Forwarded to another team', pt_:'Olá, {nome}! Encaminhamos o seu pedido para a equipe responsável, que vai continuar o atendimento.', en_:'Hi {nome}! We have forwarded your request to the responsible team, who will follow up.'},
+  {id:'incidente', nome:'Incidente — atualização geral', en:'Incident — general update', pt_:'Olá, {nome}! Identificamos uma falha no Wi-Fi do 2º andar da Barra e a equipe já está trabalhando nela. Avisaremos assim que normalizar.', en_:'Hi {nome}! We have identified a Wi-Fi outage on the 2nd floor at Barra and the team is already working on it. We will let you know as soon as it is back.'},
+  {id:'resolvido', nome:'Resolvido — encerramento', en:'Resolved — closing', pt_:'Olá, {nome}! Problema resolvido. Se precisar, é só responder este e-mail.', en_:'Hi {nome}! The issue is resolved. If you need anything else, just reply to this email.'}
+];
+
+// ---------- Filas (Δ37) ----------
+const filas = {
+  'Quase escalando': {desc:'Próximo prazo vence em até 1 h útil, ou já vencido · mais antigos primeiro', linhas:[
+    ['Troca de notebook autorizada','#8398 · Barra · Térreo · fornecedor','Bruno Faria','Suporte Barra','Você',['venc','vencido há 2 h'],'2 dias'],
+    ['Licença do sistema administrativo','#8355 · entre campi · fornecedor','Diana Prado','Sistemas','André S.',['alerta','vence em 45 min'],'4 dias'],
+    ['Impressora do RH sem toner','#8417 · Gávea · Prédio B · Térreo','Diana Prado','Suporte Gávea','—',['alerta','vence em 45 min'],'40 min'],
+    ['Wi-Fi fora no 2º andar da Barra <span class="selo-inc">Incidente · 14</span>','#8420 · Barra · 2º andar','Lucas Andrade','Suporte Barra','Você',['alerta','vence em 30 min'],'25 min']]},
+  'Em espera': {desc:'Aguardando fornecedor ou outra equipe · mais antigos primeiro', linhas:[
+    ['Troca de notebook autorizada','#8398 · Barra · fornecedor','Bruno Faria','Suporte Barra','Rafael T.',['venc','vencido há 2 h'],'2 dias'],
+    ['Licença do sistema administrativo','#8355 · entre campi · fornecedor','Diana Prado','Sistemas','André S.',['alerta','vence em 45 min'],'4 dias'],
+    ['Soundbar do auditório com chiado','#8380 · Barra · <span style="color:var(--roxo-txt);font-weight:500">encaminhado por você → Eventos</span>','Carla Nunes','Eventos','—',['pausa','pausado'],'3 h'],
+    ['Homecoming Panthers <span class="lng">EVENTO</span>','#8430 · Barra · Térreo · Ginásio','Carla Nunes','Eventos','Rafael T.',['evt','faltam 15 dias p/ montagem'],'5 dias'],
+    ['Acesso à VPN negado após atualização','#8402 · Gávea · <span style="color:var(--roxo-txt)">● Paula está vendo</span>','João Lemos','Sistemas','André S.',['pausa','pausado'],'1 dia'],
+    ['Integração do diário de classe parada','#8366 · entre campi','Otávio Reis','Sistemas','—',['pausa','pausado'],'3 dias']]},
+  'Meus tickets': {desc:'Não resolvidos atribuídos a você · mais urgentes primeiro', linhas:[
+    ['Wi-Fi fora no 2º andar da Barra <span class="selo-inc">Incidente · 14</span>','#8420 · Barra · 2º andar','Lucas Andrade','Suporte Barra','Você',['alerta','vence em 30 min'],'25 min'],
+    ['Projetor da sala 204 não liga','#8412 · Barra · 2º andar · formulário','Mariana Costa','Suporte Barra','Você',['alerta','vence em 1 h 20'],'2 h'],
+    ['Smartboard in room 214 not responding <span class="lng">EN</span>','#8411 · Barra · 2º andar · e-mail','Daniel Brooks','Suporte Barra','Você',['ok','vence em 3 h'],'2 h'],
+    ['Site bloqueado no laboratório','#8409 · Barra · 1º andar · e-mail','Marcos Teixeira','Suporte Barra','Você',['ok','vence em 2 d'],'3 h'],
+    ['Troca de notebook autorizada','#8398 · Barra · Térreo · fornecedor','Bruno Faria','Suporte Barra','Você',['venc','vencido há 2 h'],'2 dias'],
+    ['Document camera sem imagem','#8390 · Barra · 1º andar · chat','Helena Ribas','Suporte Barra','Você',['ok','vence em 4 d'],'1 dia']]},
+  'Sem responsável': {desc:'Ninguém pegou ainda · mais antigos primeiro', linhas:[
+    ['Impressora do RH sem toner','#8417 · Gávea · Prédio B · Térreo','Diana Prado','Suporte Gávea','—',['alerta','vence em 45 min'],'40 min'],
+    ['Projetor da Sala 214 sem imagem','#8423 · Barra · 2º andar · QR','Ana Ribeiro','Suporte Barra','—',['alerta','vence em 50 min'],'20 min'],
+    ['Wi-Fi fraco no ginásio','#8415 · Barra · Térreo · formulário','Otávio Reis','Suporte Barra','—',['ok','vence em 1 d'],'1 h'],
+    ['Caixa de som com chiado <span class="lng">EN</span>','#8424 · Barra · 2º andar · QR','Daniel Brooks','Suporte Barra','—',['ok','vence em 1 d'],'1 h'],
+    ['Microfone da biblioteca','#8414 · Gávea · Prédio A · chat','Lívia Prates','Eventos','—',['ok','vence em 2 d'],'2 h'],
+    ['Teclado sem funcionar','#8413 · Barra · 1º andar · formulário','Pedro Alves','Suporte Barra','—',['ok','vence em 3 d'],'3 h']]}
+};
+filas['Não resolvidos'] = {desc:'Todos os não resolvidos dos seus grupos · agrupados por estado', linhas:[...filas['Meus tickets'].linhas, ...filas['Sem responsável'].linhas,
+  ['Assembly do Ensino Médio <span class="lng">EVENTO</span>','#8425 · Barra · Cobertura · Auditório','Paula Mendes','Eventos','Rafael T.',['evt','faltam 7 dias p/ montagem'],'3 dias'],
+  ['Palestra para pais com tradução <span class="lng">EVENTO</span>','#8426 · Gávea · Prédio B · Teatro','Lívia Prates','Eventos','—',['evt','faltam 6 dias p/ montagem'],'1 dia']]};
+filas['Pendentes'] = {desc:'Aguardando o solicitante · cobrar respostas', linhas:filas['Em espera'].linhas.slice(1, 3)};
+filas['Resolvidos hoje'] = {desc:'Resolvidos nas últimas 12 h', linhas:[['Impressora da sala dos professores não imprime frente e verso','#8401 · Barra · 2º andar','Carla Nunes','Suporte Barra','Você',['pausa','resolvido no prazo'],'—']]};
+const ORDEM_FILAS = ['Quase escalando','Não resolvidos','Meus tickets','Sem responsável','Em espera','Pendentes','Resolvidos hoje'];
+
+const feed = [
+  {f:'mencao', ini:'RT', cor:'i-roxo', txt:'<strong>Rafael Torres</strong> mencionou você em <strong>#8420 Wi-Fi 2º andar</strong>', meta:'há 9 min · Suporte Barra', cit:'“Switch reiniciando em loop. Vou trocar pelo reserva do subsolo.”', nova:true, n:8420},
+  {f:'sla', ini:'!', cor:'i-verm', txt:'<strong>#8398</strong> passou do prazo de resolução', meta:'há 25 min · o gestor será avisado em 8 h úteis', nova:true, n:8398},
+  {f:'atrib', ini:'LA', cor:'i-verm', txt:'<strong>#8420</strong> virou <strong>incidente</strong> com 14 filhos', meta:'há 20 min · Barra · 2º andar'},
+  {f:'sla', ini:'EV', cor:'i-azul', txt:'<strong>#8425 Assembly do Ensino Médio</strong>: faltam 7 dias para a montagem', meta:'Barra · Cobertura · Auditório', n:8425},
+  {f:'atrib', ini:'EV', cor:'i-verde', txt:'<strong>Equipe Eventos</strong> devolveu <strong>#8380</strong> para você', meta:'há 1 h · encaminhamento com retorno'},
+  {f:'tudo', ini:'CN', cor:'i-azul', txt:'<strong>Carla Nunes</strong> avaliou <strong>#8341</strong> com nota 5', meta:'ontem 16:40 · “Rápido e gentil, obrigada!”'}
+];
+
+const $ = (s, e = document) => e.querySelector(s);
+const $$ = (s, e = document) => [...e.querySelectorAll(s)];
+const reduz = matchMedia('(prefers-reduced-motion: reduce)');
+const transicao = fn => {
+  if (!document.startViewTransition || reduz.matches || document.hidden) { fn(); return; }
+  const t = document.startViewTransition(fn);
+  // Uma transição interrompida por outra (cliques rápidos) não é erro.
+  [t.ready, t.finished, t.updateCallbackDone].forEach(p => p.catch(() => {}));
+};
+
+// ---------- Navegação com transição ----------
+const TELAS = ['entrar','inicio','filas','ticket','portal','qr','eventos'];
+let telaAtual = null, filaAtual = 'Quase escalando';
+function mostrar(tela, {fila} = {}){
+  const aplicar = () => {
+    $$('.tela').forEach(t => t.classList.toggle('ativa', t.id === 't-' + tela));
+    $('#app').classList.toggle('sem-lateral', tela === 'entrar');
+    $$('.lateral a[data-tela]').forEach(a => a.removeAttribute('aria-current'));
+    const ativo = tela === 'filas' ? $(`.lateral a[data-fila="${fila || filaAtual}"]`) : $(`.lateral a[data-tela="${tela}"]:not([data-fila])`);
+    if (ativo) ativo.setAttribute('aria-current', 'page');
+    if (tela === 'filas') desenharFila(fila || filaAtual);
+    if (tela === 'ticket') animarSla();
+    if (tela === 'eventos') desenharCal();
+    if (tela !== 'filas') limparSel();
+    if (tela !== 'portal') fecharChat();
+    fecharPops(); fecharGaveta();
+    window.scrollTo({top: 0});
+    telaAtual = tela;
+  };
+  if (telaAtual) transicao(aplicar); else aplicar();
+}
+function ir(tela, opts){ history.replaceState(null, '', '#' + tela); mostrar(tela, opts); }
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-tela]');
+  if (!a) return;
+  e.preventDefault();
+  if (a.id === 'sair') toast('Você saiu do PantherDesk');
+  ir(a.dataset.tela, {fila: a.dataset.fila});
+});
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (TELAS.includes(h) && h !== telaAtual) mostrar(h); });
+
+// ---------- Menus ----------
+function fecharPops(){ $$('.pop.aberto').forEach(p => p.classList.remove('aberto')); }
+function ligar(btn, pop, aoAbrir){ $(btn).addEventListener('click', e => { e.stopPropagation(); const p = $(pop); const abre = !p.classList.contains('aberto'); fecharPops(); p.classList.toggle('aberto', abre); if (abre && aoAbrir) aoAbrir(); }); }
+ligar('#btn-notif', '#pop-notif'); ligar('#btn-estado', '#pop-estado'); ligar('#btn-perfil', '#pop-perfil');
+ligar('#btn-macro', '#pop-macro', () => { $('#busca-macro').value = ''; desenharMacros(''); $('#busca-macro').focus(); });
+document.addEventListener('click', e => { if (!e.target.closest('.pop')) fecharPops(); });
+function toast(txt){ const t = $('#toast'); t.textContent = txt; t.classList.remove('vis'); void t.offsetWidth; t.classList.add('vis'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('vis'), 2800); }
+$('#perfil-status').addEventListener('click', () => { fecharPops(); toast('Status: Disponível (protótipo)'); });
+$('#perfil-pref').addEventListener('click', () => { fecharPops(); toast('Preferências (protótipo)'); });
+
+// ---------- Tema ----------
+try { if (localStorage.getItem('pd-tema') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+$('#tema').addEventListener('click', () => transicao(() => { const d = document.documentElement; d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pd-tema', d.dataset.theme); } catch (e) {} }));
+
+// ---------- Entrar (Δ31) ----------
+$('#entrar-google').addEventListener('click', () => { ir('inicio'); toast('Bem-vindo! Você entrou com a conta Google @earj.com.br'); });
+$('#entrar-link').addEventListener('click', e => { const f = $('#form-link'); const abre = f.classList.contains('oculto'); revelar(f, abre); e.currentTarget.setAttribute('aria-expanded', abre); if (abre) $('#e-link').focus(); });
+$('#form-link').addEventListener('submit', () => { if (!$('#e-link').value.trim()) { $('#e-link').focus(); return; } $('#e-link').value = ''; toast('Link de acesso enviado (protótipo) · confira o seu e-mail'); });
+
+// ---------- Início ----------
+$('#barras').innerHTML = [['Abertos',10,45,'var(--royal)'],['Pendentes',21,95,'var(--ink-2)'],['Em espera',7,32,'var(--faint)'],['Sem responsável',4,18,'var(--verm)']].map(([r,n,w,c]) => `<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between"><span>${r}</span><strong>${n}</strong></div><div class="barra-prog"><div style="width:${w}%;background:${c}"></div></div></div>`).join('');
+function desenharFeed(f){ $('#feed').innerHTML = feed.filter(x => f === 'tudo' || x.f === f).map(x => `<a href="#ticket" data-abrir="${x.n || ''}" class="${x.nova ? 'nova' : ''}"><span class="ini ${x.cor}">${x.ini}</span><span class="txt"><span>${x.txt}</span><span class="meta">${x.meta}</span>${x.cit ? `<span class="cit">${x.cit}</span>` : ''}</span>${x.nova ? '<span class="nao-lida" aria-label="não lida"></span>' : ''}</a>`).join(''); }
+desenharFeed('tudo');
+$('#feed').addEventListener('click', e => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); abrirTicket(+a.dataset.abrir || ticketAtual); });
+$('#abas-feed').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#abas-feed button').forEach(x => x.classList.toggle('on', x === b)); desenharFeed(b.dataset.f); });
+$('#ler-tudo').addEventListener('click', () => { feed.forEach(x => x.nova = false); desenharFeed($('#abas-feed .on').dataset.f); $$('.lateral .num').forEach(n => n.remove()); toast('Tudo marcado como lido'); });
+
+// ---------- Filas ----------
+const semTags = s => s.replace(/<[^>]+>/g, '').trim();
+function desenharFila(nome){
+  filaAtual = filas[nome] ? nome : 'Quase escalando';
+  const f = filas[filaAtual];
+  $('#filas-abas').innerHTML = ORDEM_FILAS.map(k => `<button class="fa ${k === filaAtual ? 'on' : ''}" data-tela="filas" data-fila="${k}">${k === 'Quase escalando' ? '⚠ ' : ''}${k}<span class="c ${k === 'Quase escalando' ? 'v' : ''}">${filas[k].linhas.length}</span></button>`).join('');
+  $('#fila-nome').textContent = filaAtual; $('#fila-nome-topo').textContent = filaAtual; $('#fila-desc').textContent = `${f.desc} · ${f.linhas.length} tickets`;
+  $('#corpo-fila').innerHTML = f.linhas.map(l => `<tr><td><input type="checkbox" class="sel" aria-label="Selecionar ${semTags(l[0])}"></td><td class="t"><strong>${l[0]}</strong><span>${l[1]}</span></td><td>${l[2]}</td><td>${l[3]}</td><td style="${l[4] === '—' ? 'color:var(--muted)' : ''}">${l[4]}</td><td><span class="sla ${l[5][0]}">${l[5][1]}</span></td><td style="text-align:right;padding-right:16px;color:var(--muted)">${l[6]}</td></tr>`).join('');
+  $('#sel-todos').checked = false; limparSel();
+}
+function atualizarSel(){ const n = $$('.sel:checked').length; const m = $('#massa'); if (n && !m.classList.contains('vis')) m.classList.add('vis'); if (!n) m.classList.remove('vis'); $('#qtd').textContent = n === 1 ? '1 selecionado' : `${n} selecionados`; $$('#corpo-fila tr').forEach(tr => tr.classList.toggle('sel', $('.sel', tr).checked)); }
+function limparSel(){ $$('.sel').forEach(c => c.checked = false); $('#massa').classList.remove('vis'); }
+$('#corpo-fila').addEventListener('click', e => {
+  if (e.target.classList.contains('sel')) { atualizarSel(); return; }
+  const tr = e.target.closest('tr'); if (!tr) return;
+  const m = tr.textContent.match(/#(\d{4})/); const n = m ? +m[1] : 0;
+  if (tickets.some(t => t.n === n)) abrirTicket(n); else { toast(`#${n} não tem conversa no protótipo · abrindo a caixa de entrada`); ir('ticket'); }
+});
+$('#sel-todos').addEventListener('change', e => { $$('.sel').forEach(c => c.checked = e.target.checked); atualizarSel(); });
+$('#cancelar-sel').addEventListener('click', () => { $('#sel-todos').checked = false; limparSel(); });
+$$('#massa button:not(#cancelar-sel)').forEach(b => b.addEventListener('click', () => toast(`${b.textContent}: ${$('#qtd').textContent} (protótipo)`)));
+$('#atualizar').addEventListener('click', () => { $('#atualizada').textContent = 'atualizando…'; setTimeout(() => { $('#atualizada').textContent = 'atualizada agora'; desenharFila(filaAtual); }, 500); });
+$('#exportar').addEventListener('click', () => toast('CSV exportado (protótipo)'));
+$('#chip-sla').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+
+// ---------- Ticket ----------
+let ticketAtual = 8412;
+const tAtual = () => tickets.find(x => x.n === ticketAtual);
+const primeiro = nome => nome.split(' ')[0];
+function desenharLista(){
+  let dia = '';
+  $('#lista-tickets').innerHTML = tickets.filter(t => t.lista !== false).map(t => { const g = t.dia !== dia ? `<div class="grupo">${(dia = t.dia)}</div>` : ''; return g + `<button class="cartao-lista ${t.n === ticketAtual ? 'on' : ''}" data-n="${t.n}"><span class="l1">${t.novo ? '<i class="nao-lida" style="margin:0" aria-label="não lido"></i>' : ''}<strong style="font-size:13px">${t.sol}</strong>${t.lang === 'EN' ? '<span class="lng">EN</span>' : ''}<span>${t.hora}</span></span><span class="ass">${t.ass}</span><span class="prev">${t.prev}</span><span class="l4">${t.filhos ? `<span class="selo-inc">Incidente · ${t.filhos}</span>` : ''}<span class="sla ${t.sla[0]}">${t.sla[1]}</span>${t.meta}</span></button>`; }).join('');
+}
+function desenharDetalhes(t){
+  const d = t.det || {}, e = t.evento;
+  let h = '';
+  if (e) {
+    const N = diasAte(e.mont), pct = Math.max(8, Math.min(100, 100 - N * 5));
+    h += `<section><h2 class="rot">Prazo do evento</h2><div class="par"><span style="color:var(--ink)">montagem ${ddmm(e.mont)} às ${e.montH}</span><span class="sla evt">${faltam(N)}</span></div><div class="barra-prog" role="img" aria-label="${faltam(N)} para a montagem"><div id="sla-barra" data-w="${pct}" style="width:0;background:var(--royal);transition:width .8s cubic-bezier(.2,.7,.2,1)"></div></div><span style="font-size:12px;color:var(--muted)">Avisos ao responsável 2 dias úteis antes e no dia${e.foraPrazo ? ' · <b style="color:var(--verm-txt)">pedido fora do prazo mínimo</b>' : ''}</span></section>`;
+    h += `<section><h2 class="rot">Evento</h2><div class="par"><span>Tipo</span><span>${tipos[e.tipo]}</span></div><div class="par"><span>Data</span><span>${ddmm(e.data)} · ${e.ini}–${e.fim}</span></div><div class="par"><span>Campus</span><span>${locais[e.campus].nome}</span></div><div class="par"><span>Local</span><span>${e.local}</span></div><div class="par"><span>Público</span><span>${e.pub} pessoas</span></div><div style="display:flex;flex-wrap:wrap;gap:6px">${e.equip.map(x => `<span class="tag">${x}</span>`).join('')}</div></section>`;
+  } else {
+    const [txt, rest, pct, tipo] = d.sla || ['—','—',0,'ok'];
+    const cor = tipo === 'ok' ? 'var(--verde-forte)' : 'var(--verm)';
+    h += `<section><h2 class="rot">${t.resolvido ? 'Resolução' : 'Prazo de SLA'}</h2><div class="par"><span style="color:var(--ink)">${txt}</span><strong style="color:${tipo === 'ok' ? 'var(--verde-txt)' : 'var(--verm-txt)'}">${rest}</strong></div><div class="barra-prog" role="img" aria-label="${pct}% do prazo usado"><div id="sla-barra" data-w="${pct}" style="width:0;background:${cor};transition:width .8s cubic-bezier(.2,.7,.2,1)"></div></div><span style="font-size:12px;color:var(--muted)">${t.resolvido ? 'Pesquisa de satisfação enviada' : 'Aviso ao responsável 1 hora útil antes'}</span></section>`;
+  }
+  if (t.filhos) {
+    const locs = [['Sala 201',2],['Sala 204',3],['Sala 210',2],['Sala 214',4],['Sala dos professores',3]];
+    h += `<section><h2 class="rot">Filhos (${t.filhos})</h2><span style="font-size:12px;color:var(--muted)">Locais afetados · Barra · 2º andar · 11 PT · 3 EN</span>${locs.map(([s, n]) => `<div class="filho"><span>${s}</span><b>${n} ${n === 1 ? 'pedido' : 'pedidos'}</b></div>`).join('')}<span style="font-size:12px;color:var(--muted)">Resolver o pai resolve os filhos abertos, sem pesquisa de satisfação.</span><button class="btn" style="justify-content:center" data-toast="Vincular ticket (protótipo)">＋ Vincular outro ticket</button></section>`;
+  }
+  h += `<section><h2 class="rot">Atribuição</h2><div class="par"><span>Grupo</span><span>${t.grupo}</span></div><div class="par"><span>Responsável</span><span>${e && !e.espera ? 'Rafael T.' : 'Você'}</span></div>${d.seg ? `<div class="par"><span>Seguidores</span><span>${d.seg}</span></div>` : ''}<button class="btn" style="justify-content:center" data-toast="Encaminhar com retorno (protótipo)">Enviar a outra equipe com retorno</button></section>`;
+  if (!e) h += `<section><h2 class="rot">Local e classificação</h2><div class="par"><span>Campus</span><span>${d.campus}</span></div><div class="par"><span>Andar</span><span>${d.andar}</span></div><div class="par"><span>Sala</span><span>${d.sala}</span></div><div class="par"><span>Motivo</span><span>${d.motivo}</span></div><div class="par"><span>Equipamento</span><span>${d.equip}</span></div><div class="par"><span>Sintoma</span><span>${d.sint}</span></div><div style="display:flex;flex-wrap:wrap;gap:6px">${(d.tags || []).map(x => `<span class="tag">${x}</span>`).join('')}</div></section>`;
+  h += `<section><h2 class="rot">Solicitante</h2><div class="par"><span>Nome</span><span>${t.sol}</span></div><div class="par"><span>Idioma</span><span>${t.lang === 'EN' ? 'Inglês (EN)' : 'Português (PT)'}</span></div>${d.cargo ? `<div class="par"><span>Cargo</span><span>${d.cargo}</span></div><div class="par"><span>Máquina</span><span>${d.maq}</span></div>` : ''}<a href="#" data-toast="Histórico do solicitante (protótipo)" style="font-size:13px;font-weight:500;color:var(--royal-txt)">${d.ant || 1} pedidos anteriores →</a></section>`;
+  $('#detalhes').innerHTML = h;
+}
+$('#detalhes').addEventListener('click', e => { const b = e.target.closest('[data-toast]'); if (!b) return; e.preventDefault(); toast(b.dataset.toast); });
+function desenharTicket(){
+  const t = tAtual();
+  $('#t-num').textContent = '#' + t.n;
+  const extra = (t.filhos ? `<span class="selo-inc">⚠ Incidente · ${t.filhos} filhos</span>` : '') + (t.evento ? `<span class="pill" style="border-color:var(--royal-borda);color:var(--royal-txt)">Evento · ${tipos[t.evento.tipo]}</span>` : '') + (t.lang === 'EN' ? '<span class="pill">Idioma: EN</span>' : '');
+  $('#cab-ticket').innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px"><h1 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em;flex:1 1 320px">${t.ass}</h1>${t.resolvido ? '<button class="btn prim" id="criar-artigo">📄 Criar artigo</button>' : ''}<button class="btn" id="resumir">✦ Resumir com IA</button><button class="icone" aria-label="Mais ações">⋯</button></div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="pill"><i style="background:${t.estado[1]}"></i>${t.estado[0]}</span><span class="pill"><i style="background:${t.pri[1]}"></i>${t.pri[0]}</span><span class="pill" style="color:var(--ink-2)">${t.canal}</span>${extra}<span style="color:var(--muted);font-size:12px">aberto ${t.dia === 'Eventos' ? 'em 26/10' : t.dia.toLowerCase() + ' ' + t.hora} · ${t.grupo}</span></div>`;
+  const msgs = conversas[t.n] || [{t:'pub', quem:t.sol, ini:t.ini, cor:t.cor, sub:t.email, hora:t.dia === 'Eventos' ? '26/10, 09:00' : t.dia.toLowerCase() + ', ' + t.hora, txt:t.prev}];
+  const resumo = t.n === 8412 ? `<section class="resumo" aria-label="Resumo por IA"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-bottom:4px"><span style="font-weight:600;color:var(--royal-txt)">✦ Resumo fixado</span><span>gerado por você 09:02 · até a mensagem 4</span></div><p style="margin:0;font-size:13px;line-height:1.55">Projetor da sala 204 não liga desde a manhã; aula às 10:30. Lâmpada queimada. Projetor portátil entregue; troca pedida ao fornecedor.</p></section>` : '';
+  $('#conversa').innerHTML = resumo + msgs.map(m => m.t === 'int' ? `<article class="msg interna"><div class="cab"><span class="ini ${m.cor}">${m.ini}</span><strong style="font-size:13px">${m.quem}</strong><span class="etq int">Nota interna</span><span class="hora">${m.hora}</span></div><p style="padding-left:62px">${m.txt}</p></article>` : m.t === 'par' ? `<article class="msg paralela"><div class="cab" style="border:0;padding-bottom:0;flex-wrap:wrap"><span class="etq par">Conversa paralela</span><span style="font-size:12px;color:var(--muted)">com assistencia@fornecedor-av.example · só a equipe vê</span><span class="hora">${m.hora}</span></div><p>${m.txt}</p></article>` : `<article class="msg"><div class="cab"><span class="ini ${m.cor}">${m.ini}</span><span><strong style="font-size:13px">${m.quem}</strong><small>${m.sub}</small></span><span class="hora">${m.hora}</span></div><p>${m.txt}</p>${m.anexo ? `<div style="padding:0 16px 14px"><span class="pill" style="border-radius:8px"><b style="font-size:10px;background:var(--surface-2);border-radius:4px;padding:2px 5px">PNG</b>${m.anexo}<span style="color:var(--muted)">1,2 MB</span></span></div>` : ''}</article>`).join('');
+  modo($('#editor').classList.contains('interna'));
+  const av = $('#aviso-inc');
+  if (t.filhos) { av.innerHTML = `↳ A resposta vai para os <b>${t.filhos} solicitantes</b>, cada um no seu idioma (11 PT · 3 EN), e fica registrada em cada filho.`; av.classList.remove('oculto'); } else av.classList.add('oculto');
+  $('#previa').classList.add('oculto'); macroAtual = null;
+  $('#texto').value = rascunhos[t.n] || '';
+  desenharDetalhes(t);
+  $('#resumir').addEventListener('click', () => toast('Resumo gerado e fixado (protótipo)'));
+  if (t.resolvido) $('#criar-artigo').addEventListener('click', () => criarArtigo(t));
+}
+function animarSla(){ const b = $('#sla-barra'); if (!b) return; b.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => b.style.width = (b.dataset.w || 0) + '%')); }
+function trocarTicket(n){ ticketAtual = n; const t = tAtual(); t.novo = false; desenharLista(); desenharTicket(); animarSla(); }
+function abrirTicket(n){
+  if (!tickets.some(t => t.n === n)) return;
+  if (telaAtual === 'ticket') { transicao(() => trocarTicket(n)); return; }
+  ticketAtual = n; tAtual().novo = false; desenharLista(); desenharTicket(); ir('ticket');
+}
+$('#lista-tickets').addEventListener('click', e => {
+  const b = e.target.closest('.cartao-lista'); if (!b) return;
+  transicao(() => { trocarTicket(+b.dataset.n); $$('#t-ticket .anima').forEach(x => { x.style.animation = 'none'; void x.offsetWidth; x.style.animation = ''; }); });
+});
+function modo(interna){ const t = tAtual(); $('#editor').classList.toggle('interna', interna); $('#ed-pub').classList.toggle('on', !interna); $('#ed-int').classList.toggle('on', interna); $('#ed-para').textContent = interna ? 'só a equipe vê · use @ para mencionar' : t.filhos ? `para os ${t.filhos} solicitantes dos filhos · + Cc` : `para ${t.sol}${t.lang === 'EN' ? ' (EN)' : ''} · + Cc`; }
+$('#ed-pub').addEventListener('click', () => modo(false)); $('#ed-int').addEventListener('click', () => modo(true));
+$('#texto').addEventListener('input', e => { rascunhos[ticketAtual] = e.target.value; });
+$('#pop-estado').addEventListener('click', e => { const b = e.target.closest('[data-est]'); if (!b) return; $('#enviar').textContent = 'Enviar · ' + b.dataset.est; fecharPops(); });
+
+// Macros: a variante entra no idioma do solicitante, com troca na prévia
+let macroAtual = null;
+function desenharMacros(q){
+  q = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const l = macros.filter(m => !q || (m.nome + ' ' + m.en).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q));
+  $('#lista-macro').innerHTML = l.length ? l.map(m => `<button type="button" data-macro="${m.id}"><span>${m.nome}<br><small style="color:var(--muted)">${m.en}</small></span><span class="var">PT · EN</span></button>`).join('') : '<div style="padding:10px;font-size:13px;color:var(--muted)">Nenhuma intenção encontrada</div>';
+}
+function aplicarMacro(id, lang){
+  const t = tAtual(); const m = macros.find(x => x.id === id); macroAtual = m;
+  const nome = t.filhos ? (lang === 'EN' ? 'everyone' : 'pessoal') : primeiro(t.sol);
+  const texto = m[lang === 'EN' ? 'en_' : 'pt_'].replace('{nome}', nome);
+  $('#texto').value = texto; rascunhos[t.n] = texto;
+  const nota = t.filhos ? 'cada solicitante recebe a variante do seu idioma · prévia em' : `idioma de ${primeiro(t.sol)}: ${t.lang || 'PT'} · prévia em`;
+  $('#previa').innerHTML = `<span>⚡ <b>${m.nome}</b></span><span style="color:var(--muted)">${nota}</span><div class="seg mini" id="seg-prev"><button type="button" data-l="PT" class="${lang === 'PT' ? 'on' : ''}">PT</button><button type="button" data-l="EN" class="${lang === 'EN' ? 'on' : ''}">EN</button></div><button type="button" class="x" id="fechar-previa" aria-label="Remover prévia da macro">✕</button>`;
+  $('#previa').classList.remove('oculto');
+}
+$('#busca-macro').addEventListener('input', e => desenharMacros(e.target.value));
+$('#lista-macro').addEventListener('click', e => {
+  const b = e.target.closest('[data-macro]'); if (!b) return;
+  const t = tAtual(); const lang = t.lang || 'PT';
+  aplicarMacro(b.dataset.macro, lang); fecharPops(); modo(false);
+  toast(t.filhos ? `Macro aplicada: os ${t.filhos} solicitantes recebem cada um a sua variante` : `Macro aplicada · variante ${lang} (idioma de ${primeiro(t.sol)})`);
+});
+$('#previa').addEventListener('click', e => {
+  if (e.target.closest('#fechar-previa')) { $('#previa').classList.add('oculto'); macroAtual = null; return; }
+  const b = e.target.closest('[data-l]'); if (b && macroAtual) aplicarMacro(macroAtual.id, b.dataset.l);
+});
+$('#melhorar').addEventListener('click', () => {
+  if (ticketAtual === 8412) $('#texto').value = 'Olá, Mariana! A lâmpada do projetor queimou. Para não atrapalhar a sua aula das 10:30, deixamos um projetor portátil na sala 204, e a troca já foi pedida ao fornecedor. Avisaremos assim que estiver resolvido.';
+  else if (!$('#texto').value.trim()) { toast('Escreva algo primeiro'); return; }
+  rascunhos[ticketAtual] = $('#texto').value; toast('Sugestão aplicada ao rascunho');
+});
+$('#enviar').addEventListener('click', () => {
+  const txt = $('#texto').value.trim(); if (!txt) return;
+  const t = tAtual(); const interna = $('#editor').classList.contains('interna');
+  const msgs = conversas[ticketAtual] = conversas[ticketAtual] || [{t:'pub', quem:t.sol, ini:t.ini, cor:t.cor, sub:t.email, hora:t.dia === 'Eventos' ? '26/10, 09:00' : t.dia.toLowerCase() + ', ' + t.hora, txt:t.prev}];
+  msgs.push(interna ? {t:'int', quem:'Você', ini:'VC', cor:'i-esc', hora:'agora', txt} : {t:'pub', quem:'Você', ini:'VC', cor:'i-esc', sub:t.filhos ? `resposta pública · enviada aos ${t.filhos} solicitantes dos filhos` : `resposta pública${macroAtual ? ' · variante ' + ($('#seg-prev .on') || {}).textContent : ''}`, hora:'agora', txt});
+  rascunhos[ticketAtual] = '';
+  desenharTicket(); animarSla();
+  const ult = $('#conversa').lastElementChild; ult.style.animation = 'msg .3s cubic-bezier(.2,.7,.2,1) both'; ult.scrollIntoView({behavior: reduz.matches ? 'auto' : 'smooth', block: 'center'});
+  toast(interna ? 'Nota interna adicionada' : t.filhos ? `Enviado aos ${t.filhos} solicitantes (11 PT · 3 EN) e registrado em cada filho` : $('#enviar').textContent.replace('Enviar · ', 'Enviado como '));
+});
+
+// ---------- Criar artigo (Δ38) ----------
+function criarArtigo(t){
+  toast(`Rascunho criado na base (PT) a partir do #${t.n}`);
+  $('#art-origem').textContent = `a partir do #${t.n} · sem dados do solicitante`;
+  $('#art-tit').value = 'Impressora não imprime frente e verso: como ativar';
+  $('#art-txt').value = 'Se a impressora imprime só de um lado, ative a impressão nos dois lados no seu computador:\n\n1. Em Imprimir, abra Propriedades.\n2. Na aba Acabamento, marque “Imprimir nos dois lados”.\n3. Escolha “Virar na borda longa”.\n\nNos computadores da sala dos professores essa opção já vem marcada. Se continuar imprimindo de um lado só, abra um pedido na Central de ajuda.';
+  $('#veu').classList.add('vis'); $('#gaveta').classList.add('aberta'); setTimeout(() => $('#art-tit').focus(), 50);
+}
+function fecharGaveta(){ $('#gaveta').classList.remove('aberta'); $('#veu').classList.remove('vis'); }
+$('#fechar-gaveta').addEventListener('click', fecharGaveta); $('#veu').addEventListener('click', fecharGaveta);
+$('#art-salvar').addEventListener('click', () => { fecharGaveta(); toast('Rascunho salvo na base · só o admin publica'); });
+$('#art-variante').addEventListener('click', () => toast('Variante EN pedida como rascunho vinculado'));
+$('#art-en').addEventListener('click', () => toast('Variante EN pedida como rascunho vinculado'));
+
+// ---------- Eventos: calendário de novembro de 2026 ----------
+let filtroCampus = 'todos';
+$('#f-tipo').innerHTML += Object.entries(tipos).map(([v, r]) => `<option value="${v}">${r}</option>`).join('');
+function eventosVisiveis(){ const ft = $('#f-tipo').value; return eventos.filter(e => (filtroCampus === 'todos' || e.campus === filtroCampus) && (!ft || e.tipo === ft)); }
+function desenharCal(){
+  const vis = eventosVisiveis();
+  const prim = new Date(2026, 10, 1); const ini = new Date(prim); ini.setDate(1 - prim.getDay());
+  const total = Math.ceil((prim.getDay() + 30) / 7) * 7;
+  let h = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < total; i++) {
+    const d = new Date(ini); d.setDate(ini.getDate() + i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const fora = d.getMonth() !== 10, fds = d.getDay() === 0 || d.getDay() === 6;
+    const evs = vis.filter(e => e.data === iso).map(e => `<button class="ev ${e.campus}" data-n="${e.n}" title="${e.nome} · ${e.ini}–${e.fim} · ${locais[e.campus].nome}">${e.ini} ${e.nome}</button>`).join('');
+    const monts = vis.filter(e => e.mont === iso && e.mont !== e.data).map(e => `<button class="ev mont" data-n="${e.n}" title="Montagem de ${e.nome} às ${e.montH}">⚒ ${e.montH} ${e.nome}</button>`).join('');
+    h += `<div class="dia ${fora ? 'fora' : ''} ${fds && !fora ? 'fds' : ''}"><span class="n">${d.getDate()}</span>${monts}${evs}</div>`;
+  }
+  $('#cal').innerHTML = h;
+  const prox = vis.filter(e => diasAte(e.mont) >= 0).sort((a, b) => (a.mont + a.montH).localeCompare(b.mont + b.montH));
+  $('#prox').innerHTML = prox.length ? prox.map(e => { const N = diasAte(e.mont); return `<button class="prox" data-n="${e.n}"><span class="data-ev ${e.campus}"><b>${e.data.slice(8)}</b><small>nov</small></span><span class="txt"><strong>${e.nome}</strong><span class="muted">${tipos[e.tipo]} · ${locais[e.campus].nome} · ${e.local}</span><span style="display:flex;gap:6px;flex-wrap:wrap"><span class="sla ${N <= 2 ? 'alerta' : 'evt'}">${faltam(N)} para a montagem</span>${e.foraPrazo ? '<span class="sla venc">fora do prazo</span>' : ''}</span></span></button>`; }).join('') : '<p style="padding:0 18px;color:var(--muted);font-size:13px">Nenhum evento com esses filtros.</p>';
+}
+$('#f-campus').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; filtroCampus = b.dataset.c; $$('#f-campus button').forEach(x => x.classList.toggle('on', x === b)); desenharCal(); });
+$('#f-tipo').addEventListener('change', desenharCal);
+$('#cal').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) abrirTicket(+b.dataset.n); });
+$('#prox').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) abrirTicket(+b.dataset.n); });
+$('#cal-ant').addEventListener('click', () => toast('Protótipo: só novembro de 2026'));
+$('#cal-prox').addEventListener('click', () => toast('Protótipo: só novembro de 2026'));
+$('#cal-visao').addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.textContent === 'Semana') toast('Visão de semana (protótipo)'); });
+$('#novo-evento').addEventListener('click', () => setTimeout(() => abaPortal('ev'), 0));
+
+// ---------- QR da sala (visão do técnico) ----------
+const qrTickets = [
+  {n:8423, ass:'Projetor da Sala 214 sem imagem', meta:'há 20 min · Ana Ribeiro', sla:['alerta','vence em 50 min'], resp:null},
+  {n:8424, ass:'Caixa de som com chiado', meta:'há 1 h · Daniel Brooks · EN', sla:['ok','vence em 1 d'], resp:null},
+  {n:8411, ass:'Smartboard not responding to touch', meta:'hoje 07:55 · Daniel Brooks · EN', sla:['ok','vence em 3 h'], resp:'Você'},
+  {n:8422, ass:'Sem Wi-Fi na sala', meta:'filho do incidente #8420', sla:['alerta','vence em 30 min'], resp:'Você', inc:true}
+];
+function desenharQr(){
+  $('#qr-lista').innerHTML = qrTickets.map(q => `<div class="qr-item"><div class="l1"><span style="font-size:12px;color:var(--muted)">#${q.n}</span>${q.inc ? '<span class="selo-inc">Incidente</span>' : ''}<span class="sla ${q.sla[0]}" style="margin-left:auto">${q.sla[1]}</span></div><button class="tit" data-abrir="${q.inc ? 8420 : q.n}">${q.ass}</button><div class="l3"><span>${q.meta}</span>${q.resp ? `<span class="pill" style="margin-left:auto;padding:2px 8px">${q.resp === 'Você' ? '✓ com você' : q.resp}</span>` : `<button class="btn prim" data-assumir="${q.n}">Assumir</button>`}</div></div>`).join('');
+}
+$('#qr-lista').addEventListener('click', e => {
+  const a = e.target.closest('[data-assumir]');
+  if (a) { const q = qrTickets.find(x => x.n === +a.dataset.assumir); q.resp = 'Você'; desenharQr(); toast(`#${q.n} atribuído a você`); return; }
+  const t = e.target.closest('[data-abrir]');
+  if (t) { const n = +t.dataset.abrir; if (tickets.some(x => x.n === n)) abrirTicket(n); else toast(`#${n} · detalhe do ticket (protótipo)`); }
+});
+function qrSvg(code, px){
+  let h = 7; for (const ch of code) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  let r = '';
+  for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) { const f = (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12); if (!f && rnd() < .48) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }
+  const fin = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7" fill="currentColor"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="var(--surface)"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="currentColor"/>`;
+  return `<svg viewBox="-1 -1 23 23" width="${px}" height="${px}" role="img" aria-label="QR ilustrativo da sala ${code}" style="color:var(--ink);display:block"><rect x="-1" y="-1" width="23" height="23" fill="var(--surface)"/><g fill="currentColor">${r}</g>${fin(0, 0)}${fin(14, 0)}${fin(0, 14)}</svg>`;
+}
+$('#qr-svg').innerHTML = qrSvg('BAR-2-214', 180);
+desenharQr();
+$('#qr-novo').addEventListener('click', () => { ir('portal'); setTimeout(() => simularQR(true), 0); toast('Novo ticket com o local Barra · 2º andar · Sala 214 preenchido'); });
+$('#qr-sol').addEventListener('click', () => { ir('portal'); setTimeout(() => simularQR(true), 0); });
+$('#imprimir-qr').addEventListener('click', () => toast('Folha com 5 QR do 2º andar pronta para imprimir (protótipo)'));
+
+// ---------- Portal: idioma PT/EN ----------
+const EN = {'p-marca':'IT Help Center','p-artigos':'Articles','p-pedidos':'My requests','p-agente':'← Agent area','p-pill':'EARJ IT · we reply during school hours','p-h1':'How can we help?','p-sub':'Search for a ready answer or open a request. Track everything here and by email.','p-busca':'Wi-Fi password, printer, projector, VPN…','c-wifi':'Wi-Fi and network','c-wifi2':'8 articles','c-imp':'Printers','c-imp2':'6 articles','c-sala':'Classroom','c-sala2':'projector, sound, camera','c-contas':'Accounts and passwords','c-contas2':'Google, systems','tab-sup':'Support','tab-ev':'AV event','f-tit':'Open a request','f-sub':'The next fields appear based on your choices.','qr-sim':'Simulate QR for Room 214 · Barra · 2nd floor','l-tipo':'You are','l-onde':'Where is the problem?','via-qr':'via QR','nao-estou':'I’m not in this room','l-campus':'Campus','l-andar':'Floor','l-sala':'Room','l-motivo':'Reason for contact','l-equip':'Equipment','l-sint':'What is happening?','l-ass':'Subject','defl':'This might solve it now','l-desc':'Description','anexar':'Attach photo or file','enviar':'Submit request','ev-tit':'Request AV support for an event','ev-sub':'Ask at least 5 business days ahead. The team’s deadline is the setup start.','e-nome':'Event name','e-tipo':'Type','e-data':'Date','e-ini':'Start','e-fim':'End','e-mont':'Setup starts','e-pub':'Expected audience','e-local':'Event location','e-equip':'Equipment needed','e-obs':'Notes','e-enviar':'Submit event request','p-pedidos2':'My requests','mais':'Most viewed','fab':'Chat with IT'};
+let idioma = 'pt';
+$$('#t-portal [data-i18n]').forEach(el => el.dataset.pt = el.textContent);
+$$('#t-portal [data-i18n-ph]').forEach(el => el.dataset.pt = el.placeholder);
+function trocarIdioma(l){
+  idioma = l;
+  $$('#t-portal [data-i18n]').forEach(el => el.textContent = l === 'en' ? (EN[el.dataset.i18n] || el.dataset.pt) : el.dataset.pt);
+  $$('#t-portal [data-i18n-ph]').forEach(el => el.placeholder = l === 'en' ? (EN[el.dataset.i18nPh] || el.dataset.pt) : el.dataset.pt);
+  $$('#seg-idioma button').forEach(b => b.classList.toggle('on', b.dataset.l === l));
+  $('#t-portal').lang = l === 'en' ? 'en' : 'pt-BR';
+  condicionais(); avisoPrazo();
+}
+$('#seg-idioma').addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b) trocarIdioma(b.dataset.l); });
+
+// ---------- Portal: abas Suporte / Evento de AV ----------
+function abaPortal(p){ $$('#abas-portal button').forEach(b => b.classList.toggle('on', b.dataset.p === p)); revelar($('#form-sup'), p === 'sup'); revelar($('#form-ev'), p === 'ev'); }
+$('#abas-portal').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) abaPortal(b.dataset.p); });
+
+// ---------- Portal: locais em cascata (campus → andar → sala) ----------
+function revelar(el, mostrar){ if (mostrar && el.classList.contains('oculto')) { el.classList.remove('oculto'); el.classList.remove('cond'); void el.offsetWidth; el.classList.add('cond'); } else if (!mostrar) el.classList.add('oculto'); }
+const ESCOLHA = () => idioma === 'en' ? 'Choose…' : 'Escolha…';
+function preencherCampus(p, comEntre){ $(`#${p}-campus`).innerHTML = `<option value="">${ESCOLHA()}</option>` + Object.entries(locais).filter(([k]) => comEntre || k !== 'entre').map(([k, v]) => `<option value="${k}">${v.nome}</option>`).join(''); }
+function preencherAndares(p){
+  const c = locais[$(`#${p}-campus`).value];
+  if (!c) { revelar($(`#w-${p}-andar`), false); revelar($(`#w-${p}-sala`), false); return; }
+  $(`#${p}-andar`).innerHTML = `<option value="">${ESCOLHA()}</option>` + c.andares.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+  revelar($(`#w-${p}-andar`), true); revelar($(`#w-${p}-sala`), false);
+  if (c.andares.length === 1) { $(`#${p}-andar`).value = c.andares[0].id; preencherSalas(p); }
+}
+function preencherSalas(p){
+  const c = locais[$(`#${p}-campus`).value]; const a = c && c.andares.find(x => x.id === $(`#${p}-andar`).value);
+  if (!a) { revelar($(`#w-${p}-sala`), false); return; }
+  $(`#${p}-sala`).innerHTML = a.salas.map(s => `<option>${s}</option>`).join('');
+  revelar($(`#w-${p}-sala`), true);
+}
+function setLocal(p, c, a, s){ $(`#${p}-campus`).value = c; preencherAndares(p); $(`#${p}-andar`).value = a; preencherSalas(p); $(`#${p}-sala`).value = s; }
+['p', 'e'].forEach(p => { $(`#${p}-campus`).addEventListener('change', () => preencherAndares(p)); $(`#${p}-andar`).addEventListener('change', () => preencherSalas(p)); });
+preencherCampus('p', false); preencherCampus('e', true);
+setLocal('p', 'barra', '2', 'Sala 204'); setLocal('e', 'barra', 'cob', 'Auditório');
+
+// QR simulado: campus, andar e sala preenchidos e travados
+function travarLocal(travar){
+  ['campus', 'andar', 'sala'].forEach(k => $('#p-' + k).disabled = travar);
+  $('#local-sup').classList.toggle('qr', travar);
+  $('#selo-qr').classList.toggle('oculto', !travar); $('#nao-estou').classList.toggle('oculto', !travar);
+}
+function simularQR(rolar){
+  abaPortal('sup'); setLocal('p', 'barra', '2', 'Sala 214'); travarLocal(true);
+  $('#p-ass').value = ''; $('#p-ass').placeholder = idioma === 'en' ? 'E.g.: Projector in Room 214 shows no image' : 'Ex.: Projetor da Sala 214 sem imagem';
+  if (rolar) setTimeout(() => $('#form-sup').scrollIntoView({behavior: reduz.matches ? 'auto' : 'smooth', block: 'start'}), 350);
+}
+$('#sim-qr').addEventListener('click', () => { simularQR(false); toast(idioma === 'en' ? 'QR read: Room 214 · Barra · 2nd floor' : 'QR lido: Sala 214 · Barra · 2º andar'); });
+$('#nao-estou').addEventListener('click', () => { travarLocal(false); $('#p-campus').focus(); toast(idioma === 'en' ? 'Location unlocked: choose your room' : 'Local destravado: escolha a sua sala'); });
+
+// Motivo → equipamento → sintoma
+const sintomas = {projetor:['Não liga','Liga mas sem imagem','Imagem fraca ou piscando'], impressora:['Não imprime','Sem toner','Papel enroscado','Não liga'], notebook:['Não liga','Muito lento','Tela quebrada'], som:['Sem som','Chiado','Volume baixo']};
+const motivos = [['hardware','Equipamento','Hardware'],['edu','Software educacional','Educational software'],['adm','Software administrativo','Administrative software'],['rede','Rede e internet','Network & internet'],['av','Audiovisual','Audiovisual'],['outros','Outros','Other']];
+let motivo = 'hardware';
+function opts(sel, l){ sel.innerHTML = l.map(v => `<option>${v}</option>`).join(''); }
+function condicionais(){
+  revelar($('#w-equip'), motivo === 'hardware');
+  const s = sintomas[$('#p-equip').value]; revelar($('#w-sint'), !!s); if (s) opts($('#p-sint'), s);
+  $('#motivos').innerHTML = motivos.map(([v, pt, en]) => `<button type="button" role="radio" aria-checked="${v === motivo}" data-m="${v}">${idioma === 'en' ? en : pt}</button>`).join('');
+}
+$('#p-equip').addEventListener('change', condicionais);
+$('#motivos').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; motivo = b.dataset.m; condicionais(); });
+$('#enviar-pedido').addEventListener('click', () => toast(idioma === 'en' ? 'Request #8432 submitted · confirmation by email' : `Pedido #8432 enviado · ${$('#p-sala').value || 'local'} · confirmação por e-mail`));
+condicionais();
+
+// Evento de AV: tipo, equipamentos e aviso de prazo mínimo (5 dias úteis)
+$('#e-tipo').innerHTML = Object.entries(tipos).map(([v, r]) => `<option value="${v}">${r}</option>`).join('');
+$('#e-equip').innerHTML = ['Projetor','Telão','Microfone sem fio','Mesa de som','Caixas de som','Transmissão ao vivo','Gravação','Cabines de tradução','Fones de tradução'].map(x => `<label><input type="checkbox" value="${x}">${x}</label>`).join('');
+function avisoPrazo(){
+  const v = $('#e-data').value, av = $('#e-aviso');
+  if (!v) { av.classList.add('oculto'); return; }
+  const du = diasUteis(v);
+  if (diasAte(v) < 0) { av.textContent = idioma === 'en' ? '⚠ This date is in the past.' : '⚠ Esta data já passou.'; av.classList.remove('oculto'); return; }
+  if (du < 5) {
+    av.innerHTML = idioma === 'en' ? `<b>⚠ Outside the minimum notice:</b> ${du} business day${du === 1 ? '' : 's'} left (minimum is 5). The request is accepted but marked “late”.` : `<b>⚠ Fora do prazo mínimo:</b> ${du === 1 ? 'falta 1 dia útil' : `faltam ${du} dias úteis`} (o mínimo é 5). O pedido é aceito, mas fica marcado “fora do prazo”.`;
+    av.classList.remove('oculto');
+  } else av.classList.add('oculto');
+}
+$('#e-data').addEventListener('change', () => { const v = $('#e-data').value; if (v) $('#e-mont').value = v + 'T07:00'; avisoPrazo(); });
+$('#e-data').addEventListener('input', avisoPrazo);
+$('#enviar-evento').addEventListener('click', () => {
+  const fora = !$('#e-aviso').classList.contains('oculto');
+  toast(idioma === 'en' ? `Event request #8440 submitted${fora ? ' · marked late' : ''}` : `Pedido de evento #8440 enviado${fora ? ' · marcado “fora do prazo”' : ''} · aparece no calendário da equipe`);
+});
+avisoPrazo();
+
+// ---------- Chat ----------
+function fecharChat(){ $('#chat').classList.remove('aberto'); $('#fab').setAttribute('aria-expanded', 'false'); }
+$('#fab').addEventListener('click', () => { const c = $('#chat'); const abre = !c.classList.contains('aberto'); c.classList.toggle('aberto', abre); $('#fab').setAttribute('aria-expanded', abre); if (abre) $('#m-chat').focus(); });
+$('#fechar-chat').addEventListener('click', fecharChat);
+const legendas = ['', 'Sentimos muito. Conte o que deu errado?', 'Obrigado. O que podemos melhorar?', 'Obrigado pelo retorno.', 'Que bom! Obrigado.', 'Que ótimo! Obrigado pela avaliação.'];
+$('#notas').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#notas button').forEach(x => x.setAttribute('aria-checked', x === b)); $('#legenda').textContent = legendas[+b.textContent]; });
+$('#form-chat').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('#m-chat').value.trim(); if (!v) return;
+  const d = document.createElement('div'); d.className = 'bal eu'; d.textContent = v; d.style.animation = 'msg .3s cubic-bezier(.2,.7,.2,1) both';
+  $('#corpo-chat').appendChild(d); $('#m-chat').value = ''; d.scrollIntoView({behavior: reduz.matches ? 'auto' : 'smooth'});
+  setTimeout(() => { const r = document.createElement('div'); r.style.cssText = 'display:flex;gap:8px;align-items:flex-end;animation:msg .3s cubic-bezier(.2,.7,.2,1) both'; r.innerHTML = '<span class="ini i-roxo" style="width:28px;height:28px;flex-basis:28px;font-size:11px">RT</span><div class="bal eles">Anotado! Já estou vendo isso.</div>'; $('#corpo-chat').appendChild(r); r.scrollIntoView({behavior: reduz.matches ? 'auto' : 'smooth'}); }, 1400);
+});
+
+// ---------- Atalhos ----------
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { fecharPops(); fecharChat(); limparSel(); fecharGaveta(); }
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'r' && telaAtual === 'ticket') { modo(false); $('#texto').focus(); e.preventDefault(); }
+  if (e.key === 'i' && telaAtual === 'ticket') { modo(true); $('#texto').focus(); e.preventDefault(); }
+});
+
+// ---------- Partida ----------
+desenharLista(); desenharTicket();
+(() => { const h = location.hash.slice(1); mostrar(TELAS.includes(h) ? h : 'entrar'); })();
+</script>
+<script>
+// Recarregamento automático do protótipo (só no localhost): a página confere a cada 2 s se o arquivo mudou.
+(function(){
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  var anterior = null;
+  function assinatura(t){ var h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+  setInterval(function(){
+    fetch(location.pathname, {cache: 'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+      var a = assinatura(t);
+      if (anterior && a !== anterior) { try { sessionStorage.setItem('pd-tela', location.hash); } catch (e) {} location.reload(); }
+      anterior = a;
+    }).catch(function(){});
+  }, 2000);
+})();
+</script>
+</body>
+</html>

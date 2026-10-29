@@ -1,0 +1,13 @@
+From: Carla Souza <customer3@lab.test>
+To: {{SUPPORT}}
+Subject: Automatic reply: {{REPLY_SUBJECT}}
+Date: Mon, 26 Oct 2026 12:00:00 +0000
+Message-ID: <fx08.{{RUN}}@customer.lab.test>
+In-Reply-To: {{REPLY_MSGID}}
+Auto-Submitted: auto-replied
+X-Autoreply: yes
+X-Auto-Response-Suppress: All
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+I am out of office until Monday.

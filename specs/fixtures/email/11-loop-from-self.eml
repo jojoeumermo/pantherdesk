@@ -1,0 +1,10 @@
+From: {{SUPPORT}}
+To: {{SUPPORT}}
+Subject: Re: {{REPLY_SUBJECT}}
+Date: Mon, 26 Oct 2026 12:30:00 +0000
+Message-ID: <fx11.{{RUN}}@helpdesk.lab.test>
+In-Reply-To: {{REPLY_MSGID}}
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+A message sent by the support address to itself (simulated mail loop).

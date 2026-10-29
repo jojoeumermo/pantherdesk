@@ -1,0 +1,41 @@
+name: obs-osticket
+
+networks:
+  lab:
+    external: true
+    name: obslab_lab
+
+services:
+  db:
+    image: mariadb:10.11
+    networks: [lab]
+    environment:
+      MARIADB_ROOT_PASSWORD: obs-lab-only
+      MARIADB_DATABASE: osticket
+      MARIADB_USER: osticket
+      MARIADB_PASSWORD: obs-lab-only
+      TZ: UTC
+    volumes: [db:/var/lib/mysql]
+
+  web:
+    build: .
+    image: obs/osticket:v1.18.4
+    depends_on: [db]
+    networks:
+      lab:
+        aliases: [osticket.lab.test]
+    volumes: [app:/var/www/html]
+
+  # Runs the periodic tasks (mail fetch, SLA overdue checks) once a minute.
+  # Shares the app volume so it sees the config written by the web installer.
+  cron:
+    image: obs/osticket:v1.18.4
+    depends_on: [web]
+    networks: [lab]
+    user: www-data
+    command: ["sh", "-c", "while true; do php /var/www/html/api/cron.php; sleep 60; done"]
+    volumes: [app:/var/www/html]
+
+volumes:
+  db:
+  app:

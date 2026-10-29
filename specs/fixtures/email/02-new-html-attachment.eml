@@ -1,0 +1,46 @@
+From: Bruno Lima <customer2@lab.test>
+To: {{SUPPORT}}
+Subject: Invoice 4471 has the wrong amount
+Date: Mon, 26 Oct 2026 09:05:00 +0000
+Message-ID: <fx02.{{RUN}}@customer.lab.test>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix-fx02"
+
+--mix-fx02
+Content-Type: multipart/related; boundary="rel-fx02"
+
+--rel-fx02
+Content-Type: multipart/alternative; boundary="alt-fx02"
+
+--alt-fx02
+Content-Type: text/plain; charset=utf-8
+
+The invoice attached charges 3 licences, we only have 2. Screenshot inline.
+
+--alt-fx02
+Content-Type: text/html; charset=utf-8
+
+<html><body><p>The invoice attached charges <b>3 licences</b>, we only have 2.</p>
+<p><img src="cid:shot-fx02@customer.lab.test" alt="screenshot"></p>
+<script>alert(1)</script></body></html>
+
+--alt-fx02--
+
+--rel-fx02
+Content-Type: image/png; name="shot.png"
+Content-Transfer-Encoding: base64
+Content-ID: <shot-fx02@customer.lab.test>
+Content-Disposition: inline; filename="shot.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==
+--rel-fx02--
+
+--mix-fx02
+Content-Type: application/pdf; name="invoice-4471.pdf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="invoice-4471.pdf"
+
+JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBv
+Ymo8PC9UeXBlL1BhZ2VzL0NvdW50IDAvS2lkc1tdPj5lbmRvYmoKdHJhaWxlcjw8L1Jvb3QgMSAw
+IFI+PgolJUVPRgo=
+--mix-fx02--

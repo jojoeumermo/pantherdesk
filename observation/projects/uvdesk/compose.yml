@@ -1,0 +1,39 @@
+# UVdesk built from the official community-skeleton Dockerfile (tag v1.1.8), which
+# observation/tools/fetch-upstream.ps1 extracts to ./upstream/. The upstream image runs
+# Apache and MySQL inside the same container, so there is no separate db service.
+name: obs-uvdesk
+
+networks:
+  lab:
+    external: true
+    name: obslab_lab
+
+services:
+  app:
+    build: ./upstream
+    image: obs/uvdesk:v1.1.8
+    environment:
+      MYSQL_USER: uvdesk
+      MYSQL_PASSWORD: obs-lab-only
+      MYSQL_ROOT_PASSWORD: obs-lab-only
+      MYSQL_DATABASE: uvdesk
+      TZ: UTC
+      # Mailbox polled once a minute (set after creating it in the admin UI).
+      UVDESK_MAILBOX: support-uvdesk@lab.test
+    # The upstream entrypoint steps down to the uvdesk user and runs this command;
+    # it must not exit, or the container stops. It also drives mailbox polling.
+    command:
+      - sh
+      - -c
+      - >-
+        while true; do sleep 60;
+        php /var/www/uvdesk/bin/console uvdesk:refresh-mailbox "$$UVDESK_MAILBOX" --no-interaction || true;
+        done
+    networks:
+      lab:
+        aliases: [uvdesk.lab.test]
+    volumes:
+      - mysql:/var/lib/mysql
+
+volumes:
+  mysql:

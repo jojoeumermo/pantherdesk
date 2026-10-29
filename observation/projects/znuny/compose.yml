@@ -1,0 +1,41 @@
+name: obs-znuny
+
+networks:
+  lab:
+    external: true
+    name: obslab_lab
+
+services:
+  db:
+    image: mariadb:10.11
+    networks: [lab]
+    # Znuny's installer checks these server settings.
+    command: ["--max-allowed-packet=64M", "--innodb-log-file-size=256M", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      MARIADB_ROOT_PASSWORD: obs-lab-only
+      TZ: UTC
+    volumes: [db:/var/lib/mysql]
+
+  web:
+    build: .
+    image: obs/znuny:7.3.8
+    depends_on: [db]
+    networks:
+      lab:
+        aliases: [znuny.lab.test]
+    volumes: [app:/opt/otrs]
+
+  # Background daemon: mail fetch, escalation checks, generic agent jobs, notifications.
+  # Start it only after the web installer has finished (see observation/README.md).
+  daemon:
+    image: obs/znuny:7.3.8
+    depends_on: [web]
+    networks: [lab]
+    user: otrs
+    command: ["sh", "-c", "/opt/otrs/bin/otrs.Daemon.pl start; while true; do sleep 60; /opt/otrs/bin/otrs.Daemon.pl status >/dev/null || /opt/otrs/bin/otrs.Daemon.pl start; done"]
+    volumes: [app:/opt/otrs]
+    profiles: [after-install]
+
+volumes:
+  db:
+  app:

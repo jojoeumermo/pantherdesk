@@ -1,0 +1,12 @@
+From: Newsletter <news@vendor.lab.test>
+To: {{SUPPORT}}
+Subject: October product news
+Date: Mon, 26 Oct 2026 12:20:00 +0000
+Message-ID: <fx10.{{RUN}}@vendor.lab.test>
+Precedence: bulk
+List-Id: Vendor News <news.vendor.lab.test>
+List-Unsubscribe: <mailto:unsubscribe@vendor.lab.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Our monthly newsletter.

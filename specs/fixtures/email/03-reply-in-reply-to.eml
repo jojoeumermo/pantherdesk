@@ -1,0 +1,14 @@
+From: Ana Ribeiro <customer1@lab.test>
+To: {{SUPPORT}}
+Subject: Re: {{REPLY_SUBJECT}}
+Date: Mon, 26 Oct 2026 10:00:00 +0000
+Message-ID: <fx03.{{RUN}}@customer.lab.test>
+In-Reply-To: {{REPLY_MSGID}}
+References: <fx01.{{RUN}}@customer.lab.test> {{REPLY_MSGID}}
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+I restarted it as you suggested, still the same error.
+
+On Mon, 26 Oct 2026 the support team wrote:
+> quoted text of the agent reply that should be collapsed or trimmed
